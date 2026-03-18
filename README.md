@@ -8,6 +8,18 @@ frontend and backend via Route Handlers. Modular architecture: drop a new folder
 
 ---
 
+## Documentation Map
+
+If you are an agent or developer trying to understand this project, read these files:
+
+| File | Purpose |
+|---|---|
+| `README.md` | This file — overview, local dev setup, useful commands |
+| `SPEC.md` | Product specification — what the app is, architecture decisions, module system, API conventions, auth design |
+| `DEPLOYMENT.md` | Step-by-step VPS deployment guide — treat it as a verifiable checklist |
+
+---
+
 ## Tech Stack
 
 - **Framework:** Next.js 14 (App Router)
@@ -46,6 +58,8 @@ Edit `.env` and fill in at minimum:
 DATABASE_URL=postgresql://postgres:yourpassword@localhost:5432/appdb
 JWT_ACCESS_SECRET=any-random-string
 JWT_REFRESH_SECRET=another-random-string
+ADMIN_EMAIL=admin@local
+ADMIN_PASSWORD=changeme
 ```
 
 ### 3. Set up the database
@@ -79,132 +93,14 @@ npm run dev
 
 ---
 
-## Production Deployment (Hetzner CX23 — Ubuntu 24.04)
+## Production Deployment
 
-### 1. Create the server
+See `DEPLOYMENT.md` for the full step-by-step guide.
 
-- Provider: [Hetzner Cloud](https://console.hetzner.cloud)
-- Image: Ubuntu 24.04
-- Type: CX23 (2 vCPU, 4 GB RAM, 40 GB SSD) — ~€3.79/month
-- Add your SSH public key during setup
-- Attach a Firewall (see Firewall section below)
-
-### 2. SSH into the server
-
-```bash
-ssh root@<your-server-ip>
-```
-
-### 3. Install system dependencies
-
-```bash
-# Update system
-apt update && apt upgrade -y
-
-# Node.js 20 LTS
-curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-apt install -y nodejs
-
-# PostgreSQL
-apt install -y postgresql postgresql-contrib
-systemctl enable postgresql
-systemctl start postgresql
-
-# Nginx
-apt install -y nginx
-systemctl enable nginx
-systemctl start nginx
-
-# PM2
-npm install -g pm2
-pm2 startup  # run this — it configures auto-start on reboot automatically, no copy-paste needed
-
-# Git
-apt install -y git
-```
-
-Verify everything installed correctly:
-
-```bash
-node -v && npm -v && psql --version && nginx -v && pm2 -v && git --version
-```
-
-### 4. Create PostgreSQL database and user
-
-```bash
-sudo -u postgres psql
-```
-
-Inside the psql shell:
-
-```sql
-CREATE USER appuser WITH PASSWORD 'strongpassword';
-CREATE DATABASE appdb OWNER appuser;
-GRANT ALL PRIVILEGES ON DATABASE appdb TO appuser;
-\q
-```
-
-### 5. Deploy the app
-
-```bash
-# Clone the repo
-git clone https://github.com/youruser/yourrepo.git /var/www/app
-cd /var/www/app
-
-# Install dependencies
-npm install
-
-# Set up environment variables
-cp .env.example .env
-nano .env  # fill in all values (see Environment Variables section)
-
-# Run database migrations and seed
-npx prisma migrate deploy
-npx prisma db seed
-
-# Build
-npm run build
-
-# Start with PM2
-pm2 start ecosystem.config.js
-pm2 save
-```
-
-### 6. Configure Nginx
-
-```bash
-cp nginx.conf /etc/nginx/sites-available/app
-ln -s /etc/nginx/sites-available/app /etc/nginx/sites-enabled/app
-rm /etc/nginx/sites-enabled/default
-nginx -t  # test config
-systemctl reload nginx
-```
-
-### 7. SSL with Certbot (Let's Encrypt — free)
-
-```bash
-apt install -y certbot python3-certbot-nginx
-certbot --nginx -d yourdomain.com -d www.yourdomain.com
-```
-
-Certbot auto-renews via a systemd timer — nothing else needed.
-
----
-
-## Firewall (Hetzner Cloud Console)
-
-Go to **Hetzner Console → Firewalls → Create Firewall** and set:
-
-| Direction | Protocol | Port | Source |
-|---|---|---|---|
-| Inbound | TCP | 22 (SSH) | Your IP (or `0.0.0.0/0`) |
-| Inbound | TCP | 80 (HTTP) | `0.0.0.0/0` |
-| Inbound | TCP | 443 (HTTPS) | `0.0.0.0/0` |
-| Outbound | All | All | `0.0.0.0/0` |
-
-**Do not open port 3000** (Next.js) or **5432** (PostgreSQL) — they stay internal.
-
-Attach the firewall to your server from the server's Networking tab.
+The short version:
+1. Provision a Hetzner CX23 running Ubuntu 24.04
+2. Point DNS for your domain to the server IP
+3. SSH in and follow `DEPLOYMENT.md` from top to bottom
 
 ---
 
@@ -215,10 +111,12 @@ See `.env.example` for the full list. Required before first run:
 | Variable | Description |
 |---|---|
 | `DATABASE_URL` | PostgreSQL connection string |
-| `JWT_ACCESS_SECRET` | Secret for signing access tokens (generate a strong random string) |
-| `JWT_REFRESH_SECRET` | Secret for signing refresh tokens (different from access secret) |
+| `JWT_ACCESS_SECRET` | Secret for signing access tokens — `openssl rand -base64 64` |
+| `JWT_REFRESH_SECRET` | Secret for signing refresh tokens — different from above |
 | `NEXT_PUBLIC_APP_URL` | Your public domain, e.g. `https://yourdomain.com` |
-| `R2_ACCOUNT_ID` | Cloudflare R2 account ID (for file uploads) |
+| `ADMIN_EMAIL` | Email for the seeded master admin account |
+| `ADMIN_PASSWORD` | Password for the seeded master admin account |
+| `R2_ACCOUNT_ID` | Cloudflare R2 account ID (for file uploads — optional) |
 | `R2_ACCESS_KEY_ID` | Cloudflare R2 access key |
 | `R2_SECRET_ACCESS_KEY` | Cloudflare R2 secret key |
 | `R2_BUCKET_NAME` | R2 bucket name |
@@ -275,11 +173,7 @@ bash backup.sh           # manual database backup to R2
 
 ---
 
-## Default Admin Account
+## Admin Account
 
-After seeding, a master admin account is created:
-
-- **Email:** `admin@app.com`
-- **Password:** `changeme123`
-
-Change the password immediately after first login.
+After seeding (`npx prisma db seed`), a master admin account is created using the
+`ADMIN_EMAIL` and `ADMIN_PASSWORD` values from `.env`. Log in with those credentials.

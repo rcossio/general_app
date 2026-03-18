@@ -1,22 +1,50 @@
-# Deployment Guide — VPS Setup (Hetzner CX23, Ubuntu 24.04)
+# Deployment Guide — Hetzner CX23, Ubuntu 24.04
 
 This file is the single source of truth for deploying this app on the VPS.
-A Claude instance on the VPS should read this file, verify each step, and complete what is missing.
+An agent or human can read this file, verify each step, and complete what is missing.
 
 ---
 
-## Server Specs
+## Ingredients — Have These Ready Before Starting
 
+### Server
 - Provider: Hetzner Cloud
 - Type: CX23 (2 vCPU, 4 GB RAM, 40 GB SSD)
 - OS: Ubuntu 24.04
-- App location: `/var/www/app`
-- App runs on: port 3000 (internal only)
-- Nginx proxies: port 80/443 → 3000
+- SSH access as root
+
+### Domain
+- A registered domain name pointing to the server IP via DNS A record (for both `@` and `www`)
+- DNS must propagate before running Certbot (Step 15)
+
+### Firewall (Hetzner Cloud Console — not on the server)
+Configure in Hetzner Console → Firewalls before anything else:
+
+| Direction | Protocol | Port | Source |
+|---|---|---|---|
+| Inbound | TCP | 22 | Your IP |
+| Inbound | TCP | 80 | `0.0.0.0/0` |
+| Inbound | TCP | 443 | `0.0.0.0/0` |
+| Outbound | All | All | `0.0.0.0/0` |
+
+Do not open port 3000 or 5432 — they stay internal.
+
+### Values to prepare before starting
+Have these ready before you begin — you will need them during `.env` setup:
+
+| Value | Notes |
+|---|---|
+| DB password | Pick a strong password for the `appuser` PostgreSQL role |
+| `JWT_ACCESS_SECRET` | Generate: `openssl rand -base64 64` |
+| `JWT_REFRESH_SECRET` | Generate: `openssl rand -base64 64` (different from above) |
+| `ADMIN_EMAIL` | Email for the initial master admin app account (does not need to be real) |
+| `ADMIN_PASSWORD` | Strong password for the initial master admin app account |
 
 ---
 
-## Step 1 — System Update
+## Procedure
+
+### Step 1 — System Update
 
 **Verify:** `apt list --upgradable 2>/dev/null | wc -l` should return `1` (just the header line).
 
@@ -27,7 +55,7 @@ apt update && apt upgrade -y
 
 ---
 
-## Step 2 — Node.js 20
+### Step 2 — Node.js 20
 
 **Verify:** `node -v` should print `v20.x.x`
 
@@ -39,7 +67,7 @@ apt install -y nodejs
 
 ---
 
-## Step 3 — PostgreSQL
+### Step 3 — PostgreSQL
 
 **Verify:** `systemctl is-active postgresql` should print `active`
 
@@ -52,7 +80,7 @@ systemctl start postgresql
 
 ---
 
-## Step 4 — Nginx
+### Step 4 — Nginx
 
 **Verify:** `systemctl is-active nginx` should print `active`
 
@@ -65,7 +93,7 @@ systemctl start nginx
 
 ---
 
-## Step 5 — PM2
+### Step 5 — PM2
 
 **Verify:** `pm2 -v` should print a version number. `systemctl is-enabled pm2-root` should print `enabled`.
 
@@ -77,7 +105,7 @@ pm2 startup   # run this — it configures auto-start automatically, no copy-pas
 
 ---
 
-## Step 6 — Git
+### Step 6 — Git
 
 **Verify:** `git --version` should print a version number.
 
@@ -88,7 +116,7 @@ apt install -y git
 
 ---
 
-## Step 7 — PostgreSQL Database and User
+### Step 7 — PostgreSQL Database and User
 
 **Verify:**
 ```bash
@@ -101,7 +129,7 @@ Should show the `appdb` database.
 sudo -u postgres psql
 ```
 ```sql
-CREATE USER appuser WITH PASSWORD 'strongpassword';
+CREATE USER appuser WITH PASSWORD '<your-db-password>';
 CREATE DATABASE appdb OWNER appuser;
 GRANT ALL PRIVILEGES ON DATABASE appdb TO appuser;
 \q
@@ -109,7 +137,7 @@ GRANT ALL PRIVILEGES ON DATABASE appdb TO appuser;
 
 ---
 
-## Step 8 — Clone the Repository
+### Step 8 — Clone the Repository
 
 **Verify:** `ls /var/www/app/package.json` should exist.
 
@@ -120,7 +148,7 @@ git clone https://github.com/yourusername/yourrepo.git /var/www/app
 
 ---
 
-## Step 9 — Environment Variables
+### Step 9 — Environment Variables
 
 **Verify:** `ls /var/www/app/.env` should exist. Check it has real values (not empty) for `JWT_ACCESS_SECRET` and `JWT_REFRESH_SECRET`.
 
@@ -132,20 +160,20 @@ nano .env
 ```
 
 Fill in:
-- `DATABASE_URL=postgresql://appuser:<password>@localhost:5432/appdb`
+- `DATABASE_URL=postgresql://appuser:<your-db-password>@localhost:5432/appdb`
 - `JWT_ACCESS_SECRET=` — generate with `openssl rand -base64 64`
 - `JWT_REFRESH_SECRET=` — generate with `openssl rand -base64 64` (different value)
 - `JWT_ACCESS_EXPIRES_IN=15m`
 - `JWT_REFRESH_EXPIRES_IN=30d`
-- `NEXT_PUBLIC_APP_URL=http://<server-ip>` (use domain once DNS is set up)
-- `ADMIN_EMAIL=` — the email for the initial master admin account
-- `ADMIN_PASSWORD=` — a strong password for the initial master admin account
+- `NEXT_PUBLIC_APP_URL=https://yourdomain.com`
+- `ADMIN_EMAIL=` — email for the initial master admin account
+- `ADMIN_PASSWORD=` — strong password for the initial master admin account
 
 R2 variables can be left blank until file uploads are needed.
 
 ---
 
-## Step 9b — Verify DB Credentials
+### Step 9b — Verify DB Credentials
 
 **Verify:** The password in `DATABASE_URL` must match the PostgreSQL user password set in Step 7.
 
@@ -158,12 +186,12 @@ psql "$DATABASE_URL" -c "SELECT 1" 2>&1
 Should print `(1 row)`. If it fails with "authentication failed", reset the PostgreSQL password to match `.env`:
 
 ```bash
-sudo -u postgres psql -c "ALTER USER appuser WITH PASSWORD 'your-password-from-env';"
+sudo -u postgres psql -c "ALTER USER appuser WITH PASSWORD '<your-db-password>';"
 ```
 
 ---
 
-## Step 10 — Install Dependencies
+### Step 10 — Install Dependencies
 
 **Verify:** `ls /var/www/app/node_modules` should exist.
 
@@ -175,7 +203,7 @@ npm install
 
 ---
 
-## Step 11 — Run Migrations and Seed
+### Step 11 — Run Migrations and Seed
 
 **Verify:**
 ```bash
@@ -192,21 +220,22 @@ npx prisma db seed
 
 ---
 
-## Step 12 — Build
+### Step 12 — Build
 
 **Verify:** `ls /var/www/app/.next/BUILD_ID` should exist.
 
 **If not done:**
 ```bash
 cd /var/www/app
+pm2 stop all  # stop PM2 before building to avoid an incomplete .next output
 npm run build
 ```
 
-**Important:** Stop PM2 before rebuilding (`pm2 delete all`), otherwise a running instance can interfere with the build and leave `.next` without a `BUILD_ID`. Restart PM2 after the build completes.
+**Important:** Always stop PM2 before rebuilding. A running instance can interfere with the build and leave `.next` without a `BUILD_ID`, causing PM2 to crash on start.
 
 ---
 
-## Step 13 — Start with PM2
+### Step 13 — Start with PM2
 
 **Verify:** `pm2 status` should show the app with status `online`.
 
@@ -217,7 +246,7 @@ pm2 start ecosystem.config.js
 pm2 save
 ```
 
-**Troubleshooting — app starts then immediately crashes:** If `pm2 status` shows `errored` or a high restart count within seconds of starting, check two things:
+**Troubleshooting — app starts then immediately crashes:** If `pm2 status` shows `errored` or a high restart count within seconds of starting, check:
 
 1. `cwd` in `ecosystem.config.js` must be `/var/www/app`
 2. `.next/BUILD_ID` must exist — if missing, the build was incomplete; run `npm run build` again
@@ -228,7 +257,7 @@ cat /home/deploy/logs/app-err.log | tail -5  # shows the actual crash reason
 
 ---
 
-## Step 14 — Configure Nginx
+### Step 14 — Configure Nginx
 
 **Verify:** `ls /etc/nginx/sites-enabled/app` should exist. `nginx -t` should print `syntax is ok`.
 
@@ -247,11 +276,11 @@ systemctl reload nginx
 
 ---
 
-## Step 15 — SSL with Certbot
+### Step 15 — SSL with Certbot
 
 **Verify:** `certbot certificates` should show a valid certificate for your domain.
 
-**Prerequisite:** DNS A record must point to this server's IP before running Certbot.
+**Prerequisite:** DNS A record must point to the server IP before running Certbot.
 
 **If not done:**
 ```bash
@@ -263,24 +292,9 @@ Auto-renewal is handled by systemd — nothing else needed.
 
 ---
 
-## Firewall (Hetzner Cloud Console — not on the server)
+## Admin Account
 
-Configured in Hetzner Console → Firewalls. Required rules:
-
-| Direction | Protocol | Port | Source |
-|---|---|---|---|
-| Inbound | TCP | 22 | Your IP |
-| Inbound | TCP | 80 | `0.0.0.0/0` |
-| Inbound | TCP | 443 | `0.0.0.0/0` |
-| Outbound | All | All | `0.0.0.0/0` |
-
-Do not open port 3000 or 5432 — they stay internal.
-
----
-
-## Default Admin Account
-
-Created by `prisma db seed` using the `ADMIN_EMAIL` and `ADMIN_PASSWORD` values from `.env`.
+Created by `npx prisma db seed` using the `ADMIN_EMAIL` and `ADMIN_PASSWORD` values from `.env`.
 Log in with those credentials after the first deploy.
 
 ---
