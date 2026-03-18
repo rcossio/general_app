@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState, use } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { useRouter, useParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
 import { z } from 'zod'
@@ -17,10 +17,11 @@ const updateSchema = z.object({
   tags: z.array(z.string()).default([]),
 })
 
-export default function EditEntryPage({ params }: { params: Promise<{ id: string }> }) {
+export default function EditEntryPage() {
+  const params = useParams<{ id: string }>()
   return (
     <ProtectedRoute>
-      <EditEntryForm entryId={use(params).id} />
+      <EditEntryForm entryId={params.id} />
     </ProtectedRoute>
   )
 }

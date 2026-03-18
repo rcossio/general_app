@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState, use } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { useRouter, useParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
 import { Plus, Trash2, ChevronUp, ChevronDown, Pencil, Check, X } from 'lucide-react'
@@ -37,10 +37,11 @@ const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 const addDaySchema = z.object({ name: z.string().min(1, 'Required'), dayOfWeek: z.number() })
 const addExSchema = z.object({ name: z.string().min(1, 'Required'), sets: z.coerce.number().int().positive().optional(), reps: z.coerce.number().int().positive().optional() })
 
-export default function RoutineDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default function RoutineDetailPage() {
+  const params = useParams<{ id: string }>()
   return (
     <ProtectedRoute>
-      <RoutineDetail routineId={use(params).id} />
+      <RoutineDetail routineId={params.id} />
     </ProtectedRoute>
   )
 }
