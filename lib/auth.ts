@@ -42,12 +42,25 @@ export async function comparePassword(password: string, hash: string): Promise<b
   return bcrypt.compare(password, hash)
 }
 
+function parseDurationMs(duration: string): number {
+  const match = duration.match(/^(\d+)(s|m|h|d)$/)
+  if (!match) return 30 * 24 * 60 * 60 * 1000
+  const value = parseInt(match[1])
+  const multipliers: Record<string, number> = {
+    s: 1000,
+    m: 60 * 1000,
+    h: 60 * 60 * 1000,
+    d: 24 * 60 * 60 * 1000,
+  }
+  return value * multipliers[match[2]]
+}
+
 export async function storeRefreshToken(
   userId: string,
   token: string
 ): Promise<void> {
   const tokenHash = hashToken(token)
-  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
+  const expiresAt = new Date(Date.now() + parseDurationMs(REFRESH_EXPIRES))
 
   await prisma.refreshToken.create({
     data: { userId, tokenHash, expiresAt },

@@ -91,23 +91,15 @@ export async function DELETE(request: NextRequest, { params }: Params) {
   if (isNextResponse(result)) return result
 
   const { id } = await params
-  const routine = await prisma.workoutRoutine.findUnique({
-    where: { id },
-    select: { userId: true },
+  const canDeleteAny = result.user.roles.some((r) => ['master_admin', 'admin'].includes(r))
+  const routine = await prisma.workoutRoutine.findFirst({
+    where: { id, ...(!canDeleteAny && { userId: result.user.sub }) },
+    select: { id: true },
   })
   if (!routine) {
     return NextResponse.json(
       { error: 'Routine not found', code: 'NOT_FOUND' },
       { status: 404 }
-    )
-  }
-
-  const isOwner = routine.userId === result.user.sub
-  const canDeleteAny = result.user.roles.some((r) => ['master_admin', 'admin'].includes(r))
-  if (!isOwner && !canDeleteAny) {
-    return NextResponse.json(
-      { error: 'Forbidden', code: 'PERMISSION_DENIED' },
-      { status: 403 }
     )
   }
 

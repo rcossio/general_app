@@ -31,6 +31,18 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
+    // Verify all exercises belong to the day
+    const exercises = await prisma.workoutExercise.findMany({
+      where: { id: { in: exerciseIds }, dayId },
+      select: { id: true },
+    })
+    if (exercises.length !== exerciseIds.length) {
+      return NextResponse.json(
+        { error: 'One or more exercises not found in this day', code: 'NOT_FOUND' },
+        { status: 404 }
+      )
+    }
+
     // Update orders in a transaction
     await prisma.$transaction(
       exerciseIds.map((exerciseId, index) =>

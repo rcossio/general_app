@@ -14,7 +14,6 @@ const workoutManifest: ModuleManifest = {
     'workout:create',
     'workout:update',
     'workout:delete',
-    'workout:delete_any',
   ],
   apiPrefix: '/api/workout',
 }
