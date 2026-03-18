@@ -16,9 +16,3 @@ This applies to all files that are or could be git-tracked: `.md`, `.conf`, `.sh
 
 The only place real values belong is `.env`, which is gitignored.
 
-## Documentation Files
-
-Read these files to understand the project before making changes:
-
-- `SPEC.md` — product specification, architecture, module system, API conventions
-- `DEPLOYMENT.md` — step-by-step VPS deployment guide
