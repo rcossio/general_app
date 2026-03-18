@@ -115,7 +115,7 @@ GRANT ALL PRIVILEGES ON DATABASE appdb TO appuser;
 
 **If not done:**
 ```bash
-git clone https://github.com/rcossio/general_app.git /var/www/app
+git clone https://github.com/yourusername/yourrepo.git /var/www/app
 ```
 
 ---
@@ -132,12 +132,14 @@ nano .env
 ```
 
 Fill in:
-- `DATABASE_URL=postgresql://appuser:strongpassword@localhost:5432/appdb`
+- `DATABASE_URL=postgresql://appuser:<password>@localhost:5432/appdb`
 - `JWT_ACCESS_SECRET=` — generate with `openssl rand -base64 64`
 - `JWT_REFRESH_SECRET=` — generate with `openssl rand -base64 64` (different value)
 - `JWT_ACCESS_EXPIRES_IN=15m`
 - `JWT_REFRESH_EXPIRES_IN=30d`
 - `NEXT_PUBLIC_APP_URL=http://<server-ip>` (use domain once DNS is set up)
+- `ADMIN_EMAIL=` — the email for the initial master admin account
+- `ADMIN_PASSWORD=` — a strong password for the initial master admin account
 
 R2 variables can be left blank until file uploads are needed.
 
@@ -233,11 +235,15 @@ cat /home/deploy/logs/app-err.log | tail -5  # shows the actual crash reason
 **If not done:**
 ```bash
 cp /var/www/app/nginx.conf /etc/nginx/sites-available/app
+# Edit server_name to your actual domain before enabling:
+nano /etc/nginx/sites-available/app
 ln -s /etc/nginx/sites-available/app /etc/nginx/sites-enabled/app
 rm -f /etc/nginx/sites-enabled/default
 nginx -t
 systemctl reload nginx
 ```
+
+**Note:** `nginx.conf` in the repo is a template with `yourdomain.com` placeholders. The live config at `/etc/nginx/sites-available/app` is what actually runs and will be modified by Certbot — do not copy from the repo over it after SSL is set up.
 
 ---
 
@@ -250,7 +256,7 @@ systemctl reload nginx
 **If not done:**
 ```bash
 apt install -y certbot python3-certbot-nginx
-certbot --nginx -d yourdomain.com
+certbot --nginx -d yourdomain.com -d www.yourdomain.com
 ```
 
 Auto-renewal is handled by systemd — nothing else needed.
@@ -274,11 +280,8 @@ Do not open port 3000 or 5432 — they stay internal.
 
 ## Default Admin Account
 
-Created by `prisma db seed`:
-- Email: `admin@app.com`
-- Password: `changeme123`
-
-**Change this immediately after first login.**
+Created by `prisma db seed` using the `ADMIN_EMAIL` and `ADMIN_PASSWORD` values from `.env`.
+Log in with those credentials after the first deploy.
 
 ---
 

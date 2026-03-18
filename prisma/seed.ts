@@ -54,12 +54,17 @@ async function main() {
   }
 
   // Seed default master_admin user
-  const passwordHash = await bcrypt.hash('changeme123', 12)
+  const adminEmail = process.env.ADMIN_EMAIL
+  const adminPassword = process.env.ADMIN_PASSWORD
+  if (!adminEmail || !adminPassword) {
+    throw new Error('ADMIN_EMAIL and ADMIN_PASSWORD must be set in .env before seeding')
+  }
+  const passwordHash = await bcrypt.hash(adminPassword, 12)
   const adminUser = await prisma.user.upsert({
-    where: { email: 'admin@app.com' },
+    where: { email: adminEmail },
     update: {},
     create: {
-      email: 'admin@app.com',
+      email: adminEmail,
       passwordHash,
       name: 'Master Admin',
     },
