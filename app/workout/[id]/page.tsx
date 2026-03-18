@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
+import { useLocale } from '@/contexts/LocaleContext'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
 import { Plus, Trash2, ChevronUp, ChevronDown, Pencil, Check, X, Globe } from 'lucide-react'
 import { z } from 'zod'
@@ -49,6 +50,7 @@ export default function RoutineDetailPage() {
 
 function RoutineDetail({ routineId }: { routineId: string }) {
   const { fetchWithAuth } = useAuth()
+  const { t } = useLocale()
   const router = useRouter()
   const [routine, setRoutine] = useState<Routine | null>(null)
   const [loading, setLoading] = useState(true)
@@ -238,11 +240,11 @@ function RoutineDetail({ routineId }: { routineId: string }) {
           <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
             <input type="checkbox" checked={editRoutinePublic} onChange={(e) => setEditRoutinePublic(e.target.checked)} className="rounded accent-blue-600" />
             <Globe className="h-3.5 w-3.5 text-gray-400" />
-            Make public
+            {t('common.makePublic')}
           </label>
           <div className="flex gap-2">
-            <button onClick={saveRoutine} className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm"><Check className="h-3 w-3" /> Save</button>
-            <button onClick={() => setEditRoutine(false)} className="flex items-center gap-1 px-3 py-1.5 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm"><X className="h-3 w-3" /> Cancel</button>
+            <button onClick={saveRoutine} className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm"><Check className="h-3 w-3" /> {t('common.save')}</button>
+            <button onClick={() => setEditRoutine(false)} className="flex items-center gap-1 px-3 py-1.5 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm"><X className="h-3 w-3" /> {t('common.cancel')}</button>
           </div>
         </div>
       ) : (
@@ -250,7 +252,7 @@ function RoutineDetail({ routineId }: { routineId: string }) {
           <div className="min-w-0">
             <h1 className="text-2xl font-bold">{routine.name}</h1>
             {routine.description && <p className="text-gray-500 mt-1">{routine.description}</p>}
-            {routine.isPublic && <p className="flex items-center gap-1 text-xs text-blue-500 mt-1"><Globe className="h-3 w-3" /> Public</p>}
+            {routine.isPublic && <p className="flex items-center gap-1 text-xs text-blue-500 mt-1"><Globe className="h-3 w-3" /> {t('common.public')}</p>}
           </div>
           <div className="flex gap-1 shrink-0">
             <button onClick={() => { setEditRoutineName(routine.name); setEditRoutineDesc(routine.description ?? ''); setEditRoutinePublic(routine.isPublic); setEditRoutine(true) }} className="p-2 text-gray-400 hover:text-blue-600"><Pencil className="h-4 w-4" /></button>
@@ -286,7 +288,7 @@ function RoutineDetail({ routineId }: { routineId: string }) {
                 <button onClick={() => startEditDay(day)} className="p-1 text-gray-400 hover:text-blue-600"><Pencil className="h-3.5 w-3.5" /></button>
                 <button onClick={() => deleteDay(day.id)} className="p-1 text-gray-400 hover:text-red-600"><Trash2 className="h-3.5 w-3.5" /></button>
                 <button onClick={() => setAddExOpen(addExOpen === day.id ? null : day.id)} className="text-blue-600 text-sm flex items-center gap-1 ml-2">
-                  <Plus className="h-4 w-4" /> Exercise
+                  <Plus className="h-4 w-4" /> {t('workout.addExercise')}
                 </button>
               </div>
             </div>
@@ -294,32 +296,32 @@ function RoutineDetail({ routineId }: { routineId: string }) {
 
           {addExOpen === day.id && (
             <form onSubmit={(e) => addExercise(day.id, e)} className="p-4 border-b border-gray-200 dark:border-gray-700 space-y-2">
-              <input placeholder="Exercise name" value={newExName} onChange={(e) => setNewExName(e.target.value)}
+              <input placeholder={t('workout.addExercise')} value={newExName} onChange={(e) => setNewExName(e.target.value)}
                 className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
               <div className="flex gap-2">
-                <input placeholder="Sets" type="number" value={newExSets} onChange={(e) => setNewExSets(e.target.value)}
+                <input placeholder={t('workout.sets')} type="number" value={newExSets} onChange={(e) => setNewExSets(e.target.value)}
                   className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                <input placeholder="Reps" type="number" value={newExReps} onChange={(e) => setNewExReps(e.target.value)}
+                <input placeholder={t('workout.reps')} type="number" value={newExReps} onChange={(e) => setNewExReps(e.target.value)}
                   className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
               <div className="flex gap-2">
-                <button type="submit" className="px-3 py-1 bg-blue-600 text-white rounded text-sm">Add</button>
-                <button type="button" onClick={() => setAddExOpen(null)} className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded text-sm">Cancel</button>
+                <button type="submit" className="px-3 py-1 bg-blue-600 text-white rounded text-sm">{t('workout.addExercise')}</button>
+                <button type="button" onClick={() => setAddExOpen(null)} className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded text-sm">{t('common.cancel')}</button>
               </div>
             </form>
           )}
 
           <ul>
-            {day.exercises.length === 0 && <li className="px-4 py-3 text-sm text-gray-400">No exercises yet.</li>}
+            {day.exercises.length === 0 && <li className="px-4 py-3 text-sm text-gray-400">{t('workout.noExercisesYet')}</li>}
             {day.exercises.map((ex, idx) => (
               <li key={ex.id} className="border-b last:border-b-0 border-gray-100 dark:border-gray-800">
                 {editExId === ex.id ? (
                   <div className="flex items-center gap-2 px-4 py-2">
                     <input value={editExName} onChange={(e) => setEditExName(e.target.value)}
                       className="flex-1 px-2 py-1 rounded border border-gray-300 dark:border-gray-600 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                    <input placeholder="Sets" type="number" value={editExSets} onChange={(e) => setEditExSets(e.target.value)}
+                    <input placeholder={t('workout.sets')} type="number" value={editExSets} onChange={(e) => setEditExSets(e.target.value)}
                       className="w-16 px-2 py-1 rounded border border-gray-300 dark:border-gray-600 bg-transparent text-sm focus:outline-none" />
-                    <input placeholder="Reps" type="number" value={editExReps} onChange={(e) => setEditExReps(e.target.value)}
+                    <input placeholder={t('workout.reps')} type="number" value={editExReps} onChange={(e) => setEditExReps(e.target.value)}
                       className="w-16 px-2 py-1 rounded border border-gray-300 dark:border-gray-600 bg-transparent text-sm focus:outline-none" />
                     <button onClick={() => saveEx(day.id, ex.id)} className="p-1 text-blue-600 hover:text-blue-800"><Check className="h-4 w-4" /></button>
                     <button onClick={() => setEditExId(null)} className="p-1 text-gray-400 hover:text-gray-600"><X className="h-4 w-4" /></button>
@@ -348,20 +350,20 @@ function RoutineDetail({ routineId }: { routineId: string }) {
 
       {addDayOpen ? (
         <form onSubmit={addDay} className="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 space-y-3">
-          <input placeholder="Day name (e.g. Push Day)" value={newDayName} onChange={(e) => setNewDayName(e.target.value)}
+          <input placeholder={t('workout.dayNamePlaceholder')} value={newDayName} onChange={(e) => setNewDayName(e.target.value)}
             className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500" />
           <select value={newDayOfWeek} onChange={(e) => setNewDayOfWeek(Number(e.target.value))}
             className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
             {DAY_NAMES.map((d, i) => <option key={i} value={i}>{d}</option>)}
           </select>
           <div className="flex gap-2">
-            <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm">Add Day</button>
-            <button type="button" onClick={() => setAddDayOpen(false)} className="px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm">Cancel</button>
+            <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm">{t('workout.addDay')}</button>
+            <button type="button" onClick={() => setAddDayOpen(false)} className="px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm">{t('common.cancel')}</button>
           </div>
         </form>
       ) : (
         <button onClick={() => setAddDayOpen(true)} className="flex items-center gap-2 px-4 py-2 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl text-gray-500 hover:border-blue-400 hover:text-blue-600 w-full justify-center">
-          <Plus className="h-4 w-4" /> Add Day
+          <Plus className="h-4 w-4" /> {t('workout.addDay')}
         </button>
       )}
     </div>

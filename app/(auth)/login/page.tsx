@@ -4,21 +4,23 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
+import { useLocale } from '@/contexts/LocaleContext'
 import { z } from 'zod'
-
-const loginSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(1, 'Password is required'),
-})
 
 export default function LoginPage() {
   const { login } = useAuth()
+  const { t } = useLocale()
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [serverError, setServerError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  const loginSchema = z.object({
+    email: z.string().email(t('auth.invalidEmail')),
+    password: z.string().min(1, t('auth.passwordRequired')),
+  })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -38,7 +40,7 @@ export default function LoginPage() {
       await login(email, password)
       router.push('/')
     } catch (err) {
-      setServerError(err instanceof Error ? err.message : 'Login failed')
+      setServerError(err instanceof Error ? err.message : t('auth.loginFailed'))
     } finally {
       setLoading(false)
     }
@@ -47,10 +49,10 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
-        <h1 className="text-2xl font-bold mb-6 text-center">Sign in</h1>
+        <h1 className="text-2xl font-bold mb-6 text-center">{t('auth.signIn')}</h1>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1">Email</label>
+            <label className="block text-sm font-medium mb-1">{t('auth.email')}</label>
             <input
               type="email"
               value={email}
@@ -60,7 +62,7 @@ export default function LoginPage() {
             {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email}</p>}
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Password</label>
+            <label className="block text-sm font-medium mb-1">{t('auth.password')}</label>
             <input
               type="password"
               value={password}
@@ -79,12 +81,12 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-medium rounded-lg transition-colors"
           >
-            {loading ? 'Signing in...' : 'Sign in'}
+            {loading ? t('auth.signingIn') : t('auth.signIn')}
           </button>
         </form>
         <p className="text-center text-sm mt-4 text-gray-500">
-          No account?{' '}
-          <Link href="/register" className="text-blue-600 hover:underline">Register</Link>
+          {t('auth.noAccount')}{' '}
+          <Link href="/register" className="text-blue-600 hover:underline">{t('auth.register')}</Link>
         </p>
       </div>
     </div>

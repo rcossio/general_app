@@ -4,16 +4,12 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
+import { useLocale } from '@/contexts/LocaleContext'
 import { z } from 'zod'
-
-const registerSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(100),
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-})
 
 export default function RegisterPage() {
   const { register } = useAuth()
+  const { t } = useLocale()
   const router = useRouter()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -21,6 +17,12 @@ export default function RegisterPage() {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [serverError, setServerError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  const registerSchema = z.object({
+    name: z.string().min(1, t('auth.nameRequired')).max(100),
+    email: z.string().email(t('auth.invalidEmail')),
+    password: z.string().min(8, t('auth.passwordMinLength')),
+  })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -40,22 +42,24 @@ export default function RegisterPage() {
       await register(email, password, name)
       router.push('/')
     } catch (err) {
-      setServerError(err instanceof Error ? err.message : 'Registration failed')
+      setServerError(err instanceof Error ? err.message : t('auth.registrationFailed'))
     } finally {
       setLoading(false)
     }
   }
 
+  const fields = [
+    { label: t('auth.name'), type: 'text', value: name, onChange: setName, key: 'name' },
+    { label: t('auth.email'), type: 'email', value: email, onChange: setEmail, key: 'email' },
+    { label: t('auth.password'), type: 'password', value: password, onChange: setPassword, key: 'password' },
+  ]
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
-        <h1 className="text-2xl font-bold mb-6 text-center">Create account</h1>
+        <h1 className="text-2xl font-bold mb-6 text-center">{t('auth.createAccount')}</h1>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {[
-            { label: 'Name', type: 'text', value: name, onChange: setName, key: 'name' },
-            { label: 'Email', type: 'email', value: email, onChange: setEmail, key: 'email' },
-            { label: 'Password', type: 'password', value: password, onChange: setPassword, key: 'password' },
-          ].map((field) => (
+          {fields.map((field) => (
             <div key={field.key}>
               <label className="block text-sm font-medium mb-1">{field.label}</label>
               <input
@@ -77,12 +81,12 @@ export default function RegisterPage() {
             disabled={loading}
             className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-medium rounded-lg transition-colors"
           >
-            {loading ? 'Creating account...' : 'Create account'}
+            {loading ? t('auth.creatingAccount') : t('auth.createAccount')}
           </button>
         </form>
         <p className="text-center text-sm mt-4 text-gray-500">
-          Have an account?{' '}
-          <Link href="/login" className="text-blue-600 hover:underline">Sign in</Link>
+          {t('auth.haveAccount')}{' '}
+          <Link href="/login" className="text-blue-600 hover:underline">{t('auth.signIn')}</Link>
         </p>
       </div>
     </div>

@@ -36,6 +36,7 @@ it in `config/modules.ts`.
 | PWA | manifest.json + service worker | Installable on iOS and Android |
 | Process manager | PM2 | Cluster mode, auto-restart |
 | Reverse proxy | Nginx | Gzip, static caching, SSL |
+| i18n | Custom LocaleContext | EN/IT/ES, cookie-persisted, no library |
 | Testing | Vitest | Integration tests for security-critical logic |
 
 ---
@@ -103,21 +104,35 @@ project-root/
 ├── app/
 │   ├── api/
 │   │   ├── auth/
-│   │   ├── workout/          # workout module API routes
-│   │   └── tracker/          # life-tracker module API routes
+│   │   ├── workout/
+│   │   │   ├── routines/
+│   │   │   │   └── public/   # unauthenticated public feed
+│   │   │   └── ...
+│   │   └── tracker/
+│   │       ├── entries/
+│   │       │   └── public/   # unauthenticated public feed
+│   │       └── ...
 │   ├── (auth)/
 │   │   ├── login/
 │   │   └── register/
 │   ├── workout/              # workout module pages
 │   ├── tracker/              # life-tracker module pages
-│   ├── profile/
+│   ├── profile/              # includes language selector
 │   ├── admin/
-│   └── layout.tsx            # reads activeModules to build nav
+│   └── layout.tsx            # reads activeModules, wraps LocaleProvider + AuthProvider
 ├── modules/
 │   ├── workout/              # manifest.ts + lib/schemas.ts
 │   └── life-tracker/         # manifest.ts + lib/schemas.ts
 ├── config/
 │   └── modules.ts
+├── contexts/
+│   ├── AuthContext.tsx
+│   └── LocaleContext.tsx     # i18n provider: t(), locale, setLocale
+├── locales/
+│   ├── en.ts                 # source of truth, exports Translations type
+│   ├── it.ts                 # Italian, typed as Translations
+│   ├── es.ts                 # Spanish, typed as Translations
+│   └── index.ts              # Locale type, LOCALES array, translations map
 ├── lib/
 │   ├── prisma.ts             # Prisma singleton
 │   ├── auth.ts               # JWT sign/verify/refresh logic
@@ -128,13 +143,15 @@ project-root/
 │   └── ui/                   # Shared reusable components
 ├── prisma/
 │   ├── schema.prisma         # single file, sections by module
-│   └── seed.ts
+│   └── seed.ts               # roles, admin, + 10 bot community users
 ├── public/
 │   ├── manifest.json
 │   └── icons/                # PWA icons: 192x192 and 512x512
 └── __tests__/
     ├── auth.test.ts
-    └── rbac.test.ts
+    ├── rbac.test.ts
+    ├── tracker.test.ts
+    └── workout.test.ts
 ```
 
 ---
@@ -152,13 +169,13 @@ project-root/
 
 ### Workout module
 
-- **workout_routines** — id, user_id, name, description, created_at, updated_at
+- **workout_routines** — id, user_id, name, description, is_public (default false), created_at, updated_at; indexed on (is_public, created_at)
 - **workout_days** — id, routine_id, day_of_week (0-6), name
 - **workout_exercises** — id, day_id, name, sets, reps, duration_seconds, rest_seconds, notes, order
 
 ### Life Tracker module
 
-- **tracker_entries** — id, user_id, type (DESIRE|EMOTION|GOAL|ACHIEVEMENT), title, content, score (1-10), tags (String[]), created_at
+- **tracker_entries** — id, user_id, type (DESIRE|EMOTION|GOAL|ACHIEVEMENT), title, content, score (1-10), tags (String[]), is_public (default false), created_at; indexed on (is_public, createdAt)
 
 ### Schema rules
 
@@ -228,8 +245,9 @@ GET  /api/auth/me         → return current user with roles and flat permission
 ```
 GET    /api/workout/routines                → list my routines (paginated)
 POST   /api/workout/routines                → create routine
+GET    /api/workout/routines/public         → public community feed (no auth, ?limit=)
 GET    /api/workout/routines/[id]           → get routine with days and exercises
-PUT    /api/workout/routines/[id]           → update routine metadata
+PUT    /api/workout/routines/[id]           → update routine metadata (incl. isPublic)
 DELETE /api/workout/routines/[id]           → delete (owner or admin only)
 POST   /api/workout/routines/[id]/days      → add day to routine
 PUT    /api/workout/days/[id]               → update day
@@ -247,11 +265,19 @@ PATCH  /api/workout/exercises/reorder       → reorder exercises within a day
 ```
 GET    /api/tracker/entries                 → list my entries (paginated, ?type=EMOTION)
 POST   /api/tracker/entries                 → create entry
+GET    /api/tracker/entries/public          → public community feed (no auth, ?limit=, ?type=)
 GET    /api/tracker/entries/[id]            → get single entry
-PUT    /api/tracker/entries/[id]            → update entry
+PUT    /api/tracker/entries/[id]            → update entry (incl. isPublic)
 DELETE /api/tracker/entries/[id]            → delete entry
 GET    /api/tracker/stats                   → score averages by type (cached 60s per user)
 ```
+
+### Public feed rules
+
+- No `requirePermission` guard — fully unauthenticated
+- Returns only entries/routines where `isPublic = true`
+- Includes `user.name` so the community can see who posted
+- Default `limit=20`, capped at 100; ordered by `createdAt desc`
 
 ---
 
@@ -260,8 +286,17 @@ GET    /api/tracker/stats                   → score averages by type (cached 6
 ### Layout
 
 - Bottom nav on mobile, collapsible sidebar on desktop — both built from `activeModules`
+- Nav labels are translated via `useLocale()` / `t()`
 - Dark/light mode toggle stored in localStorage
-- Auth context wraps entire app
+- `LocaleProvider` wraps `AuthProvider` wraps entire app
+
+### i18n
+
+- Locale stored in `localStorage` key `'locale'`; falls back to `'en'`
+- `useLocale()` returns `{ t, locale, setLocale }` — call `t('section.key')` anywhere
+- Changing locale in Profile applies immediately app-wide (React context re-render)
+- `t()` supports `{placeholder}` interpolation: `t('dashboard.welcomeBack', { name })`
+- TypeScript enforces completeness: `it.ts` and `es.ts` both implement `Translations`; adding a key to `en.ts` without updating the others is a build error
 
 ### Pages
 
@@ -269,16 +304,17 @@ GET    /api/tracker/stats                   → score averages by type (cached 6
 - `/` — Dashboard: module cards, recent workout activity, recent tracker entries
 - `/login` — Login form
 - `/register` — Register form
-- `/profile` — View and edit name and avatar URL
+- `/profile` — View/edit name and avatar URL; language selector (EN / IT / ES flags)
 - `/admin` — User list with role assignment (admin and master_admin only)
 
 **Workout module:**
-- `/workout` — List of my routines, create new button
-- `/workout/[id]` — Full routine: days, exercises, inline editing, reordering
+- `/workout` — My routines list with isPublic toggle per item; Community Routines section (public feed, up to 12 items, scrollable)
+- `/workout/[id]` — Full routine: days, exercises, inline editing, reordering; isPublic toggle
 
 **Life Tracker module:**
-- `/tracker` — Entry feed, filter by type, stats bar with avg score per type
-- `/tracker/new` — Create entry: type selector, score slider (1-10), tag input
+- `/tracker` — Entry feed, filter by type, stats bar with avg score per type; Community section (public feed, up to 12 items, scrollable)
+- `/tracker/new` — Create entry: type selector, score slider (1-10), tag input, isPublic checkbox
+- `/tracker/[id]` — Edit entry: same fields as new, pre-populated
 
 ### UX requirements
 
@@ -308,7 +344,7 @@ GET    /api/tracker/stats                   → score averages by type (cached 6
 
 ## Tests (Vitest)
 
-Integration tests only, for security-critical logic. Uses a separate `TEST_DATABASE_URL`.
+Integration tests only, for security-critical logic. 43 tests total across 4 files.
 
 **`__tests__/auth.test.ts`**
 - Register creates user with hashed password
@@ -326,12 +362,42 @@ Integration tests only, for security-critical logic. Uses a separate `TEST_DATAB
 - requirePermission returns 403 with correct error code
 - requirePermission returns 401 with no token
 
+**`__tests__/workout.test.ts`**
+- CRUD operations on routines (create, read, update, delete)
+- isPublic toggle reflected in public feed
+- Public feed accessible without authentication
+
+**`__tests__/tracker.test.ts`**
+- CRUD operations on entries
+- isPublic toggle reflected in public feed
+- Public feed accessible without authentication
+- `?type=` filter on public feed
+
 ---
 
 ## Seed Data
 
 `prisma/seed.ts` creates:
+
+**Core:**
 - Roles: master_admin, admin, moderator, user
 - Permissions for all active modules from `activeModules[].permissions`
 - Default master_admin: created from `ADMIN_EMAIL` and `ADMIN_PASSWORD` env vars
 - All permissions assigned to master_admin and admin roles
+
+**Bot community users (10 accounts, idempotent):**
+Each has the `user` role. All their workouts and tracker entries are `isPublic: true`
+so the community feed is populated from first login. Skipped if already exists.
+
+| Bot | Routine | Tracker theme |
+|---|---|---|
+| Alex Rivera | PPL split + mobility | High-score entries (8–10) |
+| Maria Santos | Beginner 3-day | Mixed scores (3–8) |
+| James Park | — | Mental health journal (2–9) |
+| Sofia Chen | Hypertrophy block | High scores (9–10) |
+| Marcus Webb | Comeback plan | Low scores (2–6) |
+| Priya Patel | Yoga flow | Mindfulness (7–9) |
+| Tom Larsson | — | Life journal (2–8) |
+| Zara Ahmed | Running base | Improvement arc (2–9) |
+| Lucas Moreau | Stronglifts + conditioning | — |
+| Nina Okafor | 3-day dumbbell | Balanced (6–8) |

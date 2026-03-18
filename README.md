@@ -27,6 +27,7 @@ If you are an agent or developer trying to understand this project, read these f
 - **Database:** PostgreSQL + Prisma ORM
 - **Auth:** JWT (access 15min + refresh 30d) + bcrypt
 - **Styling:** Tailwind CSS (mobile-first)
+- **i18n:** Custom `LocaleContext` — English, Italian, Spanish (no library)
 - **PWA:** manifest.json + service worker
 - **Process manager:** PM2
 - **Reverse proxy:** Nginx
@@ -145,6 +146,15 @@ deactivate a module, edit `config/modules.ts` — no other file needs to change.
 
 The nav bar, permissions, and API prefix are all picked up automatically.
 
+### Adding a new language
+
+1. Create `locales/<code>.ts` implementing the `Translations` type from `locales/en.ts`
+2. Add the locale to the `Locale` union type in `locales/index.ts`
+3. Add an entry to the `LOCALES` array in `locales/index.ts` (value, label, flag)
+4. Add the import and entry to the `translations` map in `locales/index.ts`
+
+Missing keys cause a TypeScript build error — completeness is enforced at compile time.
+
 ---
 
 ## Useful Commands
@@ -153,12 +163,12 @@ The nav bar, permissions, and API prefix are all picked up automatically.
 # Development
 npm run dev              # start dev server
 npm run build            # production build
-npm run test             # run Vitest tests
+npm run test             # run Vitest tests (43 tests across auth/rbac/tracker/workout)
 
 # Prisma
 npx prisma studio        # visual database browser
-npx prisma migrate dev   # create + apply a new migration
-npx prisma db seed       # seed roles, permissions, admin user
+npx prisma migrate dev   # create + apply a new migration (requires CREATEDB on appuser)
+npx prisma db seed       # seed roles, permissions, admin user + 10 bot community users
 
 # PM2 (production)
 pm2 status               # check running processes
@@ -177,3 +187,7 @@ bash backup.sh           # manual database backup to R2
 
 After seeding (`npx prisma db seed`), a master admin account is created using the
 `ADMIN_EMAIL` and `ADMIN_PASSWORD` values from `.env`. Log in with those credentials.
+
+The seed also creates 10 bot community users with public workouts and tracker entries
+so the community feed is populated from day one. Bot accounts use the `user` role and
+cannot be distinguished from real users in the UI.

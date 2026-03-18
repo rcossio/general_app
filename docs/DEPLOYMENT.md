@@ -132,8 +132,14 @@ sudo -u postgres psql
 CREATE USER appuser WITH PASSWORD '<your-db-password>';
 CREATE DATABASE appdb OWNER appuser;
 GRANT ALL PRIVILEGES ON DATABASE appdb TO appuser;
+ALTER USER appuser CREATEDB;   -- required for prisma migrate dev shadow database
 \q
 ```
+
+**Note:** `CREATEDB` is needed if you ever run `prisma migrate dev` on the server
+(e.g. for local testing). `prisma migrate deploy` (used in `deploy.sh`) does **not**
+require it. If you skip `CREATEDB` and later run `migrate dev`, it will fail with
+"permission denied to create database".
 
 ---
 
@@ -217,6 +223,10 @@ cd /var/www/app
 npx prisma migrate deploy
 npx prisma db seed
 ```
+
+**What seed creates:** roles, permissions, master admin account, and 10 bot community
+users with public workouts and tracker entries. The community feed will be populated
+immediately after first deploy. The seed is idempotent — safe to re-run.
 
 ---
 

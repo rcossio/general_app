@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
+import { useLocale } from '@/contexts/LocaleContext'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
 import Link from 'next/link'
 import { Plus, BarChart2, Pencil, Trash2, Globe } from 'lucide-react'
@@ -52,6 +53,7 @@ export default function TrackerPage() {
 
 function TrackerFeed() {
   const { fetchWithAuth } = useAuth()
+  const { t } = useLocale()
   const [entries, setEntries] = useState<Entry[]>([])
   const [publicEntries, setPublicEntries] = useState<PublicEntry[]>([])
   const [stats, setStats] = useState<Stats | null>(null)
@@ -86,16 +88,16 @@ function TrackerFeed() {
   return (
     <div className="max-w-2xl mx-auto p-4 md:p-6">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold">Life Tracker</h1>
+        <h1 className="text-2xl font-bold">{t('tracker.title')}</h1>
         <Link href="/tracker/new" className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium">
-          <Plus className="h-4 w-4" /> New Entry
+          <Plus className="h-4 w-4" /> {t('tracker.newEntry')}
         </Link>
       </div>
 
       {/* Stats bar */}
       {stats && stats.total > 0 && (
         <div className="mb-5 p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
-          <p className="text-xs text-gray-400 mb-3">{stats.total} entries · avg scores</p>
+          <p className="text-xs text-gray-400 mb-3">{stats.total} entries · {t('tracker.avgScores')}</p>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             {Object.entries(stats.typeStats).map(([type, s]) => (
               <div key={type} className="text-center">
@@ -110,17 +112,17 @@ function TrackerFeed() {
 
       {/* Filter tabs */}
       <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
-        {TYPES.map((t) => (
+        {TYPES.map((tp) => (
           <button
-            key={t}
-            onClick={() => setFilter(t)}
+            key={tp}
+            onClick={() => setFilter(tp)}
             className={`px-3 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors ${
-              filter === t
+              filter === tp
                 ? 'bg-blue-600 text-white'
                 : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
             }`}
           >
-            {t || 'All'}
+            {tp || 'All'}
           </button>
         ))}
       </div>
@@ -134,7 +136,7 @@ function TrackerFeed() {
       ) : entries.length === 0 ? (
         <div className="text-center py-16 text-gray-500">
           <BarChart2 className="h-12 w-12 mx-auto mb-4 opacity-30" />
-          <p>No entries yet.</p>
+          <p>{t('tracker.noEntriesYet')}</p>
         </div>
       ) : (
         <ul className="space-y-3">
@@ -144,7 +146,7 @@ function TrackerFeed() {
                 <p className="font-semibold">{e.title}</p>
                 <div className="flex items-center gap-1 shrink-0">
                   <span className="text-lg font-bold text-blue-600">{e.score}<span className="text-xs text-gray-400">/10</span></span>
-                  {e.isPublic && <Globe className="h-3.5 w-3.5 text-blue-400" aria-label="Public" />}
+                  {e.isPublic && <Globe className="h-3.5 w-3.5 text-blue-400" aria-label={t('common.public')} />}
                   <Link href={`/tracker/${e.id}`} className="p-1 text-gray-400 hover:text-blue-600"><Pencil className="h-3.5 w-3.5" /></Link>
                   <button onClick={() => deleteEntry(e.id)} className="p-1 text-gray-400 hover:text-red-600"><Trash2 className="h-3.5 w-3.5" /></button>
                 </div>
@@ -168,7 +170,7 @@ function TrackerFeed() {
       {publicEntries.length > 0 && (
         <div className="mt-10">
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <Globe className="h-4 w-4 text-blue-500" /> Community
+            <Globe className="h-4 w-4 text-blue-500" /> {t('tracker.community')}
           </h2>
           <ul className="space-y-3 max-h-[560px] overflow-y-auto pr-1">
             {publicEntries.map((e) => (
@@ -183,7 +185,7 @@ function TrackerFeed() {
                   {e.tags.map((tag) => (
                     <span key={tag} className="px-2 py-0.5 rounded-full text-xs bg-gray-100 dark:bg-gray-800 text-gray-500">{tag}</span>
                   ))}
-                  <span className="text-xs text-gray-400 ml-auto">by {e.user.name} · {new Date(e.createdAt).toLocaleDateString()}</span>
+                  <span className="text-xs text-gray-400 ml-auto">{t('common.by')} {e.user.name} · {new Date(e.createdAt).toLocaleDateString()}</span>
                 </div>
               </li>
             ))}

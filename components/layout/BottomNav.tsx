@@ -4,20 +4,21 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { activeModules } from '@/config/modules'
 import * as Icons from 'lucide-react'
-import { Home, User } from 'lucide-react'
+import { useLocale } from '@/contexts/LocaleContext'
 
-const coreNavItems = [
-  { label: 'Home', href: '/', icon: 'Home' },
-  { label: 'Profile', href: '/profile', icon: 'User' },
-]
+const MODULE_NAV_KEYS: Record<string, string> = {
+  workout: 'nav.workout',
+  'life-tracker': 'nav.lifeTracker',
+}
 
 export function BottomNav() {
   const pathname = usePathname()
+  const { t } = useLocale()
 
   const navItems = [
-    coreNavItems[0],
-    ...activeModules.map((m) => m.navItem),
-    coreNavItems[1],
+    { label: t('nav.home'), href: '/', icon: 'Home' },
+    ...activeModules.map((m) => ({ ...m.navItem, label: t(MODULE_NAV_KEYS[m.id] ?? 'nav.home') })),
+    { label: t('nav.profile'), href: '/profile', icon: 'User' },
   ]
 
   return (

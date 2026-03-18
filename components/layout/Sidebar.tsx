@@ -5,21 +5,28 @@ import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import { activeModules } from '@/config/modules'
 import * as Icons from 'lucide-react'
-import { ChevronLeft, ChevronRight, Home, User, Shield } from 'lucide-react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
+import { useLocale } from '@/contexts/LocaleContext'
+
+const MODULE_NAV_KEYS: Record<string, string> = {
+  workout: 'nav.workout',
+  'life-tracker': 'nav.lifeTracker',
+}
 
 export function Sidebar() {
   const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(false)
   const { user } = useAuth()
+  const { t } = useLocale()
 
   const isAdmin = user?.roles.some((r) => ['master_admin', 'admin'].includes(r))
 
   const navItems = [
-    { label: 'Dashboard', href: '/', icon: 'Home' },
-    ...activeModules.map((m) => m.navItem),
-    { label: 'Profile', href: '/profile', icon: 'User' },
-    ...(isAdmin ? [{ label: 'Admin', href: '/admin', icon: 'Shield' }] : []),
+    { label: t('nav.dashboard'), href: '/', icon: 'Home' },
+    ...activeModules.map((m) => ({ ...m.navItem, label: t(MODULE_NAV_KEYS[m.id] ?? 'nav.home') })),
+    { label: t('nav.profile'), href: '/profile', icon: 'User' },
+    ...(isAdmin ? [{ label: t('nav.admin'), href: '/admin', icon: 'Shield' }] : []),
   ]
 
   return (

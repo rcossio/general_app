@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
+import { useLocale } from '@/contexts/LocaleContext'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
 import Link from 'next/link'
 import { Plus, Dumbbell, Pencil, Trash2, Check, X, Globe, Lock } from 'lucide-react'
@@ -40,6 +41,7 @@ export default function WorkoutPage() {
 
 function WorkoutList() {
   const { fetchWithAuth } = useAuth()
+  const { t } = useLocale()
   const [routines, setRoutines] = useState<Routine[]>([])
   const [publicRoutines, setPublicRoutines] = useState<PublicRoutine[]>([])
   const [loading, setLoading] = useState(true)
@@ -128,13 +130,13 @@ function WorkoutList() {
   return (
     <div className="max-w-2xl mx-auto p-4 md:p-6">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">My Routines</h1>
+        <h1 className="text-2xl font-bold">{t('workout.myRoutines')}</h1>
         <button
           onClick={() => setShowForm((v) => !v)}
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium"
         >
           <Plus className="h-4 w-4" />
-          New Routine
+          {t('workout.newRoutine')}
         </button>
       </div>
 
@@ -142,7 +144,7 @@ function WorkoutList() {
         <form onSubmit={handleCreate} className="mb-6 p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 space-y-3">
           <div>
             <input
-              placeholder="Routine name"
+              placeholder={t('workout.routineName')}
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -150,7 +152,7 @@ function WorkoutList() {
             {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name}</p>}
           </div>
           <textarea
-            placeholder="Description (optional)"
+            placeholder={t('workout.descriptionOptional')}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={2}
@@ -159,14 +161,14 @@ function WorkoutList() {
           <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
             <input type="checkbox" checked={isPublic} onChange={(e) => setIsPublic(e.target.checked)} className="rounded accent-blue-600" />
             <Globe className="h-3.5 w-3.5 text-gray-400" />
-            Make public
+            {t('common.makePublic')}
           </label>
           <div className="flex gap-2">
             <button type="submit" disabled={submitting} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg text-sm">
-              Create
+              {t('common.create')}
             </button>
             <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm">
-              Cancel
+              {t('common.cancel')}
             </button>
           </div>
         </form>
@@ -181,7 +183,7 @@ function WorkoutList() {
       ) : routines.length === 0 ? (
         <div className="text-center py-16 text-gray-500">
           <Dumbbell className="h-12 w-12 mx-auto mb-4 opacity-30" />
-          <p>No routines yet. Create one to get started.</p>
+          <p>{t('workout.noRoutinesYet')}</p>
         </div>
       ) : (
         <ul className="space-y-3">
@@ -197,17 +199,17 @@ function WorkoutList() {
                   <input
                     value={editDesc}
                     onChange={(e) => setEditDesc(e.target.value)}
-                    placeholder="Description (optional)"
+                    placeholder={t('workout.descriptionOptional')}
                     className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
                     <input type="checkbox" checked={editPublic} onChange={(e) => setEditPublic(e.target.checked)} className="rounded accent-blue-600" />
                     <Globe className="h-3.5 w-3.5 text-gray-400" />
-                    Make public
+                    {t('common.makePublic')}
                   </label>
                   <div className="flex gap-2">
-                    <button onClick={() => saveEdit(r.id)} className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm"><Check className="h-3 w-3" /> Save</button>
-                    <button onClick={() => setEditId(null)} className="flex items-center gap-1 px-3 py-1.5 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm"><X className="h-3 w-3" /> Cancel</button>
+                    <button onClick={() => saveEdit(r.id)} className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm"><Check className="h-3 w-3" /> {t('common.save')}</button>
+                    <button onClick={() => setEditId(null)} className="flex items-center gap-1 px-3 py-1.5 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm"><X className="h-3 w-3" /> {t('common.cancel')}</button>
                   </div>
                 </div>
               ) : (
@@ -215,11 +217,11 @@ function WorkoutList() {
                   <Link href={`/workout/${r.id}`} className="flex-1 min-w-0">
                     <p className="font-semibold truncate">{r.name}</p>
                     {r.description && <p className="text-sm text-gray-500 mt-0.5 truncate">{r.description}</p>}
-                    <p className="text-xs text-gray-400 mt-1">{r._count.days} day{r._count.days !== 1 ? 's' : ''}</p>
+                    <p className="text-xs text-gray-400 mt-1">{r._count.days} {r._count.days !== 1 ? t('common.days') : t('common.day')}</p>
                   </Link>
                   {r.isPublic
-                    ? <Globe className="h-3.5 w-3.5 text-blue-400 shrink-0" aria-label="Public" />
-                    : <Lock className="h-3.5 w-3.5 text-gray-300 dark:text-gray-600 shrink-0" aria-label="Private" />
+                    ? <Globe className="h-3.5 w-3.5 text-blue-400 shrink-0" aria-label={t('common.public')} />
+                    : <Lock className="h-3.5 w-3.5 text-gray-300 dark:text-gray-600 shrink-0" aria-label={t('common.private')} />
                   }
                   <button onClick={() => startEdit(r)} className="text-gray-400 hover:text-blue-600 p-1"><Pencil className="h-4 w-4" /></button>
                   <button onClick={() => deleteRoutine(r.id)} className="text-gray-400 hover:text-red-600 p-1"><Trash2 className="h-4 w-4" /></button>
@@ -234,7 +236,7 @@ function WorkoutList() {
       {publicRoutines.length > 0 && (
         <div className="mt-10">
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <Globe className="h-4 w-4 text-blue-500" /> Community Routines
+            <Globe className="h-4 w-4 text-blue-500" /> {t('workout.communityRoutines')}
           </h2>
           <ul className="space-y-3 max-h-[560px] overflow-y-auto pr-1">
             {publicRoutines.map((r) => (
@@ -242,7 +244,7 @@ function WorkoutList() {
                 <p className="font-semibold">{r.name}</p>
                 {r.description && <p className="text-sm text-gray-500 mt-0.5">{r.description}</p>}
                 <p className="text-xs text-gray-400 mt-1">
-                  {r._count.days} day{r._count.days !== 1 ? 's' : ''} · by {r.user.name}
+                  {r._count.days} {r._count.days !== 1 ? t('common.days') : t('common.day')} · {t('common.by')} {r.user.name}
                 </p>
               </li>
             ))}

@@ -3,21 +3,13 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
+import { useLocale } from '@/contexts/LocaleContext'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
 import { Globe } from 'lucide-react'
 import { z } from 'zod'
 
 const TYPES = ['DESIRE', 'EMOTION', 'GOAL', 'ACHIEVEMENT'] as const
 type TrackerType = typeof TYPES[number]
-
-const updateSchema = z.object({
-  type: z.enum(TYPES),
-  title: z.string().min(1, 'Title is required').max(200),
-  content: z.string().max(2000).optional(),
-  score: z.number().int().min(1).max(10),
-  tags: z.array(z.string()).default([]),
-  isPublic: z.boolean().default(false),
-})
 
 export default function EditEntryPage() {
   const params = useParams<{ id: string }>()
@@ -30,6 +22,7 @@ export default function EditEntryPage() {
 
 function EditEntryForm({ entryId }: { entryId: string }) {
   const { fetchWithAuth } = useAuth()
+  const { t } = useLocale()
   const router = useRouter()
   const [type, setType] = useState<TrackerType>('EMOTION')
   const [title, setTitle] = useState('')
@@ -41,6 +34,15 @@ function EditEntryForm({ entryId }: { entryId: string }) {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+
+  const updateSchema = z.object({
+    type: z.enum(TYPES),
+    title: z.string().min(1, t('tracker.titleRequired')).max(200),
+    content: z.string().max(2000).optional(),
+    score: z.number().int().min(1).max(10),
+    tags: z.array(z.string()).default([]),
+    isPublic: z.boolean().default(false),
+  })
 
   useEffect(() => {
     fetchWithAuth(`/api/tracker/entries/${entryId}`)
@@ -66,7 +68,7 @@ function EditEntryForm({ entryId }: { entryId: string }) {
     }
   }
 
-  const removeTag = (tag: string) => setTags((prev) => prev.filter((t) => t !== tag))
+  const removeTag = (tag: string) => setTags((prev) => prev.filter((tg) => tg !== tag))
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -99,32 +101,30 @@ function EditEntryForm({ entryId }: { entryId: string }) {
 
   return (
     <div className="max-w-lg mx-auto p-4 md:p-6">
-      <h1 className="text-2xl font-bold mb-6">Edit Entry</h1>
+      <h1 className="text-2xl font-bold mb-6">{t('tracker.editEntry')}</h1>
       <form onSubmit={handleSubmit} className="space-y-5">
-        {/* Type selector */}
         <div>
-          <label className="block text-sm font-medium mb-2">Type</label>
+          <label className="block text-sm font-medium mb-2">{t('tracker.type')}</label>
           <div className="grid grid-cols-2 gap-2">
-            {TYPES.map((t) => (
+            {TYPES.map((tp) => (
               <button
-                key={t}
+                key={tp}
                 type="button"
-                onClick={() => setType(t)}
+                onClick={() => setType(tp)}
                 className={`py-2 px-3 rounded-lg border text-sm font-medium transition-colors ${
-                  type === t
+                  type === tp
                     ? 'border-blue-600 bg-blue-600 text-white'
                     : 'border-gray-300 dark:border-gray-600 hover:border-blue-400'
                 }`}
               >
-                {t}
+                {tp}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Title */}
         <div>
-          <label className="block text-sm font-medium mb-1">Title</label>
+          <label className="block text-sm font-medium mb-1">{t('tracker.titleLabel')}</label>
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -133,9 +133,8 @@ function EditEntryForm({ entryId }: { entryId: string }) {
           {errors.title && <p className="mt-1 text-xs text-red-500">{errors.title}</p>}
         </div>
 
-        {/* Score slider */}
         <div>
-          <label className="block text-sm font-medium mb-1">Score: <span className="text-blue-600 font-bold">{score}</span>/10</label>
+          <label className="block text-sm font-medium mb-1">{t('tracker.score')}: <span className="text-blue-600 font-bold">{score}</span>/10</label>
           <input
             type="range"
             min={1}
@@ -149,9 +148,8 @@ function EditEntryForm({ entryId }: { entryId: string }) {
           </div>
         </div>
 
-        {/* Content */}
         <div>
-          <label className="block text-sm font-medium mb-1">Notes (optional)</label>
+          <label className="block text-sm font-medium mb-1">{t('tracker.notesOptional')}</label>
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
@@ -160,14 +158,13 @@ function EditEntryForm({ entryId }: { entryId: string }) {
           />
         </div>
 
-        {/* Tags */}
         <div>
-          <label className="block text-sm font-medium mb-1">Tags</label>
+          <label className="block text-sm font-medium mb-1">{t('tracker.tags')}</label>
           <input
             value={tagInput}
             onChange={(e) => setTagInput(e.target.value)}
             onKeyDown={addTag}
-            placeholder="Press Enter to add a tag"
+            placeholder={t('tracker.pressEnterToAddTag')}
             className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           {tags.length > 0 && (
@@ -182,11 +179,10 @@ function EditEntryForm({ entryId }: { entryId: string }) {
           )}
         </div>
 
-        {/* Make public */}
         <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
           <input type="checkbox" checked={isPublic} onChange={(e) => setIsPublic(e.target.checked)} className="rounded accent-blue-600" />
           <Globe className="h-3.5 w-3.5 text-gray-400" />
-          Make public
+          {t('common.makePublic')}
         </label>
 
         <div className="flex gap-3">
@@ -195,14 +191,14 @@ function EditEntryForm({ entryId }: { entryId: string }) {
             disabled={saving}
             className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-medium rounded-lg transition-colors"
           >
-            {saving ? 'Saving...' : 'Save Changes'}
+            {saving ? t('common.saving') : t('tracker.saveChanges')}
           </button>
           <button
             type="button"
             onClick={() => router.push('/tracker')}
             className="px-5 py-2.5 bg-gray-100 dark:bg-gray-800 rounded-lg font-medium text-sm"
           >
-            Cancel
+            {t('common.cancel')}
           </button>
         </div>
       </form>

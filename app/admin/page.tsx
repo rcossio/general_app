@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
+import { useLocale } from '@/contexts/LocaleContext'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
 import { useRouter } from 'next/navigation'
 
@@ -38,6 +39,7 @@ function AdminGuard() {
 
 function AdminPanel() {
   const { fetchWithAuth } = useAuth()
+  const { t } = useLocale()
   const [users, setUsers] = useState<AdminUser[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -63,7 +65,7 @@ function AdminPanel() {
 
   return (
     <div className="max-w-4xl mx-auto p-4 md:p-6">
-      <h1 className="text-2xl font-bold mb-6">Admin Panel</h1>
+      <h1 className="text-2xl font-bold mb-6">{t('admin.title')}</h1>
       {loading ? (
         <div className="space-y-3">{[1,2,3].map(i => <div key={i} className="h-16 rounded-xl bg-gray-200 dark:bg-gray-800 animate-pulse" />)}</div>
       ) : (
@@ -71,9 +73,9 @@ function AdminPanel() {
           <table className="w-full text-sm">
             <thead className="bg-gray-50 dark:bg-gray-800 text-gray-500">
               <tr>
-                <th className="px-4 py-3 text-left">User</th>
-                <th className="px-4 py-3 text-left">Roles</th>
-                <th className="px-4 py-3 text-left">Assign Role</th>
+                <th className="px-4 py-3 text-left">{t('admin.user')}</th>
+                <th className="px-4 py-3 text-left">{t('admin.roles')}</th>
+                <th className="px-4 py-3 text-left">{t('admin.assignRole')}</th>
               </tr>
             </thead>
             <tbody>
@@ -96,7 +98,7 @@ function AdminPanel() {
                       onChange={(e) => { if (e.target.value) assignRole(u.id, e.target.value) }}
                       className="text-sm px-2 py-1 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800"
                     >
-                      <option value="">Add role...</option>
+                      <option value="">{t('admin.addRole')}</option>
                       {ROLES.filter((r) => !u.roles.includes(r)).map((r) => (
                         <option key={r} value={r}>{r}</option>
                       ))}
