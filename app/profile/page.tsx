@@ -1,0 +1,103 @@
+'use client'
+
+import { useState } from 'react'
+import { useAuth } from '@/contexts/AuthContext'
+import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
+import { z } from 'zod'
+
+const profileSchema = z.object({
+  name: z.string().min(1, 'Name is required').max(100),
+  avatarUrl: z.string().url('Invalid URL').optional().or(z.literal('')),
+})
+
+export default function ProfilePage() {
+  return (
+    <ProtectedRoute>
+      <ProfileForm />
+    </ProtectedRoute>
+  )
+}
+
+function ProfileForm() {
+  const { user, fetchWithAuth } = useAuth()
+  const [name, setName] = useState(user?.name ?? '')
+  const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl ?? '')
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [success, setSuccess] = useState(false)
+  const [loading, setLoading] = useState(false)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const parsed = profileSchema.safeParse({ name, avatarUrl: avatarUrl || undefined })
+    if (!parsed.success) {
+      const errs: Record<string, string> = {}
+      for (const err of parsed.error.issues) errs[err.path[0] as string] = err.message
+      setErrors(errs)
+      return
+    }
+    setErrors({})
+    setLoading(true)
+    try {
+      await fetchWithAuth('/api/auth/me', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(parsed.data),
+      })
+      setSuccess(true)
+      setTimeout(() => setSuccess(false), 3000)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="max-w-lg mx-auto p-4 md:p-6">
+      <h1 className="text-2xl font-bold mb-6">Profile</h1>
+
+      {user?.avatarUrl && (
+        <img src={user.avatarUrl} alt="Avatar" className="w-20 h-20 rounded-full object-cover mb-6" />
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">Name</label>
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name}</p>}
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Avatar URL</label>
+          <input
+            value={avatarUrl}
+            onChange={(e) => setAvatarUrl(e.target.value)}
+            placeholder="https://..."
+            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          {errors.avatarUrl && <p className="mt-1 text-xs text-red-500">{errors.avatarUrl}</p>}
+        </div>
+        {success && <div className="p-3 rounded-lg bg-green-50 dark:bg-green-950 text-green-600 text-sm">Profile updated.</div>}
+        <button
+          type="submit"
+          disabled={loading}
+          className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-medium rounded-lg transition-colors"
+        >
+          {loading ? 'Saving...' : 'Save'}
+        </button>
+      </form>
+
+      <div className="mt-8 p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+        <p className="text-sm text-gray-500 mb-1">Email</p>
+        <p className="font-medium">{user?.email}</p>
+        <p className="text-sm text-gray-500 mt-3 mb-1">Roles</p>
+        <div className="flex flex-wrap gap-2">
+          {user?.roles.map((r) => (
+            <span key={r} className="px-2 py-0.5 bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 rounded-full text-xs">{r}</span>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}

@@ -1,0 +1,171 @@
+// This is your Prisma schema file
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// SECTION: Core (auth, users, RBAC)
+// ============================================================
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  name         String
+  avatarUrl    String?  @map("avatar_url")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  userRoles       UserRole[]
+  refreshTokens   RefreshToken[]
+  workoutRoutines WorkoutRoutine[]
+  trackerEntries  TrackerEntry[]
+
+  @@map("users")
+}
+
+model Role {
+  id          String  @id @default(cuid())
+  name        String
+  slug        String  @unique
+  description String?
+
+  userRoles       UserRole[]
+  rolePermissions RolePermission[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id       String @id @default(cuid())
+  resource String
+  action   String
+
+  rolePermissions RolePermission[]
+
+  @@unique([resource, action])
+  @@map("permissions")
+}
+
+model UserRole {
+  userId String @map("user_id")
+  roleId String @map("role_id")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+  @@index([userId])
+  @@index([roleId])
+  @@map("user_roles")
+}
+
+model RolePermission {
+  roleId       String @map("role_id")
+  permissionId String @map("permission_id")
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@index([roleId])
+  @@index([permissionId])
+  @@map("role_permissions")
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  tokenHash String   @map("token_hash")
+  expiresAt DateTime @map("expires_at")
+  revoked   Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+// ============================================================
+// SECTION: Workout Module
+// ============================================================
+
+model WorkoutRoutine {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  name        String
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  days WorkoutDay[]
+
+  @@index([userId])
+  @@map("workout_routines")
+}
+
+model WorkoutDay {
+  id        String @id @default(cuid())
+  routineId String @map("routine_id")
+  dayOfWeek Int    @map("day_of_week")
+  name      String
+
+  routine   WorkoutRoutine    @relation(fields: [routineId], references: [id], onDelete: Cascade)
+  exercises WorkoutExercise[]
+
+  @@index([routineId])
+  @@map("workout_days")
+}
+
+model WorkoutExercise {
+  id              String  @id @default(cuid())
+  dayId           String  @map("day_id")
+  name            String
+  sets            Int?
+  reps            Int?
+  durationSeconds Int?    @map("duration_seconds")
+  restSeconds     Int?    @map("rest_seconds")
+  notes           String?
+  order           Int
+
+  day WorkoutDay @relation(fields: [dayId], references: [id], onDelete: Cascade)
+
+  @@index([dayId])
+  @@map("workout_exercises")
+}
+
+// ============================================================
+// SECTION: Life Tracker Module
+// ============================================================
+
+enum TrackerType {
+  DESIRE
+  EMOTION
+  GOAL
+  ACHIEVEMENT
+}
+
+model TrackerEntry {
+  id        String      @id @default(cuid())
+  userId    String      @map("user_id")
+  type      TrackerType
+  title     String
+  content   String?
+  score     Int
+  tags      String[]
+  createdAt DateTime    @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, type])
+  @@map("tracker_entries")
+}
