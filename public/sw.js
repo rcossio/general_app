@@ -1,4 +1,4 @@
-const CACHE_NAME = 'platform-v1'
+const CACHE_NAME = 'vysi-v1'
 const APP_SHELL = [
   '/',
   '/login',
@@ -28,15 +28,12 @@ self.addEventListener('fetch', (event) => {
   if (event.request.url.includes('/api/')) return
 
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      const networkFetch = fetch(event.request).then((response) => {
-        if (response.ok) {
-          const clone = response.clone()
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone))
-        }
-        return response
-      })
-      return cached ?? networkFetch
-    })
+    fetch(event.request).then((response) => {
+      if (response.ok) {
+        const clone = response.clone()
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone))
+      }
+      return response
+    }).catch(() => caches.match(event.request))
   )
 })
