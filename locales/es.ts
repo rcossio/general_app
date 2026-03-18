@@ -34,6 +34,10 @@ const es: Translations = {
     passwordMinLength: 'La contraseña debe tener al menos 8 caracteres',
     loginFailed: 'Error al iniciar sesión',
     registrationFailed: 'Error al registrarse',
+    signInWithGoogle: 'Iniciar sesión con Google',
+    orEmail: 'o inicia sesión con email',
+    googleFailed: 'Error al iniciar sesión con Google, inténtalo de nuevo',
+    googleCancelled: 'Inicio de sesión con Google cancelado',
   },
   nav: {
     home: 'Inicio',

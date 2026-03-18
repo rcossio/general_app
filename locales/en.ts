@@ -32,6 +32,10 @@ const en = {
     passwordMinLength: 'Password must be at least 8 characters',
     loginFailed: 'Login failed',
     registrationFailed: 'Registration failed',
+    signInWithGoogle: 'Sign in with Google',
+    orEmail: 'or sign in with email',
+    googleFailed: 'Google sign-in failed, please try again',
+    googleCancelled: 'Google sign-in was cancelled',
   },
   nav: {
     home: 'Home',

@@ -34,6 +34,10 @@ const it: Translations = {
     passwordMinLength: 'La password deve contenere almeno 8 caratteri',
     loginFailed: 'Accesso fallito',
     registrationFailed: 'Registrazione fallita',
+    signInWithGoogle: 'Accedi con Google',
+    orEmail: 'oppure accedi con email',
+    googleFailed: 'Accesso con Google fallito, riprova',
+    googleCancelled: 'Accesso con Google annullato',
   },
   nav: {
     home: 'Home',
