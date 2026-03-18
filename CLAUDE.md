@@ -16,3 +16,7 @@ This applies to all files that are or could be git-tracked: `.md`, `.conf`, `.sh
 
 The only place real values belong is `.env`, which is gitignored.
 
+## Bash Commands
+
+You are allowed to freely use `cat`, `grep`, `ls`, `sed -n`, `find`, and `awk` without asking for permission.
+
