@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
       where,
       select: {
         id: true, type: true, title: true, content: true,
-        score: true, tags: true, createdAt: true,
+        score: true, tags: true, isPublic: true, createdAt: true,
       },
       orderBy: { createdAt: 'desc' },
       skip,
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
       data: { ...parsed.data, userId: result.user.sub },
       select: {
         id: true, type: true, title: true, content: true,
-        score: true, tags: true, createdAt: true,
+        score: true, tags: true, isPublic: true, createdAt: true,
       },
     })
     return NextResponse.json({ data: entry }, { status: 201 })

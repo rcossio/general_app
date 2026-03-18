@@ -31,6 +31,69 @@ async function createExercise(accessToken: string, dayId: string) {
   return { res, id: body.data?.id as string }
 }
 
+describe('Workout: Public Feed', () => {
+  it('public endpoint requires no auth and returns only public routines', async () => {
+    const { accessToken } = await registerAndLogin('wk-pub-setup')
+
+    // Create a private and a public routine
+    const privRes = await fetch(`${BASE}/api/workout/routines`, {
+      method: 'POST',
+      headers: authHeaders(accessToken),
+      body: JSON.stringify({ name: 'Private Routine', isPublic: false }),
+    })
+    const privBody = await privRes.json()
+    const privId = privBody.data?.id as string
+
+    const pubRes = await fetch(`${BASE}/api/workout/routines`, {
+      method: 'POST',
+      headers: authHeaders(accessToken),
+      body: JSON.stringify({ name: 'Public Routine', isPublic: true }),
+    })
+    const pubBody = await pubRes.json()
+    const pubId = pubBody.data?.id as string
+
+    // Hit public endpoint with no auth
+    const feedRes = await fetch(`${BASE}/api/workout/routines/public`)
+    expect(feedRes.status).toBe(200)
+    const feedBody = await feedRes.json()
+    const names = feedBody.data.routines.map((r: { name: string }) => r.name)
+    expect(names).toContain('Public Routine')
+    expect(names).not.toContain('Private Routine')
+
+    // Each entry includes author name
+    const pub = feedBody.data.routines.find((r: { name: string }) => r.name === 'Public Routine')
+    expect(pub.user).toHaveProperty('name')
+
+    await fetch(`${BASE}/api/workout/routines/${privId}`, { method: 'DELETE', headers: authHeaders(accessToken) })
+    await fetch(`${BASE}/api/workout/routines/${pubId}`, { method: 'DELETE', headers: authHeaders(accessToken) })
+  })
+
+  it('toggling isPublic via PUT updates visibility in feed', async () => {
+    const { accessToken } = await registerAndLogin('wk-pub-toggle')
+    const { id } = await createRoutine(accessToken, 'Toggle Routine')
+
+    // Not in public feed yet
+    const before = await fetch(`${BASE}/api/workout/routines/public`)
+    const beforeBody = await before.json()
+    const namesBefore = beforeBody.data.routines.map((r: { name: string }) => r.name)
+    expect(namesBefore).not.toContain('Toggle Routine')
+
+    // Make public
+    await fetch(`${BASE}/api/workout/routines/${id}`, {
+      method: 'PUT',
+      headers: authHeaders(accessToken),
+      body: JSON.stringify({ isPublic: true }),
+    })
+
+    const after = await fetch(`${BASE}/api/workout/routines/public`)
+    const afterBody = await after.json()
+    const namesAfter = afterBody.data.routines.map((r: { name: string }) => r.name)
+    expect(namesAfter).toContain('Toggle Routine')
+
+    await fetch(`${BASE}/api/workout/routines/${id}`, { method: 'DELETE', headers: authHeaders(accessToken) })
+  })
+})
+
 describe('Workout: Routines', () => {
   it('returns paginated routines', async () => {
     const { accessToken } = await registerAndLogin('wk-list')

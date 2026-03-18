@@ -3,11 +3,18 @@ import { z } from 'zod'
 export const createRoutineSchema = z.object({
   name: z.string().min(1).max(200),
   description: z.string().max(1000).optional(),
+  isPublic: z.boolean().default(false),
 })
 
 export const updateRoutineSchema = z.object({
   name: z.string().min(1).max(200).optional(),
   description: z.string().max(1000).optional(),
+  isPublic: z.boolean().optional(),
+})
+
+export const publicFeedSchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(100).default(20),
 })
 
 export const createDaySchema = z.object({

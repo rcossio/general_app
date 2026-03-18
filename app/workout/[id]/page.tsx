@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
-import { Plus, Trash2, ChevronUp, ChevronDown, Pencil, Check, X } from 'lucide-react'
+import { Plus, Trash2, ChevronUp, ChevronDown, Pencil, Check, X, Globe } from 'lucide-react'
 import { z } from 'zod'
 
 interface Exercise {
@@ -29,6 +29,7 @@ interface Routine {
   id: string
   name: string
   description: string | null
+  isPublic: boolean
   days: Day[]
 }
 
@@ -56,6 +57,7 @@ function RoutineDetail({ routineId }: { routineId: string }) {
   const [editRoutine, setEditRoutine] = useState(false)
   const [editRoutineName, setEditRoutineName] = useState('')
   const [editRoutineDesc, setEditRoutineDesc] = useState('')
+  const [editRoutinePublic, setEditRoutinePublic] = useState(false)
 
   // Day adding
   const [addDayOpen, setAddDayOpen] = useState(false)
@@ -88,12 +90,12 @@ function RoutineDetail({ routineId }: { routineId: string }) {
 
   const saveRoutine = async () => {
     if (!editRoutineName.trim()) return
-    setRoutine((prev) => prev ? { ...prev, name: editRoutineName, description: editRoutineDesc || null } : prev)
+    setRoutine((prev) => prev ? { ...prev, name: editRoutineName, description: editRoutineDesc || null, isPublic: editRoutinePublic } : prev)
     setEditRoutine(false)
     await fetchWithAuth(`/api/workout/routines/${routineId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: editRoutineName, description: editRoutineDesc || undefined }),
+      body: JSON.stringify({ name: editRoutineName, description: editRoutineDesc || undefined, isPublic: editRoutinePublic }),
     })
   }
 
@@ -233,6 +235,11 @@ function RoutineDetail({ routineId }: { routineId: string }) {
             placeholder="Description (optional)"
             className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
+          <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+            <input type="checkbox" checked={editRoutinePublic} onChange={(e) => setEditRoutinePublic(e.target.checked)} className="rounded accent-blue-600" />
+            <Globe className="h-3.5 w-3.5 text-gray-400" />
+            Make public
+          </label>
           <div className="flex gap-2">
             <button onClick={saveRoutine} className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm"><Check className="h-3 w-3" /> Save</button>
             <button onClick={() => setEditRoutine(false)} className="flex items-center gap-1 px-3 py-1.5 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm"><X className="h-3 w-3" /> Cancel</button>
@@ -243,9 +250,10 @@ function RoutineDetail({ routineId }: { routineId: string }) {
           <div className="min-w-0">
             <h1 className="text-2xl font-bold">{routine.name}</h1>
             {routine.description && <p className="text-gray-500 mt-1">{routine.description}</p>}
+            {routine.isPublic && <p className="flex items-center gap-1 text-xs text-blue-500 mt-1"><Globe className="h-3 w-3" /> Public</p>}
           </div>
           <div className="flex gap-1 shrink-0">
-            <button onClick={() => { setEditRoutineName(routine.name); setEditRoutineDesc(routine.description ?? ''); setEditRoutine(true) }} className="p-2 text-gray-400 hover:text-blue-600"><Pencil className="h-4 w-4" /></button>
+            <button onClick={() => { setEditRoutineName(routine.name); setEditRoutineDesc(routine.description ?? ''); setEditRoutinePublic(routine.isPublic); setEditRoutine(true) }} className="p-2 text-gray-400 hover:text-blue-600"><Pencil className="h-4 w-4" /></button>
             <button onClick={deleteRoutine} className="p-2 text-gray-400 hover:text-red-600"><Trash2 className="h-4 w-4" /></button>
           </div>
         </div>

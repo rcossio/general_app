@@ -29,6 +29,7 @@ export async function GET(request: NextRequest) {
         id: true,
         name: true,
         description: true,
+        isPublic: true,
         createdAt: true,
         updatedAt: true,
         _count: { select: { days: true } },
@@ -59,7 +60,7 @@ export async function POST(request: NextRequest) {
 
     const routine = await prisma.workoutRoutine.create({
       data: { ...parsed.data, userId: result.user.sub },
-      select: { id: true, name: true, description: true, createdAt: true, updatedAt: true },
+      select: { id: true, name: true, description: true, isPublic: true, createdAt: true, updatedAt: true },
     })
 
     return NextResponse.json({ data: routine }, { status: 201 })

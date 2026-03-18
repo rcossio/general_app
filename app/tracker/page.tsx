@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
 import Link from 'next/link'
-import { Plus, BarChart2, Pencil, Trash2 } from 'lucide-react'
+import { Plus, BarChart2, Pencil, Trash2, Globe } from 'lucide-react'
 
 interface Entry {
   id: string
@@ -13,7 +13,19 @@ interface Entry {
   content: string | null
   score: number
   tags: string[]
+  isPublic: boolean
   createdAt: string
+}
+
+interface PublicEntry {
+  id: string
+  type: string
+  title: string
+  content: string | null
+  score: number
+  tags: string[]
+  createdAt: string
+  user: { name: string }
 }
 
 interface Stats {
@@ -41,6 +53,7 @@ export default function TrackerPage() {
 function TrackerFeed() {
   const { fetchWithAuth } = useAuth()
   const [entries, setEntries] = useState<Entry[]>([])
+  const [publicEntries, setPublicEntries] = useState<PublicEntry[]>([])
   const [stats, setStats] = useState<Stats | null>(null)
   const [filter, setFilter] = useState<string>('')
   const [loading, setLoading] = useState(true)
@@ -48,14 +61,18 @@ function TrackerFeed() {
   const load = async (type: string) => {
     setLoading(true)
     const url = `/api/tracker/entries?limit=20${type ? `&type=${type}` : ''}`
-    const [entriesRes, statsRes] = await Promise.all([
+    const pubUrl = `/api/tracker/entries/public?limit=20${type ? `&type=${type}` : ''}`
+    const [entriesRes, statsRes, pubRes] = await Promise.all([
       fetchWithAuth(url),
       fetchWithAuth('/api/tracker/stats'),
+      fetch(pubUrl),
     ])
     const entriesBody = await entriesRes.json()
     const statsBody = await statsRes.json()
+    const pubBody = await pubRes.json()
     setEntries(entriesBody.data?.entries ?? [])
     setStats(statsBody.data ?? null)
+    setPublicEntries(pubBody.data?.entries ?? [])
     setLoading(false)
   }
 
@@ -127,6 +144,7 @@ function TrackerFeed() {
                 <p className="font-semibold">{e.title}</p>
                 <div className="flex items-center gap-1 shrink-0">
                   <span className="text-lg font-bold text-blue-600">{e.score}<span className="text-xs text-gray-400">/10</span></span>
+                  {e.isPublic && <Globe className="h-3.5 w-3.5 text-blue-400" aria-label="Public" />}
                   <Link href={`/tracker/${e.id}`} className="p-1 text-gray-400 hover:text-blue-600"><Pencil className="h-3.5 w-3.5" /></Link>
                   <button onClick={() => deleteEntry(e.id)} className="p-1 text-gray-400 hover:text-red-600"><Trash2 className="h-3.5 w-3.5" /></button>
                 </div>
@@ -144,6 +162,33 @@ function TrackerFeed() {
             </li>
           ))}
         </ul>
+      )}
+
+      {/* Community feed */}
+      {publicEntries.length > 0 && (
+        <div className="mt-10">
+          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <Globe className="h-4 w-4 text-blue-500" /> Community
+          </h2>
+          <ul className="space-y-3">
+            {publicEntries.map((e) => (
+              <li key={e.id} className="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+                <div className="flex items-start justify-between gap-3 mb-1">
+                  <p className="font-semibold">{e.title}</p>
+                  <span className="text-lg font-bold text-blue-600 shrink-0">{e.score}<span className="text-xs text-gray-400">/10</span></span>
+                </div>
+                {e.content && <p className="text-sm text-gray-500 mb-2 line-clamp-2">{e.content}</p>}
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${TYPE_COLORS[e.type] ?? ''}`}>{e.type}</span>
+                  {e.tags.map((tag) => (
+                    <span key={tag} className="px-2 py-0.5 rounded-full text-xs bg-gray-100 dark:bg-gray-800 text-gray-500">{tag}</span>
+                  ))}
+                  <span className="text-xs text-gray-400 ml-auto">by {e.user.name} · {new Date(e.createdAt).toLocaleDateString()}</span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </div>
   )

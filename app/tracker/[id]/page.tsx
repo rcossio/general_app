@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
+import { Globe } from 'lucide-react'
 import { z } from 'zod'
 
 const TYPES = ['DESIRE', 'EMOTION', 'GOAL', 'ACHIEVEMENT'] as const
@@ -15,6 +16,7 @@ const updateSchema = z.object({
   content: z.string().max(2000).optional(),
   score: z.number().int().min(1).max(10),
   tags: z.array(z.string()).default([]),
+  isPublic: z.boolean().default(false),
 })
 
 export default function EditEntryPage() {
@@ -35,6 +37,7 @@ function EditEntryForm({ entryId }: { entryId: string }) {
   const [score, setScore] = useState(5)
   const [tagInput, setTagInput] = useState('')
   const [tags, setTags] = useState<string[]>([])
+  const [isPublic, setIsPublic] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -50,6 +53,7 @@ function EditEntryForm({ entryId }: { entryId: string }) {
         setContent(e.content ?? '')
         setScore(e.score)
         setTags(e.tags ?? [])
+        setIsPublic(e.isPublic ?? false)
       })
       .finally(() => setLoading(false))
   }, [entryId])
@@ -66,7 +70,7 @@ function EditEntryForm({ entryId }: { entryId: string }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const parsed = updateSchema.safeParse({ type, title, content: content || undefined, score, tags })
+    const parsed = updateSchema.safeParse({ type, title, content: content || undefined, score, tags, isPublic })
     if (!parsed.success) {
       const errs: Record<string, string> = {}
       for (const err of parsed.error.issues) errs[err.path[0] as string] = err.message
@@ -177,6 +181,13 @@ function EditEntryForm({ entryId }: { entryId: string }) {
             </div>
           )}
         </div>
+
+        {/* Make public */}
+        <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+          <input type="checkbox" checked={isPublic} onChange={(e) => setIsPublic(e.target.checked)} className="rounded accent-blue-600" />
+          <Globe className="h-3.5 w-3.5 text-gray-400" />
+          Make public
+        </label>
 
         <div className="flex gap-3">
           <button

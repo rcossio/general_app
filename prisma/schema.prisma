@@ -102,6 +102,7 @@ model WorkoutRoutine {
   userId      String   @map("user_id")
   name        String
   description String?
+  isPublic    Boolean  @default(false) @map("is_public")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
@@ -109,6 +110,7 @@ model WorkoutRoutine {
   days WorkoutDay[]
 
   @@index([userId])
+  @@index([isPublic, createdAt])
   @@map("workout_routines")
 }
 
@@ -161,11 +163,13 @@ model TrackerEntry {
   content   String?
   score     Int
   tags      String[]
+  isPublic  Boolean     @default(false) @map("is_public")
   createdAt DateTime    @default(now()) @map("created_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([userId, type])
+  @@index([isPublic, createdAt])
   @@map("tracker_entries")
 }

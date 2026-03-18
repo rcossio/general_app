@@ -16,6 +16,7 @@ export async function GET(request: NextRequest, { params }: Params) {
       id: true,
       name: true,
       description: true,
+      isPublic: true,
       createdAt: true,
       updatedAt: true,
       days: {
@@ -75,7 +76,7 @@ export async function PUT(request: NextRequest, { params }: Params) {
     const updated = await prisma.workoutRoutine.update({
       where: { id },
       data: parsed.data,
-      select: { id: true, name: true, description: true, updatedAt: true },
+      select: { id: true, name: true, description: true, isPublic: true, updatedAt: true },
     })
     return NextResponse.json({ data: updated })
   } catch {

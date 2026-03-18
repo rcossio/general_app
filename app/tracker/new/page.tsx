@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
+import { Globe } from 'lucide-react'
 import { z } from 'zod'
 
 const TYPES = ['DESIRE', 'EMOTION', 'GOAL', 'ACHIEVEMENT'] as const
@@ -34,6 +35,7 @@ function NewEntryForm() {
   const [score, setScore] = useState(5)
   const [tagInput, setTagInput] = useState('')
   const [tags, setTags] = useState<string[]>([])
+  const [isPublic, setIsPublic] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(false)
 
@@ -49,7 +51,7 @@ function NewEntryForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const parsed = createSchema.safeParse({ type, title, content: content || undefined, score, tags })
+    const parsed = createSchema.safeParse({ type, title, content: content || undefined, score, tags, isPublic })
     if (!parsed.success) {
       const errs: Record<string, string> = {}
       for (const err of parsed.error.issues) errs[err.path[0] as string] = err.message
@@ -154,6 +156,13 @@ function NewEntryForm() {
             </div>
           )}
         </div>
+
+        {/* Make public */}
+        <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+          <input type="checkbox" checked={isPublic} onChange={(e) => setIsPublic(e.target.checked)} className="rounded accent-blue-600" />
+          <Globe className="h-3.5 w-3.5 text-gray-400" />
+          Make public
+        </label>
 
         <button
           type="submit"

@@ -59,7 +59,7 @@ export async function PUT(request: NextRequest, { params }: Params) {
       data: parsed.data,
       select: {
         id: true, type: true, title: true, content: true,
-        score: true, tags: true, createdAt: true,
+        score: true, tags: true, isPublic: true, createdAt: true,
       },
     })
     return NextResponse.json({ data: updated })
