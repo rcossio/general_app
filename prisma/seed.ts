@@ -41,7 +41,11 @@ async function main() {
   // Assign all permissions to master_admin and admin
   const masterAdmin = await prisma.role.findUniqueOrThrow({ where: { slug: 'master_admin' } })
   const admin = await prisma.role.findUniqueOrThrow({ where: { slug: 'admin' } })
+  const user = await prisma.role.findUniqueOrThrow({ where: { slug: 'user' } })
   const allPermissions = await prisma.permission.findMany()
+
+  // Actions restricted to admins only
+  const adminOnlyActions = ['manage', 'delete_any']
 
   for (const permission of allPermissions) {
     for (const role of [masterAdmin, admin]) {
@@ -49,6 +53,13 @@ async function main() {
         where: { roleId_permissionId: { roleId: role.id, permissionId: permission.id } },
         update: {},
         create: { roleId: role.id, permissionId: permission.id },
+      })
+    }
+    if (!adminOnlyActions.includes(permission.action)) {
+      await prisma.rolePermission.upsert({
+        where: { roleId_permissionId: { roleId: user.id, permissionId: permission.id } },
+        update: {},
+        create: { roleId: user.id, permissionId: permission.id },
       })
     }
   }

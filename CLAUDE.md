@@ -16,6 +16,16 @@ This applies to all files that are or could be git-tracked: `.md`, `.conf`, `.sh
 
 The only place real values belong is `.env`, which is gitignored.
 
+## Before Starting Any Task
+
+Read all `.md` files in the project root before doing anything. This includes — but is not limited to — `SPEC.md`, `DEPLOYMENT.md`, and `README.md`. These files define the intended architecture, conventions, and constraints. Code must conform to them, not to whatever pattern already exists in the codebase (existing code may already be wrong).
+
+Scan the project structure first. Check what already exists before creating anything new — test folders, config files, scripts, docs. Do not create a file if one already serves the same purpose.
+
+## Testing
+
+Tests live in `__tests__/`. Always check there first. Run `npm test` before writing anything new. Extend existing tests — never create parallel scripts or separate test files outside `__tests__/`.
+
 ## Bash Commands
 
 You are allowed to freely use `cat`, `grep`, `ls`, `sed -n`, `find`, and `awk` without asking for permission.

@@ -44,10 +44,14 @@ it in `config/modules.ts`.
 
 ### Core concept
 
-Each module is a fully self-contained folder under `modules/`. The core app knows
-nothing about individual modules — it only reads from `config/modules.ts`. To
-disconnect a module, comment out its import. To add a new module, create its folder
-and register it.
+A module controls two things via its manifest: **navigation** (the nav item appears
+automatically) and **permissions** (RBAC is seeded automatically). Pages and API routes
+live in `/app/` and `/app/api/` as Next.js requires — the module folder holds the
+manifest and validation schemas only.
+
+To disable a module: comment out its import in `config/modules.ts`. Its nav item
+disappears and its permissions are revoked. Its routes remain in `/app/` but are
+protected by RBAC so they return 403 to all users.
 
 ### Module registry
 
@@ -83,11 +87,12 @@ The bottom nav, sidebar, and permission seeding are all built dynamically from
 
 ### Adding a new module (5 steps)
 
-1. Create `modules/<name>/` with `manifest.ts`, `api/`, `pages/`, `components/`, `lib/`
+1. Create `modules/<name>/manifest.ts` and `modules/<name>/lib/schemas.ts`
 2. Write the manifest following the shape above
 3. Add Prisma models to `prisma/schema.prisma` in a clearly commented section
 4. Register in `config/modules.ts`
-5. Run `npx prisma migrate dev --name add_<name>_module`
+5. Add pages under `/app/<name>/` and API routes under `/app/api/<name>/`
+6. Run `npx prisma migrate dev --name add_<name>_module`
 
 ---
 
@@ -97,21 +102,20 @@ The bottom nav, sidebar, and permission seeding are all built dynamically from
 project-root/
 ├── app/
 │   ├── api/
-│   │   ├── auth/             # provided by modules/_core
-│   │   ├── workout/          # provided by modules/workout
-│   │   └── tracker/          # provided by modules/life-tracker
+│   │   ├── auth/
+│   │   ├── workout/          # workout module API routes
+│   │   └── tracker/          # life-tracker module API routes
 │   ├── (auth)/
 │   │   ├── login/
 │   │   └── register/
-│   ├── workout/              # pages from modules/workout
-│   ├── tracker/              # pages from modules/life-tracker
+│   ├── workout/              # workout module pages
+│   ├── tracker/              # life-tracker module pages
 │   ├── profile/
 │   ├── admin/
 │   └── layout.tsx            # reads activeModules to build nav
 ├── modules/
-│   ├── _core/
-│   ├── workout/
-│   └── life-tracker/
+│   ├── workout/              # manifest.ts + lib/schemas.ts
+│   └── life-tracker/         # manifest.ts + lib/schemas.ts
 ├── config/
 │   └── modules.ts
 ├── lib/
@@ -273,7 +277,7 @@ GET    /api/tracker/stats                   → score averages by type (cached 6
 - `/workout/[id]` — Full routine: days, exercises, inline editing, reordering
 
 **Life Tracker module:**
-- `/tracker` — Entry feed, filter by type, score trend mini-chart
+- `/tracker` — Entry feed, filter by type, stats bar with avg score per type
 - `/tracker/new` — Create entry: type selector, score slider (1-10), tag input
 
 ### UX requirements
@@ -329,5 +333,5 @@ Integration tests only, for security-critical logic. Uses a separate `TEST_DATAB
 `prisma/seed.ts` creates:
 - Roles: master_admin, admin, moderator, user
 - Permissions for all active modules from `activeModules[].permissions`
-- Default master_admin: email `admin@app.com`, password `changeme123`
+- Default master_admin: created from `ADMIN_EMAIL` and `ADMIN_PASSWORD` env vars
 - All permissions assigned to master_admin and admin roles

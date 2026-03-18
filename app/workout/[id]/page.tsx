@@ -1,9 +1,10 @@
 'use client'
 
 import { useEffect, useState, use } from 'react'
+import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
-import { Plus, Trash2, ChevronUp, ChevronDown } from 'lucide-react'
+import { Plus, Trash2, ChevronUp, ChevronDown, Pencil, Check, X } from 'lucide-react'
 import { z } from 'zod'
 
 interface Exercise {
@@ -46,15 +47,36 @@ export default function RoutineDetailPage({ params }: { params: Promise<{ id: st
 
 function RoutineDetail({ routineId }: { routineId: string }) {
   const { fetchWithAuth } = useAuth()
+  const router = useRouter()
   const [routine, setRoutine] = useState<Routine | null>(null)
   const [loading, setLoading] = useState(true)
+
+  // Routine editing
+  const [editRoutine, setEditRoutine] = useState(false)
+  const [editRoutineName, setEditRoutineName] = useState('')
+  const [editRoutineDesc, setEditRoutineDesc] = useState('')
+
+  // Day adding
   const [addDayOpen, setAddDayOpen] = useState(false)
   const [newDayName, setNewDayName] = useState('')
   const [newDayOfWeek, setNewDayOfWeek] = useState(0)
+
+  // Day editing
+  const [editDayId, setEditDayId] = useState<string | null>(null)
+  const [editDayName, setEditDayName] = useState('')
+  const [editDayOfWeek, setEditDayOfWeek] = useState(0)
+
+  // Exercise adding
   const [addExOpen, setAddExOpen] = useState<string | null>(null)
   const [newExName, setNewExName] = useState('')
   const [newExSets, setNewExSets] = useState('')
   const [newExReps, setNewExReps] = useState('')
+
+  // Exercise editing
+  const [editExId, setEditExId] = useState<string | null>(null)
+  const [editExName, setEditExName] = useState('')
+  const [editExSets, setEditExSets] = useState('')
+  const [editExReps, setEditExReps] = useState('')
 
   useEffect(() => {
     fetchWithAuth(`/api/workout/routines/${routineId}`)
@@ -62,6 +84,22 @@ function RoutineDetail({ routineId }: { routineId: string }) {
       .then((b) => setRoutine(b.data))
       .finally(() => setLoading(false))
   }, [routineId])
+
+  const saveRoutine = async () => {
+    if (!editRoutineName.trim()) return
+    setRoutine((prev) => prev ? { ...prev, name: editRoutineName, description: editRoutineDesc || null } : prev)
+    setEditRoutine(false)
+    await fetchWithAuth(`/api/workout/routines/${routineId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: editRoutineName, description: editRoutineDesc || undefined }),
+    })
+  }
+
+  const deleteRoutine = async () => {
+    await fetchWithAuth(`/api/workout/routines/${routineId}`, { method: 'DELETE' })
+    router.push('/workout')
+  }
 
   const addDay = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -76,6 +114,31 @@ function RoutineDetail({ routineId }: { routineId: string }) {
     setRoutine((prev) => prev ? { ...prev, days: [...prev.days, { ...body.data, exercises: [] }] } : prev)
     setNewDayName('')
     setAddDayOpen(false)
+  }
+
+  const startEditDay = (day: Day) => {
+    setEditDayId(day.id)
+    setEditDayName(day.name)
+    setEditDayOfWeek(day.dayOfWeek)
+  }
+
+  const saveDay = async (dayId: string) => {
+    if (!editDayName.trim()) return
+    setRoutine((prev) => prev ? {
+      ...prev,
+      days: prev.days.map((d) => d.id === dayId ? { ...d, name: editDayName, dayOfWeek: editDayOfWeek } : d),
+    } : prev)
+    setEditDayId(null)
+    await fetchWithAuth(`/api/workout/days/${dayId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: editDayName, dayOfWeek: editDayOfWeek }),
+    })
+  }
+
+  const deleteDay = async (dayId: string) => {
+    setRoutine((prev) => prev ? { ...prev, days: prev.days.filter((d) => d.id !== dayId) } : prev)
+    await fetchWithAuth(`/api/workout/days/${dayId}`, { method: 'DELETE' })
   }
 
   const addExercise = async (dayId: string, e: React.FormEvent) => {
@@ -98,6 +161,31 @@ function RoutineDetail({ routineId }: { routineId: string }) {
     setNewExSets('')
     setNewExReps('')
     setAddExOpen(null)
+  }
+
+  const startEditEx = (ex: Exercise) => {
+    setEditExId(ex.id)
+    setEditExName(ex.name)
+    setEditExSets(ex.sets?.toString() ?? '')
+    setEditExReps(ex.reps?.toString() ?? '')
+  }
+
+  const saveEx = async (dayId: string, exId: string) => {
+    const parsed = addExSchema.safeParse({ name: editExName, sets: editExSets || undefined, reps: editExReps || undefined })
+    if (!parsed.success) return
+    setRoutine((prev) => prev ? {
+      ...prev,
+      days: prev.days.map((d) => d.id === dayId ? {
+        ...d,
+        exercises: d.exercises.map((ex) => ex.id === exId ? { ...ex, name: editExName, sets: parsed.data.sets ?? null, reps: parsed.data.reps ?? null } : ex),
+      } : d),
+    } : prev)
+    setEditExId(null)
+    await fetchWithAuth(`/api/workout/exercises/${exId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(parsed.data),
+    })
   }
 
   const deleteExercise = async (dayId: string, exerciseId: string) => {
@@ -130,17 +218,70 @@ function RoutineDetail({ routineId }: { routineId: string }) {
 
   return (
     <div className="max-w-2xl mx-auto p-4 md:p-6">
-      <h1 className="text-2xl font-bold mb-1">{routine.name}</h1>
-      {routine.description && <p className="text-gray-500 mb-6">{routine.description}</p>}
+      {/* Routine header */}
+      {editRoutine ? (
+        <div className="mb-6 space-y-2">
+          <input
+            value={editRoutineName}
+            onChange={(e) => setEditRoutineName(e.target.value)}
+            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-transparent text-xl font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <input
+            value={editRoutineDesc}
+            onChange={(e) => setEditRoutineDesc(e.target.value)}
+            placeholder="Description (optional)"
+            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <div className="flex gap-2">
+            <button onClick={saveRoutine} className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm"><Check className="h-3 w-3" /> Save</button>
+            <button onClick={() => setEditRoutine(false)} className="flex items-center gap-1 px-3 py-1.5 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm"><X className="h-3 w-3" /> Cancel</button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex items-start justify-between mb-6 gap-3">
+          <div className="min-w-0">
+            <h1 className="text-2xl font-bold">{routine.name}</h1>
+            {routine.description && <p className="text-gray-500 mt-1">{routine.description}</p>}
+          </div>
+          <div className="flex gap-1 shrink-0">
+            <button onClick={() => { setEditRoutineName(routine.name); setEditRoutineDesc(routine.description ?? ''); setEditRoutine(true) }} className="p-2 text-gray-400 hover:text-blue-600"><Pencil className="h-4 w-4" /></button>
+            <button onClick={deleteRoutine} className="p-2 text-gray-400 hover:text-red-600"><Trash2 className="h-4 w-4" /></button>
+          </div>
+        </div>
+      )}
 
       {routine.days.map((day) => (
         <div key={day.id} className="mb-6 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-            <h2 className="font-semibold">{day.name} <span className="text-xs text-gray-400 ml-1">({DAY_NAMES[day.dayOfWeek]})</span></h2>
-            <button onClick={() => setAddExOpen(addExOpen === day.id ? null : day.id)} className="text-blue-600 text-sm flex items-center gap-1">
-              <Plus className="h-4 w-4" /> Exercise
-            </button>
-          </div>
+          {/* Day header */}
+          {editDayId === day.id ? (
+            <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+              <input
+                value={editDayName}
+                onChange={(e) => setEditDayName(e.target.value)}
+                className="flex-1 px-2 py-1 rounded border border-gray-300 dark:border-gray-600 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <select
+                value={editDayOfWeek}
+                onChange={(e) => setEditDayOfWeek(Number(e.target.value))}
+                className="px-2 py-1 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm focus:outline-none"
+              >
+                {DAY_NAMES.map((d, i) => <option key={i} value={i}>{d}</option>)}
+              </select>
+              <button onClick={() => saveDay(day.id)} className="p-1 text-blue-600 hover:text-blue-800"><Check className="h-4 w-4" /></button>
+              <button onClick={() => setEditDayId(null)} className="p-1 text-gray-400 hover:text-gray-600"><X className="h-4 w-4" /></button>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+              <h2 className="font-semibold">{day.name} <span className="text-xs text-gray-400 ml-1">({DAY_NAMES[day.dayOfWeek]})</span></h2>
+              <div className="flex items-center gap-1">
+                <button onClick={() => startEditDay(day)} className="p-1 text-gray-400 hover:text-blue-600"><Pencil className="h-3.5 w-3.5" /></button>
+                <button onClick={() => deleteDay(day.id)} className="p-1 text-gray-400 hover:text-red-600"><Trash2 className="h-3.5 w-3.5" /></button>
+                <button onClick={() => setAddExOpen(addExOpen === day.id ? null : day.id)} className="text-blue-600 text-sm flex items-center gap-1 ml-2">
+                  <Plus className="h-4 w-4" /> Exercise
+                </button>
+              </div>
+            </div>
+          )}
 
           {addExOpen === day.id && (
             <form onSubmit={(e) => addExercise(day.id, e)} className="p-4 border-b border-gray-200 dark:border-gray-700 space-y-2">
@@ -162,20 +303,34 @@ function RoutineDetail({ routineId }: { routineId: string }) {
           <ul>
             {day.exercises.length === 0 && <li className="px-4 py-3 text-sm text-gray-400">No exercises yet.</li>}
             {day.exercises.map((ex, idx) => (
-              <li key={ex.id} className="flex items-center gap-3 px-4 py-3 border-b last:border-b-0 border-gray-100 dark:border-gray-800">
-                <div className="flex flex-col gap-0.5">
-                  <button onClick={() => reorder(day.id, ex.id, 'up')} disabled={idx === 0} className="text-gray-400 hover:text-gray-600 disabled:opacity-20"><ChevronUp className="h-3 w-3" /></button>
-                  <button onClick={() => reorder(day.id, ex.id, 'down')} disabled={idx === day.exercises.length - 1} className="text-gray-400 hover:text-gray-600 disabled:opacity-20"><ChevronDown className="h-3 w-3" /></button>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm">{ex.name}</p>
-                  <p className="text-xs text-gray-400">
-                    {[ex.sets && `${ex.sets} sets`, ex.reps && `${ex.reps} reps`].filter(Boolean).join(' · ')}
-                  </p>
-                </div>
-                <button onClick={() => deleteExercise(day.id, ex.id)} className="text-red-400 hover:text-red-600">
-                  <Trash2 className="h-4 w-4" />
-                </button>
+              <li key={ex.id} className="border-b last:border-b-0 border-gray-100 dark:border-gray-800">
+                {editExId === ex.id ? (
+                  <div className="flex items-center gap-2 px-4 py-2">
+                    <input value={editExName} onChange={(e) => setEditExName(e.target.value)}
+                      className="flex-1 px-2 py-1 rounded border border-gray-300 dark:border-gray-600 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    <input placeholder="Sets" type="number" value={editExSets} onChange={(e) => setEditExSets(e.target.value)}
+                      className="w-16 px-2 py-1 rounded border border-gray-300 dark:border-gray-600 bg-transparent text-sm focus:outline-none" />
+                    <input placeholder="Reps" type="number" value={editExReps} onChange={(e) => setEditExReps(e.target.value)}
+                      className="w-16 px-2 py-1 rounded border border-gray-300 dark:border-gray-600 bg-transparent text-sm focus:outline-none" />
+                    <button onClick={() => saveEx(day.id, ex.id)} className="p-1 text-blue-600 hover:text-blue-800"><Check className="h-4 w-4" /></button>
+                    <button onClick={() => setEditExId(null)} className="p-1 text-gray-400 hover:text-gray-600"><X className="h-4 w-4" /></button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3 px-4 py-3">
+                    <div className="flex flex-col gap-0.5">
+                      <button onClick={() => reorder(day.id, ex.id, 'up')} disabled={idx === 0} className="text-gray-400 hover:text-gray-600 disabled:opacity-20"><ChevronUp className="h-3 w-3" /></button>
+                      <button onClick={() => reorder(day.id, ex.id, 'down')} disabled={idx === day.exercises.length - 1} className="text-gray-400 hover:text-gray-600 disabled:opacity-20"><ChevronDown className="h-3 w-3" /></button>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm">{ex.name}</p>
+                      <p className="text-xs text-gray-400">
+                        {[ex.sets && `${ex.sets} sets`, ex.reps && `${ex.reps} reps`].filter(Boolean).join(' · ')}
+                      </p>
+                    </div>
+                    <button onClick={() => startEditEx(ex)} className="text-gray-400 hover:text-blue-600"><Pencil className="h-3.5 w-3.5" /></button>
+                    <button onClick={() => deleteExercise(day.id, ex.id)} className="text-red-400 hover:text-red-600"><Trash2 className="h-4 w-4" /></button>
+                  </div>
+                )}
               </li>
             ))}
           </ul>

@@ -252,7 +252,7 @@ pm2 save
 2. `.next/BUILD_ID` must exist — if missing, the build was incomplete; run `npm run build` again
 
 ```bash
-cat /home/deploy/logs/app-err.log | tail -5  # shows the actual crash reason
+pm2 logs --err --lines 20  # shows the actual crash reason
 ```
 
 ---

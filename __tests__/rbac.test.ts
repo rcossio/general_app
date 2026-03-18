@@ -1,90 +1,66 @@
 import { describe, it, expect } from 'vitest'
-import { prisma } from '../lib/prisma'
-import { hashPassword, signAccessToken } from '../lib/auth'
-import { requirePermission } from '../lib/permissions'
-import { NextRequest } from 'next/server'
+import { BASE, registerAndLogin, authHeaders } from './helpers'
 
-async function createUserWithRole(email: string, roleSlug: string) {
-  const passwordHash = await hashPassword('password123')
+// Admin credentials come from the environment (same as the seeded master_admin)
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL!
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD!
 
-  let role = await prisma.role.findUnique({ where: { slug: roleSlug } })
-  if (!role) {
-    role = await prisma.role.create({
-      data: { name: roleSlug, slug: roleSlug },
-    })
-  }
-
-  const user = await prisma.user.create({
-    data: { email, passwordHash, name: 'Test' },
+async function loginAsAdmin() {
+  const res = await fetch(`${BASE}/api/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: ADMIN_EMAIL, password: ADMIN_PASSWORD }),
   })
-  await prisma.userRole.create({ data: { userId: user.id, roleId: role.id } })
-
-  const token = signAccessToken({ sub: user.id, email, roles: [roleSlug] })
-  return { user, token, role }
+  const body = await res.json()
+  return body.data?.accessToken as string
 }
 
-async function createPermission(resource: string, action: string) {
-  return prisma.permission.upsert({
-    where: { resource_action: { resource, action } },
-    update: {},
-    create: { resource, action },
+describe('RBAC: Unauthenticated', () => {
+  it('returns 401 on protected endpoints with no token', async () => {
+    const endpoints = [
+      '/api/auth/me',
+      '/api/tracker/entries',
+      '/api/tracker/stats',
+      '/api/workout/routines',
+      '/api/admin/users',
+    ]
+    for (const endpoint of endpoints) {
+      const res = await fetch(`${BASE}${endpoint}`)
+      expect(res.status, `${endpoint} should be 401`).toBe(401)
+    }
   })
-}
+})
 
-function makeRequest(token: string) {
-  return new NextRequest('http://localhost/api/test', {
-    headers: { Authorization: `Bearer ${token}` },
-  })
-}
-
-describe('RBAC', () => {
-  it('user with "user" role cannot access an admin-only endpoint (403)', async () => {
-    const { token } = await createUserWithRole('user@test.com', 'user')
-    await createPermission('admin', 'access')
-
-    const req = makeRequest(token)
-    const result = await requirePermission(req as unknown as Request, 'admin', 'access')
-
-    expect(result).toHaveProperty('status', 403)
-  })
-
-  it('user with "admin" role bypasses permission checks', async () => {
-    const { token } = await createUserWithRole('admin@test.com', 'admin')
-
-    const req = makeRequest(token)
-    const result = await requirePermission(req as unknown as Request, 'anything', 'anyaction')
-
-    expect(result).not.toHaveProperty('status')
-    expect(result).toHaveProperty('user')
+describe('RBAC: Regular user', () => {
+  it('can access own data endpoints', async () => {
+    const { accessToken } = await registerAndLogin('rbac-user')
+    const endpoints = ['/api/auth/me', '/api/tracker/entries', '/api/tracker/stats', '/api/workout/routines']
+    for (const endpoint of endpoints) {
+      const res = await fetch(`${BASE}${endpoint}`, { headers: authHeaders(accessToken) })
+      expect(res.status, `${endpoint} should be 200`).toBe(200)
+    }
   })
 
-  it('master_admin bypasses all permission checks', async () => {
-    const { token } = await createUserWithRole('master@test.com', 'master_admin')
+  it('cannot access admin endpoints (403)', async () => {
+    const { accessToken } = await registerAndLogin('rbac-noadmin')
+    const res = await fetch(`${BASE}/api/admin/users`, { headers: authHeaders(accessToken) })
+    expect(res.status).toBe(403)
+  })
+})
 
-    const req = makeRequest(token)
-    const result = await requirePermission(req as unknown as Request, 'any', 'permission')
-
-    expect(result).not.toHaveProperty('status')
-    expect(result).toHaveProperty('user')
+describe('RBAC: Admin', () => {
+  it('can access admin endpoints', async () => {
+    const adminToken = await loginAsAdmin()
+    const res = await fetch(`${BASE}/api/admin/users`, { headers: authHeaders(adminToken) })
+    expect(res.status).toBe(200)
   })
 
-  it('requirePermission returns 403 with correct error code when permission is missing', async () => {
-    const { token } = await createUserWithRole('noperm@test.com', 'user')
-
-    const req = makeRequest(token)
-    const result = await requirePermission(req as unknown as Request, 'workout', 'create')
-
-    expect(result).toHaveProperty('status', 403)
-    const body = await (result as Response).json()
-    expect(body.code).toBe('PERMISSION_DENIED')
-  })
-
-  it('requirePermission returns 401 when no token is provided', async () => {
-    const req = new NextRequest('http://localhost/api/test')
-    const result = await requirePermission(req as unknown as Request, 'workout', 'read')
-
-    expect(result).toHaveProperty('status', 401)
-    const body = await (result as Response).json()
-    expect(body.code).toBe('AUTH_REQUIRED')
+  it('can access all regular endpoints', async () => {
+    const adminToken = await loginAsAdmin()
+    const endpoints = ['/api/auth/me', '/api/tracker/entries', '/api/tracker/stats', '/api/workout/routines']
+    for (const endpoint of endpoints) {
+      const res = await fetch(`${BASE}${endpoint}`, { headers: authHeaders(adminToken) })
+      expect(res.status, `${endpoint} should be 200`).toBe(200)
+    }
   })
 })

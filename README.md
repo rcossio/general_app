@@ -137,7 +137,7 @@ deactivate a module, edit `config/modules.ts` — no other file needs to change.
 
 ### Adding a new module (5 steps)
 
-1. Create `modules/<name>/` with `manifest.ts`, `api/`, `pages/`, `components/`, `lib/`
+1. Create `modules/<name>/manifest.ts` and `modules/<name>/lib/schemas.ts`
 2. Write the manifest following the shape in `modules/workout/manifest.ts`
 3. Add your Prisma models to `prisma/schema.prisma` in a clearly commented section
 4. Register in `config/modules.ts`: `import myModule from '@/modules/<name>/manifest'` and add to `activeModules`

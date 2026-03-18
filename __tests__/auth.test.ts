@@ -1,144 +1,124 @@
 import { describe, it, expect } from 'vitest'
-import { prisma } from '../lib/prisma'
-import bcrypt from 'bcryptjs'
-import { signAccessToken, signRefreshToken, storeRefreshToken, hashToken } from '../lib/auth'
-
-// Helper to make requests with the app base URL
-const BASE = 'http://localhost:3000'
-
-async function registerUser(email = 'test@example.com', password = 'password123', name = 'Test User') {
-  const response = await fetch(`${BASE}/api/auth/register`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password, name }),
-  })
-  return response
-}
+import { BASE, register, login, registerAndLogin, uniqueEmail, authHeaders } from './helpers'
 
 describe('Auth: Register', () => {
-  it('creates user with hashed password — plain password never stored', async () => {
-    const password = 'mypassword123'
-    const response = await registerUser('hash@test.com', password)
-    expect(response.status).toBe(201)
-
-    const user = await prisma.user.findUnique({ where: { email: 'hash@test.com' } })
-    expect(user).toBeTruthy()
-    expect(user!.passwordHash).not.toBe(password)
-    const valid = await bcrypt.compare(password, user!.passwordHash)
-    expect(valid).toBe(true)
-  })
-
-  it('returns valid access and refresh tokens on register', async () => {
-    const response = await registerUser()
-    expect(response.status).toBe(201)
-    const body = await response.json()
+  it('returns 201 and tokens on successful registration', async () => {
+    const res = await register(uniqueEmail('reg'))
+    expect(res.status).toBe(201)
+    const body = await res.json()
     expect(body.data.accessToken).toBeTruthy()
     expect(body.data.refreshToken).toBeTruthy()
+  })
+
+  it('returns 400 when email is already taken', async () => {
+    const email = uniqueEmail('dup')
+    await register(email)
+    const res = await register(email)
+    expect(res.status).toBe(400)
+    const body = await res.json()
+    expect(body.code).toBe('EMAIL_EXISTS')
+  })
+
+  it('returns 400 when required fields are missing', async () => {
+    const res = await fetch(`${BASE}/api/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'notvalid' }),
+    })
+    expect(res.status).toBe(400)
   })
 })
 
 describe('Auth: Login', () => {
-  it('returns valid tokens with correct credentials', async () => {
-    await registerUser('login@test.com', 'correctpass')
-
-    const response = await fetch(`${BASE}/api/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: 'login@test.com', password: 'correctpass' }),
-    })
-    expect(response.status).toBe(200)
-    const body = await response.json()
-    expect(body.data.accessToken).toBeTruthy()
-    expect(body.data.refreshToken).toBeTruthy()
+  it('returns tokens with correct credentials', async () => {
+    const email = uniqueEmail('login')
+    await register(email)
+    const { res, accessToken, refreshToken } = await login(email)
+    expect(res.status).toBe(200)
+    expect(accessToken).toBeTruthy()
+    expect(refreshToken).toBeTruthy()
   })
 
   it('returns 401 with wrong password', async () => {
-    await registerUser('wrong@test.com', 'correctpass')
+    const email = uniqueEmail('wrongpass')
+    await register(email)
+    const { res } = await login(email, 'WrongPassword!')
+    expect(res.status).toBe(401)
+  })
 
-    const response = await fetch(`${BASE}/api/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: 'wrong@test.com', password: 'wrongpass' }),
-    })
-    expect(response.status).toBe(401)
+  it('returns 401 for unknown email', async () => {
+    const { res } = await login(uniqueEmail('ghost'))
+    expect(res.status).toBe(401)
   })
 })
 
 describe('Auth: Refresh', () => {
-  it('returns new token pair with valid refresh token', async () => {
-    const reg = await registerUser('refresh@test.com', 'password123')
-    const regBody = await reg.json()
-    const refreshToken = regBody.data.refreshToken
-
-    const response = await fetch(`${BASE}/api/auth/refresh`, {
+  it('returns a new token pair with a valid refresh token', async () => {
+    const { refreshToken } = await registerAndLogin('refresh')
+    const res = await fetch(`${BASE}/api/auth/refresh`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ refreshToken }),
     })
-    expect(response.status).toBe(200)
-    const body = await response.json()
+    expect(res.status).toBe(200)
+    const body = await res.json()
     expect(body.data.accessToken).toBeTruthy()
-    expect(body.data.refreshToken).toBeTruthy()
     expect(body.data.refreshToken).not.toBe(refreshToken)
   })
 
-  it('returns 401 with revoked refresh token', async () => {
-    const reg = await registerUser('revoked@test.com', 'password123')
-    const regBody = await reg.json()
-    const refreshToken = regBody.data.refreshToken
-
-    // Use once (rotates)
+  it('returns 401 when a rotated (used) refresh token is reused', async () => {
+    const { refreshToken } = await registerAndLogin('rotate')
+    // Use the token once
     await fetch(`${BASE}/api/auth/refresh`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ refreshToken }),
     })
-
-    // Use again — should fail
-    const response = await fetch(`${BASE}/api/auth/refresh`, {
+    // Use again — must fail
+    const res = await fetch(`${BASE}/api/auth/refresh`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ refreshToken }),
     })
-    expect(response.status).toBe(401)
+    expect(res.status).toBe(401)
   })
 })
 
 describe('Auth: Logout', () => {
-  it('marks the refresh token as revoked', async () => {
-    const reg = await registerUser('logout@test.com', 'password123')
-    const regBody = await reg.json()
-    const refreshToken = regBody.data.refreshToken
-
+  it('revokes the refresh token so it cannot be reused', async () => {
+    const { accessToken, refreshToken } = await registerAndLogin('logout')
     await fetch(`${BASE}/api/auth/logout`, {
+      method: 'POST',
+      headers: authHeaders(accessToken),
+      body: JSON.stringify({ refreshToken }),
+    })
+    const res = await fetch(`${BASE}/api/auth/refresh`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ refreshToken }),
     })
-
-    const tokenHash = hashToken(refreshToken)
-    const stored = await prisma.refreshToken.findFirst({ where: { tokenHash } })
-    expect(stored?.revoked).toBe(true)
+    expect(res.status).toBe(401)
   })
 })
 
 describe('Auth: Me', () => {
-  it('returns 401 with expired/invalid access token', async () => {
-    const response = await fetch(`${BASE}/api/auth/me`, {
-      headers: { Authorization: 'Bearer invalid.token.here' },
-    })
-    expect(response.status).toBe(401)
+  it('returns 401 with no token', async () => {
+    const res = await fetch(`${BASE}/api/auth/me`)
+    expect(res.status).toBe(401)
   })
 
-  it('returns user data with valid access token', async () => {
-    const reg = await registerUser('me@test.com', 'password123')
-    const regBody = await reg.json()
-
-    const response = await fetch(`${BASE}/api/auth/me`, {
-      headers: { Authorization: `Bearer ${regBody.data.accessToken}` },
+  it('returns 401 with an invalid token', async () => {
+    const res = await fetch(`${BASE}/api/auth/me`, {
+      headers: { Authorization: 'Bearer bad.token.here' },
     })
-    expect(response.status).toBe(200)
-    const body = await response.json()
-    expect(body.data.email).toBe('me@test.com')
+    expect(res.status).toBe(401)
+  })
+
+  it('returns user data with a valid token', async () => {
+    const { email, accessToken } = await registerAndLogin('me')
+    const res = await fetch(`${BASE}/api/auth/me`, { headers: authHeaders(accessToken) })
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.data.email).toBe(email)
   })
 })

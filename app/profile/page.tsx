@@ -19,7 +19,7 @@ export default function ProfilePage() {
 }
 
 function ProfileForm() {
-  const { user, fetchWithAuth } = useAuth()
+  const { user, fetchWithAuth, logout } = useAuth()
   const [name, setName] = useState(user?.name ?? '')
   const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl ?? '')
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -97,6 +97,15 @@ function ProfileForm() {
             <span key={r} className="px-2 py-0.5 bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 rounded-full text-xs">{r}</span>
           ))}
         </div>
+      </div>
+
+      <div className="mt-6">
+        <button
+          onClick={logout}
+          className="w-full px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors"
+        >
+          Log out
+        </button>
       </div>
     </div>
   )

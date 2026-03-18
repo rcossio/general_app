@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
 import Link from 'next/link'
-import { Plus, Dumbbell } from 'lucide-react'
+import { Plus, Dumbbell, Pencil, Trash2, Check, X } from 'lucide-react'
 import { z } from 'zod'
 
 interface Routine {
@@ -37,6 +37,9 @@ function WorkoutList() {
   const [description, setDescription] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [submitting, setSubmitting] = useState(false)
+  const [editId, setEditId] = useState<string | null>(null)
+  const [editName, setEditName] = useState('')
+  const [editDesc, setEditDesc] = useState('')
 
   const load = async () => {
     const res = await fetchWithAuth('/api/workout/routines')
@@ -58,15 +61,12 @@ function WorkoutList() {
     }
     setErrors({})
     setSubmitting(true)
-
-    // Optimistic
     const tempId = `temp-${Date.now()}`
     const optimistic: Routine = { id: tempId, name, description: description || null, updatedAt: new Date().toISOString(), _count: { days: 0 } }
     setRoutines((prev) => [optimistic, ...prev])
     setShowForm(false)
     setName('')
     setDescription('')
-
     try {
       const res = await fetchWithAuth('/api/workout/routines', {
         method: 'POST',
@@ -80,6 +80,29 @@ function WorkoutList() {
     } finally {
       setSubmitting(false)
     }
+  }
+
+  const startEdit = (r: Routine) => {
+    setEditId(r.id)
+    setEditName(r.name)
+    setEditDesc(r.description ?? '')
+  }
+
+  const saveEdit = async (id: string) => {
+    const parsed = createSchema.safeParse({ name: editName, description: editDesc || undefined })
+    if (!parsed.success) return
+    setRoutines((prev) => prev.map((r) => r.id === id ? { ...r, name: editName, description: editDesc || null } : r))
+    setEditId(null)
+    await fetchWithAuth(`/api/workout/routines/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(parsed.data),
+    })
+  }
+
+  const deleteRoutine = async (id: string) => {
+    setRoutines((prev) => prev.filter((r) => r.id !== id))
+    await fetchWithAuth(`/api/workout/routines/${id}`, { method: 'DELETE' })
   }
 
   return (
@@ -138,15 +161,36 @@ function WorkoutList() {
       ) : (
         <ul className="space-y-3">
           {routines.map((r) => (
-            <li key={r.id}>
-              <Link
-                href={`/workout/${r.id}`}
-                className="block p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:shadow-md transition-shadow"
-              >
-                <p className="font-semibold">{r.name}</p>
-                {r.description && <p className="text-sm text-gray-500 mt-1 truncate">{r.description}</p>}
-                <p className="text-xs text-gray-400 mt-2">{r._count.days} day{r._count.days !== 1 ? 's' : ''}</p>
-              </Link>
+            <li key={r.id} className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden">
+              {editId === r.id ? (
+                <div className="p-4 space-y-2">
+                  <input
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <input
+                    value={editDesc}
+                    onChange={(e) => setEditDesc(e.target.value)}
+                    placeholder="Description (optional)"
+                    className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <div className="flex gap-2">
+                    <button onClick={() => saveEdit(r.id)} className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm"><Check className="h-3 w-3" /> Save</button>
+                    <button onClick={() => setEditId(null)} className="flex items-center gap-1 px-3 py-1.5 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm"><X className="h-3 w-3" /> Cancel</button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 p-4">
+                  <Link href={`/workout/${r.id}`} className="flex-1 min-w-0">
+                    <p className="font-semibold truncate">{r.name}</p>
+                    {r.description && <p className="text-sm text-gray-500 mt-0.5 truncate">{r.description}</p>}
+                    <p className="text-xs text-gray-400 mt-1">{r._count.days} day{r._count.days !== 1 ? 's' : ''}</p>
+                  </Link>
+                  <button onClick={() => startEdit(r)} className="text-gray-400 hover:text-blue-600 p-1"><Pencil className="h-4 w-4" /></button>
+                  <button onClick={() => deleteRoutine(r.id)} className="text-gray-400 hover:text-red-600 p-1"><Trash2 className="h-4 w-4" /></button>
+                </div>
+              )}
             </li>
           ))}
         </ul>
