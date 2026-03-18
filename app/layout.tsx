@@ -18,7 +18,6 @@ export const metadata: Metadata = {
   title: 'Vysi',
   description: 'Your hub for ideas and well-being',
   manifest: '/manifest.json',
-  icons: { icon: '/favicon.png', apple: '/icons/icon-192x192.png' },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',

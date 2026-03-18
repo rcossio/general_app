@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vysi-v1'
+const CACHE_NAME = 'vysi-v2'
 const APP_SHELL = [
   '/',
   '/login',
