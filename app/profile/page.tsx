@@ -54,6 +54,11 @@ function ProfileForm() {
       })
       const publicUrl = `${process.env.NEXT_PUBLIC_R2_PUBLIC_URL}/${data.key}`
       setAvatarUrl(publicUrl)
+      await fetchWithAuth('/api/auth/me', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, avatarUrl: publicUrl }),
+      })
     } catch {
       setErrors((prev) => ({ ...prev, avatar: t('profile.avatarUploadFailed') }))
     } finally {
