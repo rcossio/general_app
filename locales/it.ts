@@ -45,7 +45,10 @@ const it: Translations = {
   },
   profile: {
     title: 'Profilo',
-    avatarUrl: 'URL avatar',
+    avatarUrl: 'Foto profilo',
+    avatarHint: 'JPG, PNG, WebP o GIF · max 5 MB',
+    avatarTooLarge: "L'immagine deve essere sotto i 5 MB",
+    avatarUploadFailed: 'Caricamento fallito, riprova',
     updated: 'Profilo aggiornato.',
     email: 'Email',
     roles: 'Ruoli',

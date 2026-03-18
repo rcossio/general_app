@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useLocale } from '@/contexts/LocaleContext'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
@@ -23,11 +23,43 @@ function ProfileForm() {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const profileSchema = z.object({
     name: z.string().min(1, t('auth.nameRequired')).max(100),
-    avatarUrl: z.string().url(t('auth.invalidEmail')).optional().or(z.literal('')),
+    avatarUrl: z.string().url().optional().or(z.literal('')),
   })
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 5 * 1024 * 1024) {
+      setErrors((prev) => ({ ...prev, avatar: t('profile.avatarTooLarge') }))
+      return
+    }
+    setUploading(true)
+    setErrors((prev) => { const n = { ...prev }; delete n.avatar; return n })
+    try {
+      const res = await fetchWithAuth('/api/upload/avatar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contentType: file.type }),
+      })
+      const { data } = await res.json()
+      await fetch(data.uploadUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': file.type },
+        body: file,
+      })
+      const publicUrl = `${process.env.NEXT_PUBLIC_R2_PUBLIC_URL}/${data.key}`
+      setAvatarUrl(publicUrl)
+    } catch {
+      setErrors((prev) => ({ ...prev, avatar: t('profile.avatarUploadFailed') }))
+    } finally {
+      setUploading(false)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -57,11 +89,40 @@ function ProfileForm() {
     <div className="max-w-lg mx-auto p-4 md:p-6">
       <h1 className="text-2xl font-bold mb-6">{t('profile.title')}</h1>
 
-      {user?.avatarUrl && (
-        <img src={user.avatarUrl} alt="Avatar" className="w-20 h-20 rounded-full object-cover mb-6" />
-      )}
-
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Avatar picker */}
+        <div className="flex items-center gap-4">
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-blue-500 transition-colors flex-shrink-0 disabled:opacity-50"
+          >
+            {avatarUrl ? (
+              <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-2xl">👤</span>
+            )}
+            {uploading && (
+              <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              </div>
+            )}
+          </button>
+          <div>
+            <p className="text-sm font-medium">{t('profile.avatarUrl')}</p>
+            <p className="text-xs text-gray-500 mt-0.5">{t('profile.avatarHint')}</p>
+            {errors.avatar && <p className="mt-1 text-xs text-red-500">{errors.avatar}</p>}
+          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            onChange={handleFileChange}
+            className="hidden"
+          />
+        </div>
+
         <div>
           <label className="block text-sm font-medium mb-1">{t('auth.name')}</label>
           <input
@@ -70,16 +131,6 @@ function ProfileForm() {
             className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name}</p>}
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">{t('profile.avatarUrl')}</label>
-          <input
-            value={avatarUrl}
-            onChange={(e) => setAvatarUrl(e.target.value)}
-            placeholder="https://..."
-            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          {errors.avatarUrl && <p className="mt-1 text-xs text-red-500">{errors.avatarUrl}</p>}
         </div>
         {success && <div className="p-3 rounded-lg bg-green-50 dark:bg-green-950 text-green-600 text-sm">{t('profile.updated')}</div>}
         <button

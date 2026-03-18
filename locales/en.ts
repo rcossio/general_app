@@ -43,7 +43,10 @@ const en = {
   },
   profile: {
     title: 'Profile',
-    avatarUrl: 'Avatar URL',
+    avatarUrl: 'Profile picture',
+    avatarHint: 'JPG, PNG, WebP or GIF · max 5 MB',
+    avatarTooLarge: 'Image must be under 5 MB',
+    avatarUploadFailed: 'Upload failed, please try again',
     updated: 'Profile updated.',
     email: 'Email',
     roles: 'Roles',

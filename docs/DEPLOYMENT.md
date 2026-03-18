@@ -309,24 +309,69 @@ Log in with those credentials after the first deploy.
 
 ---
 
+## Redeploying After Code Changes
+
+There is no deploy script. Run these commands in order on the server:
+
+```bash
+cd /var/www/app
+
+# 1. Install any new dependencies
+npm install
+
+# 2. Apply any new migrations
+npx prisma migrate deploy
+
+# 3. Stop PM2, build, restart
+pm2 stop all
+npm run build
+pm2 reload ecosystem.config.js --update-env
+pm2 save
+```
+
+**Important:**
+- Always stop PM2 before building — a running instance can interfere with the build
+- Use `npm install`, never `npm ci` — `npm ci` wipes `node_modules` and can cause SIGBUS on low-memory servers
+- `--update-env` makes PM2 pick up any `.env` changes
+
+---
+
+## Database Backups
+
+No backup script. Run manually when needed:
+
+```bash
+# Dump and compress
+pg_dump appdb | gzip > /tmp/appdb_$(date +%Y%m%d).sql.gz
+
+# Restore from a dump
+gunzip -c /tmp/appdb_20260318.sql.gz | psql appdb
+```
+
+For automated daily backups, add a cron job:
+```bash
+crontab -e
+# Add:
+0 2 * * * pg_dump appdb | gzip > /tmp/appdb_$(date +\%Y\%m\%d).sql.gz
+```
+
+---
+
 ## Useful Commands
 
 ```bash
 # App
 pm2 status                  # check if app is running
 pm2 logs                    # tail logs
-pm2 reload app              # zero-downtime reload
+pm2 reload ecosystem.config.js --update-env   # reload with latest .env
 pm2 monit                   # live dashboard
 
 # Database
 sudo -u postgres psql       # enter postgres shell
 npx prisma migrate deploy   # apply pending migrations
-npx prisma db seed          # re-seed roles, permissions, admin user
+npx prisma db seed          # re-seed roles, permissions, admin + bot users
 
 # Nginx
 nginx -t                    # test config
 systemctl reload nginx      # apply config changes
-
-# Redeploy
-cd /var/www/app && bash deploy.sh
 ```
