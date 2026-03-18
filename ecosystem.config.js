@@ -4,7 +4,7 @@ module.exports = {
       name: 'general-app',
       script: 'node_modules/.bin/next',
       args: 'start',
-      cwd: '/home/deploy/general_app',
+      cwd: '/var/www/app',
       // Cluster mode: max 2 instances appropriate for Hetzner CX22 (2 vCPU)
       instances: 2,
       exec_mode: 'cluster',

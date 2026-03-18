@@ -143,6 +143,24 @@ R2 variables can be left blank until file uploads are needed.
 
 ---
 
+## Step 9b — Verify DB Credentials
+
+**Verify:** The password in `DATABASE_URL` must match the PostgreSQL user password set in Step 7.
+
+```bash
+cd /var/www/app
+source .env 2>/dev/null || export $(grep -v '^#' .env | xargs)
+psql "$DATABASE_URL" -c "SELECT 1" 2>&1
+```
+
+Should print `(1 row)`. If it fails with "authentication failed", reset the PostgreSQL password to match `.env`:
+
+```bash
+sudo -u postgres psql -c "ALTER USER appuser WITH PASSWORD 'your-password-from-env';"
+```
+
+---
+
 ## Step 10 — Install Dependencies
 
 **Verify:** `ls /var/www/app/node_modules` should exist.
@@ -182,6 +200,8 @@ cd /var/www/app
 npm run build
 ```
 
+**Important:** Stop PM2 before rebuilding (`pm2 delete all`), otherwise a running instance can interfere with the build and leave `.next` without a `BUILD_ID`. Restart PM2 after the build completes.
+
 ---
 
 ## Step 13 — Start with PM2
@@ -193,6 +213,15 @@ npm run build
 cd /var/www/app
 pm2 start ecosystem.config.js
 pm2 save
+```
+
+**Troubleshooting — app starts then immediately crashes:** If `pm2 status` shows `errored` or a high restart count within seconds of starting, check two things:
+
+1. `cwd` in `ecosystem.config.js` must be `/var/www/app`
+2. `.next/BUILD_ID` must exist — if missing, the build was incomplete; run `npm run build` again
+
+```bash
+cat /home/deploy/logs/app-err.log | tail -5  # shows the actual crash reason
 ```
 
 ---
