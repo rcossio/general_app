@@ -31,6 +31,25 @@ function ProfileForm() {
     avatarUrl: z.string().url().optional().or(z.literal('')),
   })
 
+  const resizeImage = (file: File, maxSize: number): Promise<Blob> =>
+    new Promise((resolve, reject) => {
+      const img = new Image()
+      const url = URL.createObjectURL(file)
+      img.onload = () => {
+        URL.revokeObjectURL(url)
+        const scale = Math.min(1, maxSize / Math.max(img.width, img.height))
+        const w = Math.round(img.width * scale)
+        const h = Math.round(img.height * scale)
+        const canvas = document.createElement('canvas')
+        canvas.width = w
+        canvas.height = h
+        canvas.getContext('2d')!.drawImage(img, 0, 0, w, h)
+        canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error('resize failed')), 'image/webp', 0.85)
+      }
+      img.onerror = reject
+      img.src = url
+    })
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -41,16 +60,13 @@ function ProfileForm() {
     setUploading(true)
     setErrors((prev) => { const n = { ...prev }; delete n.avatar; return n })
     try {
-      const res = await fetchWithAuth('/api/upload/avatar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contentType: file.type }),
-      })
+      const resized = await resizeImage(file, 256)
+      const res = await fetchWithAuth('/api/upload/avatar', { method: 'POST' })
       const { data } = await res.json()
       await fetch(data.uploadUrl, {
         method: 'PUT',
-        headers: { 'Content-Type': file.type },
-        body: file,
+        headers: { 'Content-Type': 'image/webp' },
+        body: resized,
       })
       const publicUrl = `${process.env.NEXT_PUBLIC_R2_PUBLIC_URL}/${data.key}`
       setAvatarUrl(publicUrl)
