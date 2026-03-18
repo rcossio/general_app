@@ -1,7 +1,7 @@
 {
-  "name": "Platform",
-  "short_name": "Platform",
-  "description": "Modular productivity platform",
+  "name": "Vysi",
+  "short_name": "Vysi",
+  "description": "Your hub for ideas and well-being",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
