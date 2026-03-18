@@ -57,7 +57,7 @@ function WorkoutList() {
   const load = async () => {
     const [myRes, pubRes] = await Promise.all([
       fetchWithAuth('/api/workout/routines'),
-      fetch('/api/workout/routines/public'),
+      fetch('/api/workout/routines/public?limit=12'),
     ])
     const myBody = await myRes.json()
     const pubBody = await pubRes.json()
@@ -236,7 +236,7 @@ function WorkoutList() {
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <Globe className="h-4 w-4 text-blue-500" /> Community Routines
           </h2>
-          <ul className="space-y-3">
+          <ul className="space-y-3 max-h-[560px] overflow-y-auto pr-1">
             {publicRoutines.map((r) => (
               <li key={r.id} className="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
                 <p className="font-semibold">{r.name}</p>

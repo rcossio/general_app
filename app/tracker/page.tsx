@@ -61,7 +61,7 @@ function TrackerFeed() {
   const load = async (type: string) => {
     setLoading(true)
     const url = `/api/tracker/entries?limit=20${type ? `&type=${type}` : ''}`
-    const pubUrl = `/api/tracker/entries/public?limit=20${type ? `&type=${type}` : ''}`
+    const pubUrl = `/api/tracker/entries/public?limit=12${type ? `&type=${type}` : ''}`
     const [entriesRes, statsRes, pubRes] = await Promise.all([
       fetchWithAuth(url),
       fetchWithAuth('/api/tracker/stats'),
@@ -170,7 +170,7 @@ function TrackerFeed() {
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <Globe className="h-4 w-4 text-blue-500" /> Community
           </h2>
-          <ul className="space-y-3">
+          <ul className="space-y-3 max-h-[560px] overflow-y-auto pr-1">
             {publicEntries.map((e) => (
               <li key={e.id} className="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
                 <div className="flex items-start justify-between gap-3 mb-1">
