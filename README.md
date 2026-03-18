@@ -15,8 +15,8 @@ If you are an agent or developer trying to understand this project, read these f
 | File | Purpose |
 |---|---|
 | `README.md` | This file — overview, local dev setup, useful commands |
-| `SPEC.md` | Product specification — what the app is, architecture decisions, module system, API conventions, auth design |
-| `DEPLOYMENT.md` | Step-by-step VPS deployment guide — treat it as a verifiable checklist |
+| `docs/SPEC.md` | Product specification — what the app is, architecture decisions, module system, API conventions, auth design |
+| `docs/DEPLOYMENT.md` | Step-by-step VPS deployment guide — treat it as a verifiable checklist |
 
 ---
 
@@ -95,7 +95,7 @@ npm run dev
 
 ## Production Deployment
 
-See `DEPLOYMENT.md` for the full step-by-step guide.
+See `docs/DEPLOYMENT.md` for the full step-by-step guide.
 
 The short version:
 1. Provision a Hetzner CX23 running Ubuntu 24.04
