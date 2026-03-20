@@ -103,3 +103,22 @@ export async function GET(request: NextRequest, { params }: Params) {
     },
   })
 }
+
+export async function DELETE(request: NextRequest, { params }: Params) {
+  const result = await requirePermission(request, 'adventure', 'play')
+  if (isNextResponse(result)) return result
+
+  const { id } = await params
+
+  const session = await prisma.gameSession.findFirst({
+    where: { id, userId: result.user.sub },
+  })
+
+  if (!session) {
+    return NextResponse.json({ error: 'Session not found', code: 'NOT_FOUND' }, { status: 404 })
+  }
+
+  await prisma.gameSession.delete({ where: { id } })
+
+  return NextResponse.json({ data: { deleted: true } })
+}

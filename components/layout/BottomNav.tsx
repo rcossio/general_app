@@ -15,6 +15,7 @@ const MODULE_NAV_KEYS: Record<string, string> = {
 export function BottomNav() {
   const pathname = usePathname()
   const { t } = useLocale()
+  if (/^\/adventure\/.+/.test(pathname)) return null
 
   const navItems = [
     { label: t('nav.home'), href: '/', icon: 'Home' },

@@ -3,7 +3,7 @@
     {
       "id": "loc_1_start",
       "name": "Notice Board",
-      "coordinates": { "lat": 45.01513449199466, "lng": 8.62788452481497 },
+      "coordinates": { "lat": 45.01582683234417, "lng": 8.628133553657252 },
       "radiusM": 35,
       "visibleWhen": null,
       "values": [
@@ -21,7 +21,7 @@
     {
       "id": "loc_2_friend",
       "name": "Friend's House",
-      "coordinates": { "lat": 45.014987959911174, "lng": 8.628290416329916 },
+      "coordinates": { "lat": 45.01535001146662, "lng": 8.628346083424557 },
       "radiusM": 35,
       "visibleWhen": "visited_start",
       "values": [
@@ -39,7 +39,7 @@
     {
       "id": "loc_3_key",
       "name": "Old Shed",
-      "coordinates": { "lat": 45.0153837176548, "lng": 8.628024375589824 },
+      "coordinates": { "lat": 45.01490700011301, "lng": 8.628122450339523 },
       "radiusM": 35,
       "visibleWhen": "visited_start",
       "values": [
@@ -57,7 +57,7 @@
     {
       "id": "loc_4_hammer",
       "name": "Toolbox",
-      "coordinates": { "lat": 45.014552057403215, "lng": 8.628017292904957 },
+      "coordinates": { "lat": 45.01477694667256, "lng": 8.62756105427572 },
       "radiusM": 35,
       "visibleWhen": "visited_start",
       "values": [
@@ -75,7 +75,7 @@
     {
       "id": "loc_5_gate",
       "name": "Locked Gate",
-      "coordinates": { "lat": 45.01480624368455, "lng": 8.627613672090963 },
+      "coordinates": { "lat": 45.014486301008176, "lng": 8.62806747813587 },
       "radiusM": 35,
       "visibleWhen": "visited_start",
       "values": [

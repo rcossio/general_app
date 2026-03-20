@@ -25,7 +25,7 @@ interface AdventureMapProps {
   locations: MapLocation[]
   playerPosition: PlayerPosition | null
   onLocationClick: (loc: MapLocation) => void
-  nearbyLocationId: string | null
+  nearbyLocationIds: Set<string>
 }
 
 function PlayerTracker({ position }: { position: PlayerPosition | null }) {
@@ -46,7 +46,7 @@ export default function AdventureMap({
   locations,
   playerPosition,
   onLocationClick,
-  nearbyLocationId,
+  nearbyLocationIds,
 }: AdventureMapProps) {
   const visibleLocations = locations.filter((l) => l.visible)
 
@@ -88,7 +88,7 @@ export default function AdventureMap({
       )}
 
       {visibleLocations.map((loc) => {
-        const isNearby = loc.id === nearbyLocationId
+        const isNearby = nearbyLocationIds.has(loc.id)
         const color = isNearby ? '#22c55e' : loc.visited ? '#9ca3af' : '#f97316'
 
         return (

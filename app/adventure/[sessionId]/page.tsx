@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
 import { LocationSheet } from '@/modules/adventure/components/LocationSheet'
 import { distanceMeters } from '@/modules/adventure/lib/haversine'
-import { ArrowLeft, MapPin, Star, Trophy, RefreshCw } from 'lucide-react'
+import { ArrowLeft, MapPin, Trophy, RefreshCw, Settings, RotateCcw } from 'lucide-react'
 import type { MapLocation } from '@/modules/adventure/components/AdventureMap'
 
 // Dynamic import: Leaflet requires browser environment
@@ -80,6 +80,8 @@ function GameMap({ sessionId }: { sessionId: string }) {
   const [visiting, setVisiting] = useState(false)
   const [visitResult, setVisitResult] = useState<VisitResult | null>(null)
   const [loading, setLoading] = useState(true)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [confirmRestart, setConfirmRestart] = useState(false)
   const watchIdRef = useRef<number | null>(null)
   // Track which location id was last auto-opened so we only open once per entry
   const autoOpenedRef = useRef<string | null>(null)
@@ -129,15 +131,16 @@ function GameMap({ sessionId }: { sessionId: string }) {
     }
   }, [])
 
-  // Find nearest visible location within range (visited or not — for coloring and hint bar)
-  const nearbyLocationId = (() => {
-    if (!playerPos || !state) return null
+  // All visible locations currently within range (for green coloring and hint bar)
+  const nearbyLocationIds: Set<string> = (() => {
+    if (!playerPos || !state) return new Set()
+    const ids = new Set<string>()
     for (const loc of state.locations) {
       if (!loc.visible) continue
       const dist = distanceMeters(playerPos.lat, playerPos.lng, loc.lat, loc.lng)
-      if (dist <= loc.radiusM) return loc.id
+      if (dist <= loc.radiusM) ids.add(loc.id)
     }
-    return null
+    return ids
   })()
 
   // Auto-open the sheet when GPS places the player inside a location's radius.
@@ -160,7 +163,7 @@ function GameMap({ sessionId }: { sessionId: string }) {
   }, [playerPos, state]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleVisit = async () => {
-    if (!selectedLocation || !playerPos) return
+    if (!selectedLocation || !playerPos || selectedLocation.visited) return
     setVisiting(true)
     try {
       const res = await fetchWithAuth(`/api/adventure/sessions/${sessionId}/visit`, {
@@ -216,42 +219,12 @@ function GameMap({ sessionId }: { sessionId: string }) {
   const visibleCount = state.locations.filter((l) => l.visible).length
   const visitedCount = state.session.visitedLocationIds.length
   const flagCount = state.session.flags.length
-  const nearbyLocation = nearbyLocationId
-    ? state.locations.find((l) => l.id === nearbyLocationId) ?? null
-    : null
+  const nearbyLocation = state.locations.find(
+    (l) => nearbyLocationIds.has(l.id) && !l.visited
+  ) ?? null
 
   return (
-    <div className="relative flex flex-col" style={{ height: 'calc(100dvh - 64px)' }}>
-      {/* Header bar */}
-      <div className="flex items-center gap-3 px-4 py-3 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 shrink-0 z-10">
-        <button
-          onClick={() => router.push('/adventure')}
-          className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </button>
-        <div className="flex-1 min-w-0">
-          <p className="text-xs text-blue-600 font-medium">Chapter {state.game.chapter}</p>
-          <h1 className="font-semibold text-sm truncate">{state.game.title}</h1>
-        </div>
-        <div className="flex items-center gap-3 text-xs text-gray-500 shrink-0">
-          <span className="flex items-center gap-1">
-            <MapPin className="h-3.5 w-3.5" />
-            {visitedCount}/{visibleCount}
-          </span>
-          <span className="flex items-center gap-1">
-            <Star className="h-3.5 w-3.5" />
-            {flagCount}
-          </span>
-          <button
-            onClick={() => loadState(sessionId)}
-            className="p-1 hover:text-blue-600"
-            title="Refresh"
-          >
-            <RefreshCw className="h-3.5 w-3.5" />
-          </button>
-        </div>
-      </div>
+    <div className="relative flex flex-col" style={{ height: '100dvh' }}>
 
       {/* GPS error banner */}
       {gpsError && (
@@ -297,20 +270,20 @@ function GameMap({ sessionId }: { sessionId: string }) {
         </div>
       )}
 
-      {/* Map — fills remaining space */}
+      {/* Map — fills all space except stats bar */}
       <div className="flex-1 relative overflow-hidden">
         <AdventureMap
           locations={state.locations}
           playerPosition={playerPos}
           onLocationClick={setSelectedLocation}
-          nearbyLocationId={nearbyLocationId}
+          nearbyLocationIds={nearbyLocationIds}
         />
       </div>
 
       {/* Visit result toast */}
       {visitResult && (
         <div
-          className="absolute bottom-24 left-4 right-4 z-[2000] p-4 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-xl"
+          className="absolute bottom-32 left-4 right-4 z-[2000] p-4 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-xl"
           onClick={() => setVisitResult(null)}
         >
           {visitResult.completesChapter ? (
@@ -331,9 +304,77 @@ function GameMap({ sessionId }: { sessionId: string }) {
         </div>
       )}
 
+      {/* Bottom bar */}
+      <div className="relative flex items-center justify-between px-6 py-2 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shrink-0 z-10 text-xs text-gray-500">
+        <button
+          onClick={() => router.push('/adventure')}
+          className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </button>
+        <span className="flex items-center gap-1">
+          <MapPin className="h-3.5 w-3.5" />
+          {visitedCount}/{visibleCount}
+        </span>
+        <button onClick={() => loadState(sessionId)} className="p-1 hover:text-blue-600" title="Refresh">
+          <RefreshCw className="h-3.5 w-3.5" />
+        </button>
+        <button onClick={() => setMenuOpen((v) => !v)} className="p-1 hover:text-blue-600" title="Settings">
+          <Settings className="h-4 w-4" />
+        </button>
+
+      </div>
+
+      {/* Settings sheet */}
+      {menuOpen && (
+        <div className="absolute inset-0 z-[2000] flex items-end" onClick={() => { setMenuOpen(false); setConfirmRestart(false) }}>
+          <div className="w-full bg-white dark:bg-gray-900 rounded-t-2xl shadow-2xl border-t border-gray-200 dark:border-gray-700 p-5 pb-8" onClick={(e) => e.stopPropagation()}>
+            <div className="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mb-4" />
+            {!confirmRestart ? (
+              <>
+                <p className="text-xs text-gray-400 uppercase tracking-wide mb-3">Chapter settings</p>
+                <button
+                  onClick={() => setConfirmRestart(true)}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 dark:hover:bg-red-950 text-sm font-medium"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  Restart chapter
+                </button>
+              </>
+            ) : (
+              <>
+                <p className="font-bold text-base mb-2">Restart chapter?</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                  All progress for this chapter will be permanently erased. This cannot be undone.
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setConfirmRestart(false)}
+                    className="flex-1 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-sm"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={async () => {
+                      setMenuOpen(false)
+                      setConfirmRestart(false)
+                      await fetchWithAuth(`/api/adventure/sessions/${sessionId}`, { method: 'DELETE' })
+                      router.push('/adventure')
+                    }}
+                    className="flex-1 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold"
+                  >
+                    Restart
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Nearby hint bar — shown when in range but sheet is closed */}
-      {nearbyLocation && !selectedLocation && !visitResult && !state.session.completedAt && (
-        <div className="absolute bottom-0 left-0 right-0 z-[1500] px-4 pb-4 pt-2">
+      {nearbyLocation && !nearbyLocation.visited && !selectedLocation && !visitResult && !state.session.completedAt && (
+        <div className="absolute bottom-10 left-0 right-0 z-[1500] px-4 pb-2 pt-2">
           <button
             onClick={() => setSelectedLocation(nearbyLocation)}
             className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-green-600 hover:bg-green-700 text-white shadow-lg transition-colors"
@@ -342,7 +383,7 @@ function GameMap({ sessionId }: { sessionId: string }) {
               <span className="text-lg">📍</span>
               <div className="text-left">
                 <p className="font-semibold text-sm leading-tight">{nearbyLocation.name}</p>
-                <p className="text-xs text-green-100">You are within range — tap to interact</p>
+                <p className="text-xs text-green-100">New location achieved! Tap to interact</p>
               </div>
             </div>
             <span className="text-xl">→</span>

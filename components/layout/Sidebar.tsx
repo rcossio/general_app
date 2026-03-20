@@ -20,6 +20,7 @@ export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false)
   const { user } = useAuth()
   const { t } = useLocale()
+  if (/^\/adventure\/.+/.test(pathname)) return null
 
   const isAdmin = user?.roles.some((r) => ['master_admin', 'admin'].includes(r))
 
