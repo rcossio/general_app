@@ -3,9 +3,12 @@
 import { useAuth } from '@/contexts/AuthContext'
 import { Moon, Sun, LogOut } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { usePathname } from 'next/navigation'
 
 export function Header() {
   const { user, logout } = useAuth()
+  const pathname = usePathname()
+  if (/^\/adventure\/.+/.test(pathname)) return null
   const [dark, setDark] = useState(false)
 
   useEffect(() => {

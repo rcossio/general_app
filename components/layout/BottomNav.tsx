@@ -9,11 +9,13 @@ import { useLocale } from '@/contexts/LocaleContext'
 const MODULE_NAV_KEYS: Record<string, string> = {
   workout: 'nav.workout',
   'life-tracker': 'nav.lifeTracker',
+  adventure: 'nav.adventure',
 }
 
 export function BottomNav() {
   const pathname = usePathname()
   const { t } = useLocale()
+  if (/^\/adventure\/.+/.test(pathname)) return null
 
   const navItems = [
     { label: t('nav.home'), href: '/', icon: 'Home' },

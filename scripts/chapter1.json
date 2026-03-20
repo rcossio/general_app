@@ -1,0 +1,152 @@
+{
+  "title": { "en": "The Garden", "it": "Il Giardino", "es": "El Jardín" },
+  "locations": [
+    {
+      "id": "loc_1_start",
+      "name": { "en": "Notice Board", "it": "Bacheca degli Avvisi", "es": "Tablón de Anuncios" },
+      "coordinates": { "lat": 45.01582683234417, "lng": 8.628133553657252 },
+      "radiusM": 35,
+      "visibleWhen": null,
+      "values": [
+        {
+          "when": "visited_start",
+          "content": {
+            "en": "You already read the board. Your friend, the shed, and the toolbox are nearby.",
+            "it": "Hai già letto la bacheca. Il tuo amico, il capanno e la cassetta degli attrezzi sono vicini.",
+            "es": "Ya leíste el tablón. Tu amigo, el cobertizo y la caja de herramientas están cerca."
+          }
+        },
+        {
+          "when": null,
+          "content": {
+            "en": "A notice board describes the area. You can see a friend's house, a shed, a toolbox, and a locked gate ahead.",
+            "it": "Una bacheca descrive la zona. Puoi vedere la casa di un amico, un capanno, una cassetta degli attrezzi e un cancello chiuso davanti a te.",
+            "es": "Un tablón de anuncios describe el área. Puedes ver la casa de un amigo, un cobertizo, una caja de herramientas y una reja cerrada más adelante."
+          }
+        }
+      ],
+      "grants": [{ "flag": "visited_start" }]
+    },
+    {
+      "id": "loc_2_friend",
+      "name": { "en": "Friend's House", "it": "Casa dell'Amico", "es": "Casa del Amigo" },
+      "coordinates": { "lat": 45.01535001146662, "lng": 8.628346083424557 },
+      "radiusM": 35,
+      "visibleWhen": "visited_start",
+      "values": [
+        {
+          "when": "has_friend",
+          "content": {
+            "en": "Your friend is already with you.",
+            "it": "Il tuo amico è già con te.",
+            "es": "Tu amigo ya está contigo."
+          }
+        },
+        {
+          "when": null,
+          "content": {
+            "en": "Your friend is home and agrees to come with you.",
+            "it": "Il tuo amico è a casa e accetta di venire con te.",
+            "es": "Tu amigo está en casa y acepta acompañarte."
+          }
+        }
+      ],
+      "grants": [{ "flag": "has_friend" }]
+    },
+    {
+      "id": "loc_3_key",
+      "name": { "en": "Old Shed", "it": "Vecchio Capanno", "es": "Cobertizo Viejo" },
+      "coordinates": { "lat": 45.01490700011301, "lng": 8.628122450339523 },
+      "radiusM": 35,
+      "visibleWhen": "visited_start",
+      "values": [
+        {
+          "when": "has_key",
+          "content": {
+            "en": "The shed is empty. You already took the key.",
+            "it": "Il capanno è vuoto. Hai già preso la chiave.",
+            "es": "El cobertizo está vacío. Ya tomaste la llave."
+          }
+        },
+        {
+          "when": null,
+          "content": {
+            "en": "You find a rusty key hanging on the wall.",
+            "it": "Trovi una chiave arrugginita appesa al muro.",
+            "es": "Encuentras una llave oxidada colgada en la pared."
+          }
+        }
+      ],
+      "grants": [{ "flag": "has_key" }]
+    },
+    {
+      "id": "loc_4_hammer",
+      "name": { "en": "Toolbox", "it": "Cassetta degli Attrezzi", "es": "Caja de Herramientas" },
+      "coordinates": { "lat": 45.01477694667256, "lng": 8.62756105427572 },
+      "radiusM": 35,
+      "visibleWhen": "visited_start",
+      "values": [
+        {
+          "when": "has_hammer",
+          "content": {
+            "en": "The toolbox is empty. You already took the hammer.",
+            "it": "La cassetta è vuota. Hai già preso il martello.",
+            "es": "La caja de herramientas está vacía. Ya tomaste el martillo."
+          }
+        },
+        {
+          "when": null,
+          "content": {
+            "en": "You find a heavy hammer inside the toolbox.",
+            "it": "Trovi un pesante martello dentro la cassetta degli attrezzi.",
+            "es": "Encuentras un pesado martillo dentro de la caja de herramientas."
+          }
+        }
+      ],
+      "grants": [{ "flag": "has_hammer" }]
+    },
+    {
+      "id": "loc_5_gate",
+      "name": { "en": "Locked Gate", "it": "Cancello Chiuso", "es": "Reja Cerrada" },
+      "coordinates": { "lat": 45.014486301008176, "lng": 8.62806747813587 },
+      "radiusM": 35,
+      "visibleWhen": "visited_start",
+      "values": [
+        {
+          "when": { "and": ["has_friend", { "or": ["has_key", "has_hammer"] }] },
+          "content": {
+            "en": "You and your friend force open the gate. You're through. Chapter 1 complete!",
+            "it": "Tu e il tuo amico forzate il cancello. Ce l'avete fatta. Capitolo 1 completato!",
+            "es": "Tú y tu amigo fuerzan la reja. ¡Lo lograron! ¡Capítulo 1 completado!"
+          },
+          "completesChapter": true
+        },
+        {
+          "when": "has_friend",
+          "content": {
+            "en": "Your friend is here but you need a key or a hammer to open the gate.",
+            "it": "Il tuo amico è qui, ma ti serve una chiave o un martello per aprire il cancello.",
+            "es": "Tu amigo está aquí, pero necesitas una llave o un martillo para abrir la reja."
+          }
+        },
+        {
+          "when": { "or": ["has_key", "has_hammer"] },
+          "content": {
+            "en": "You have the tool but you need your friend to help with the gate.",
+            "it": "Hai l'attrezzo, ma hai bisogno del tuo amico per aprire il cancello.",
+            "es": "Tienes la herramienta, pero necesitas a tu amigo para abrir la reja."
+          }
+        },
+        {
+          "when": null,
+          "content": {
+            "en": "A heavy gate blocks the path. You'll need help and something to open it with.",
+            "it": "Un pesante cancello blocca il cammino. Avrai bisogno di aiuto e di qualcosa per aprirlo.",
+            "es": "Una pesada reja bloquea el camino. Necesitarás ayuda y algo para abrirla."
+          }
+        }
+      ],
+      "grants": []
+    }
+  ]
+}

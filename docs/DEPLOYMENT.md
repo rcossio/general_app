@@ -225,8 +225,16 @@ npx prisma db seed
 ```
 
 **What seed creates:** roles, permissions, master admin account, and 10 bot community
-users with public workouts and tracker entries. The community feed will be populated
-immediately after first deploy. The seed is idempotent — safe to re-run.
+users with public tracker entries. The seed is idempotent — safe to re-run.
+
+After seeding, import the adventure game data:
+```bash
+npx tsx scripts/import-game.ts \
+  --file=scripts/chapter1.json \
+  --slug=chapter-1 \
+  --chapter=1 \
+  --activate
+```
 
 ---
 

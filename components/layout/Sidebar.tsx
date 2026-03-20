@@ -12,6 +12,7 @@ import { useLocale } from '@/contexts/LocaleContext'
 const MODULE_NAV_KEYS: Record<string, string> = {
   workout: 'nav.workout',
   'life-tracker': 'nav.lifeTracker',
+  adventure: 'nav.adventure',
 }
 
 export function Sidebar() {
@@ -19,6 +20,7 @@ export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false)
   const { user } = useAuth()
   const { t } = useLocale()
+  if (/^\/adventure\/.+/.test(pathname)) return null
 
   const isAdmin = user?.roles.some((r) => ['master_admin', 'admin'].includes(r))
 

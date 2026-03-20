@@ -26,6 +26,7 @@ model User {
   refreshTokens   RefreshToken[]
   workoutRoutines WorkoutRoutine[]
   trackerEntries  TrackerEntry[]
+  gameSessions    GameSession[]
 
   @@map("users")
 }
@@ -142,6 +143,95 @@ model WorkoutExercise {
 
   @@index([dayId])
   @@map("workout_exercises")
+}
+
+// ============================================================
+// SECTION: Adventure Module
+// ============================================================
+
+model Game {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       Json
+  description String?
+  chapter     Int      @default(1)
+  nextGameId  String?  @unique @map("next_game_id")
+  isActive    Boolean  @default(false) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  locations GameLocation[]
+  sessions  GameSession[]
+
+  @@map("games")
+}
+
+model GameLocation {
+  id          String @id @default(cuid())
+  gameId      String @map("game_id")
+  externalId  String @map("external_id")
+  name        Json
+  lat         Float
+  lng         Float
+  radiusM     Int    @default(30) @map("radius_m")
+  // null | "flag_string" | { and: Condition[] } | { or: Condition[] }
+  visibleWhen Json?  @map("visible_when")
+  // Array of { when: Condition | null, content: { en, it, es }, completesChapter?: true }
+  values      Json
+  // Array of { flag: string }
+  grants      Json
+  order       Int    @default(0)
+
+  game   Game            @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  visits LocationVisit[]
+
+  @@unique([gameId, externalId])
+  @@index([gameId])
+  @@map("game_locations")
+}
+
+model GameSession {
+  id          String    @id @default(cuid())
+  gameId      String    @map("game_id")
+  userId      String    @map("user_id")
+  startedAt   DateTime  @default(now()) @map("started_at")
+  completedAt DateTime? @map("completed_at")
+
+  game   Game            @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  user   User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  flags  SessionFlag[]
+  visits LocationVisit[]
+
+  @@unique([gameId, userId])
+  @@index([userId])
+  @@map("game_sessions")
+}
+
+model SessionFlag {
+  id        String      @id @default(cuid())
+  sessionId String      @map("session_id")
+  flag      String
+  setAt     DateTime    @default(now()) @map("set_at")
+
+  session GameSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, flag])
+  @@index([sessionId])
+  @@map("session_flags")
+}
+
+model LocationVisit {
+  id         String   @id @default(cuid())
+  sessionId  String   @map("session_id")
+  locationId String   @map("location_id")
+  visitedAt  DateTime @default(now()) @map("visited_at")
+
+  session  GameSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  location GameLocation @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, locationId])
+  @@index([sessionId])
+  @@map("location_visits")
 }
 
 // ============================================================

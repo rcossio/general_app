@@ -4,7 +4,8 @@ A full-stack PWA built with the T3 Stack pattern. Single Next.js project handlin
 frontend and backend via Route Handlers. Modular architecture: drop a new folder into
 `modules/` and register it in `config/modules.ts` to add a feature.
 
-**Active modules:** Workout, Life Tracker
+**Active modules:** Life Tracker, Adventure
+**Disabled modules:** Workout (code intact, comment out removed from `config/modules.ts`)
 
 ---
 
