@@ -12,6 +12,7 @@ import { useLocale } from '@/contexts/LocaleContext'
 const MODULE_NAV_KEYS: Record<string, string> = {
   workout: 'nav.workout',
   'life-tracker': 'nav.lifeTracker',
+  adventure: 'nav.adventure',
 }
 
 export function Sidebar() {

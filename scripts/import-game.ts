@@ -1,0 +1,170 @@
+/**
+ * Import a game from a JSON file into the database.
+ *
+ * Usage:
+ *   npx tsx scripts/import-game.ts \
+ *     --file=scripts/chapter1.json \
+ *     --slug=chapter-1 \
+ *     --title="Chapter 1: The Garden" \
+ *     --chapter=1 \
+ *     [--description="..."] \
+ *     [--next-chapter-slug=chapter-2] \
+ *     [--activate]
+ *
+ * The JSON format expected:
+ * {
+ *   "locations": [
+ *     {
+ *       "id": "loc_1_start",           // unique within game, used as externalId
+ *       "name": "Notice Board",
+ *       "coordinates": { "lat": 45.01, "lng": 8.62 },
+ *       "visibleWhen": null | "flag" | { "and": [...] } | { "or": [...] },
+ *       "values": [
+ *         {
+ *           "when": null | "flag" | { "and": [...] } | { "or": [...] },
+ *           "content": "Narrative text shown to player",
+ *           "completesChapter": true   // optional — marks this as the win condition
+ *         }
+ *       ],
+ *       "grants": [{ "flag": "flag_name" }]
+ *     }
+ *   ]
+ * }
+ */
+
+import { PrismaClient } from '@prisma/client'
+import * as fs from 'fs'
+import * as path from 'path'
+
+const prisma = new PrismaClient()
+
+function parseArgs(argv: string[]) {
+  const args: Record<string, string> = {}
+  for (const arg of argv.slice(2)) {
+    if (arg.startsWith('--')) {
+      const [key, ...rest] = arg.slice(2).split('=')
+      args[key] = rest.join('=')
+    }
+  }
+  return args
+}
+
+async function main() {
+  const args = parseArgs(process.argv)
+
+  const file = args['file']
+  const slug = args['slug']
+  const title = args['title']
+  const chapter = parseInt(args['chapter'] ?? '1', 10)
+  const description = args['description']
+  const nextChapterSlug = args['next-chapter-slug']
+  const activate = 'activate' in args
+
+  if (!file || !slug || !title) {
+    console.error('Usage: npx tsx scripts/import-game.ts --file=<path> --slug=<slug> --title=<title> [--chapter=N] [--description=...] [--next-chapter-slug=<slug>] [--activate]')
+    process.exit(1)
+  }
+
+  const filePath = path.resolve(file)
+  if (!fs.existsSync(filePath)) {
+    console.error(`File not found: ${filePath}`)
+    process.exit(1)
+  }
+
+  const raw = fs.readFileSync(filePath, 'utf-8')
+  const data = JSON.parse(raw) as {
+    locations: Array<{
+      id: string
+      name: string
+      coordinates: { lat: number; lng: number }
+      radiusM?: number
+      visibleWhen: unknown
+      values: unknown
+      grants: unknown
+    }>
+  }
+
+  if (!Array.isArray(data.locations)) {
+    console.error('JSON must have a "locations" array')
+    process.exit(1)
+  }
+
+  // Resolve next chapter id
+  let nextGameId: string | null = null
+  if (nextChapterSlug) {
+    const next = await prisma.game.findUnique({ where: { slug: nextChapterSlug } })
+    if (!next) {
+      console.error(`next-chapter-slug "${nextChapterSlug}" not found. Import that chapter first.`)
+      process.exit(1)
+    }
+    nextGameId = next.id
+  }
+
+  // Upsert game
+  const game = await prisma.game.upsert({
+    where: { slug },
+    update: {
+      title,
+      description: description ?? undefined,
+      chapter,
+      isActive: activate || undefined,
+      nextGameId: nextGameId ?? undefined,
+    },
+    create: {
+      slug,
+      title,
+      description,
+      chapter,
+      isActive: activate,
+      nextGameId,
+    },
+  })
+
+  console.log(`Game "${game.title}" (${game.slug}) — id: ${game.id}`)
+
+  // Upsert locations
+  for (let i = 0; i < data.locations.length; i++) {
+    const loc = data.locations[i]
+    await prisma.gameLocation.upsert({
+      where: { gameId_externalId: { gameId: game.id, externalId: loc.id } },
+      update: {
+        name: loc.name,
+        lat: loc.coordinates.lat,
+        lng: loc.coordinates.lng,
+        ...(loc.radiusM !== undefined ? { radiusM: loc.radiusM } : {}),
+        visibleWhen: loc.visibleWhen ?? null,
+        values: loc.values as never,
+        grants: loc.grants as never,
+        order: i,
+      },
+      create: {
+        gameId: game.id,
+        externalId: loc.id,
+        name: loc.name,
+        lat: loc.coordinates.lat,
+        lng: loc.coordinates.lng,
+        ...(loc.radiusM !== undefined ? { radiusM: loc.radiusM } : {}),
+        visibleWhen: loc.visibleWhen ?? null,
+        values: loc.values as never,
+        grants: loc.grants as never,
+        order: i,
+      },
+    })
+    console.log(`  [${i + 1}/${data.locations.length}] ${loc.name} (${loc.id})`)
+  }
+
+  if (!game.isActive) {
+    console.log('\nGame imported but NOT yet active. To activate, run with --activate flag or set isActive=true in the DB.')
+  } else {
+    console.log('\nGame is active and ready to play.')
+  }
+
+  console.log(`\nDone. ${data.locations.length} locations imported.`)
+}
+
+main()
+  .catch((e) => {
+    console.error(e)
+    process.exit(1)
+  })
+  .finally(() => prisma.$disconnect())

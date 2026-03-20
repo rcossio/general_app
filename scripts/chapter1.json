@@ -1,0 +1,103 @@
+{
+  "locations": [
+    {
+      "id": "loc_1_start",
+      "name": "Notice Board",
+      "coordinates": { "lat": 45.01513449199466, "lng": 8.62788452481497 },
+      "radiusM": 35,
+      "visibleWhen": null,
+      "values": [
+        {
+          "when": "visited_start",
+          "content": "You already read the board. Your friend, the shed, and the toolbox are nearby."
+        },
+        {
+          "when": null,
+          "content": "A notice board describes the area. You can see a friend's house, a shed, a toolbox, and a locked gate ahead."
+        }
+      ],
+      "grants": [{ "flag": "visited_start" }]
+    },
+    {
+      "id": "loc_2_friend",
+      "name": "Friend's House",
+      "coordinates": { "lat": 45.014987959911174, "lng": 8.628290416329916 },
+      "radiusM": 35,
+      "visibleWhen": "visited_start",
+      "values": [
+        {
+          "when": "has_friend",
+          "content": "Your friend is already with you."
+        },
+        {
+          "when": null,
+          "content": "Your friend is home and agrees to come with you."
+        }
+      ],
+      "grants": [{ "flag": "has_friend" }]
+    },
+    {
+      "id": "loc_3_key",
+      "name": "Old Shed",
+      "coordinates": { "lat": 45.0153837176548, "lng": 8.628024375589824 },
+      "radiusM": 35,
+      "visibleWhen": "visited_start",
+      "values": [
+        {
+          "when": "has_key",
+          "content": "The shed is empty. You already took the key."
+        },
+        {
+          "when": null,
+          "content": "You find a rusty key hanging on the wall."
+        }
+      ],
+      "grants": [{ "flag": "has_key" }]
+    },
+    {
+      "id": "loc_4_hammer",
+      "name": "Toolbox",
+      "coordinates": { "lat": 45.014552057403215, "lng": 8.628017292904957 },
+      "radiusM": 35,
+      "visibleWhen": "visited_start",
+      "values": [
+        {
+          "when": "has_hammer",
+          "content": "The toolbox is empty. You already took the hammer."
+        },
+        {
+          "when": null,
+          "content": "You find a heavy hammer inside the toolbox."
+        }
+      ],
+      "grants": [{ "flag": "has_hammer" }]
+    },
+    {
+      "id": "loc_5_gate",
+      "name": "Locked Gate",
+      "coordinates": { "lat": 45.01480624368455, "lng": 8.627613672090963 },
+      "radiusM": 35,
+      "visibleWhen": "visited_start",
+      "values": [
+        {
+          "when": { "and": ["has_friend", { "or": ["has_key", "has_hammer"] }] },
+          "content": "You and your friend force open the gate. You're through. Chapter 1 complete!",
+          "completesChapter": true
+        },
+        {
+          "when": "has_friend",
+          "content": "Your friend is here but you need a key or a hammer to open the gate."
+        },
+        {
+          "when": { "or": ["has_key", "has_hammer"] },
+          "content": "You have the tool but you need your friend to help with the gate."
+        },
+        {
+          "when": null,
+          "content": "A heavy gate blocks the path. You'll need help and something to open it with."
+        }
+      ],
+      "grants": []
+    }
+  ]
+}
