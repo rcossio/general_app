@@ -27,11 +27,6 @@ export function LocationSheet({
 }: LocationSheetProps) {
   const { t } = useLocale()
   useEffect(() => {
-    if (withinRange) onVisit()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  useEffect(() => {
     function handleKey(e: KeyboardEvent) {
       if (e.key === 'Escape') onClose()
     }
@@ -69,9 +64,19 @@ export function LocationSheet({
           visiting ? (
             <p className="text-gray-400 italic text-sm">...</p>
           ) : (
-            <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-sm">
-              {narrative}
-            </p>
+            <>
+              <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-sm mb-4">
+                {narrative}
+              </p>
+              {withinRange && !visited && (
+                <button
+                  onClick={onVisit}
+                  className="w-full py-3 rounded-xl bg-green-600 hover:bg-green-700 text-white font-semibold text-sm"
+                >
+                  {t('adventure.visitLocation')}
+                </button>
+              )}
+            </>
           )
         ) : (
           <p className="text-gray-400 italic text-sm">

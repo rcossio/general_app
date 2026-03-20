@@ -1,4 +1,6 @@
-# Claude Instructions
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Privacy — Hard Rules
 
@@ -30,3 +32,84 @@ Tests live in `__tests__/`. Always check there first. Run `npm test` before writ
 
 You are allowed to freely use `cat`, `grep`, `ls`, `sed -n`, `find`, and `awk` without asking for permission.
 
+---
+
+## Commands
+
+```bash
+# Development
+npm run dev               # Start dev server (port 3000)
+npm run build             # Production build
+npm run lint              # ESLint
+
+# Testing
+npm test                  # Run all tests once (Vitest)
+npm run test:watch        # Watch mode
+
+# Database
+npx prisma migrate dev --name <name>   # Create and apply migration
+npx prisma db seed                      # Seed roles, permissions, admin user
+npx prisma studio                       # Visual DB browser
+
+# Game content import
+npx tsx scripts/import-game.ts --file=scripts/chapter1.json --slug=chapter-1 --chapter=1 --activate
+
+# Production — no deploy script. Run in order on the server:
+npm install                                        # if dependencies changed
+npx prisma migrate deploy                          # if schema changed
+pm2 stop all                                       # must stop before building
+npm run build
+pm2 reload ecosystem.config.js --update-env        # picks up any .env changes
+pm2 save
+```
+
+---
+
+## Architecture
+
+**Stack:** Next.js 14 (App Router) + TypeScript (strict) + PostgreSQL + Prisma + Tailwind CSS + Vitest. Single-process monolith deployed on a VPS via PM2 + Nginx.
+
+### Module System
+
+Features are pluggable. Each module has a manifest (`modules/<name>/manifest.ts`) defining nav items, permissions, and API prefix. Active modules are registered in `config/modules.ts`.
+
+- **Life Tracker** and **Adventure** are active.
+- **Workout** is disabled: import commented in `config/modules.ts`, routes return 403, DB tables intact.
+
+To enable/disable a module: edit `config/modules.ts`, then run `npx prisma migrate dev`.
+
+### Auth
+
+- **Access token:** JWT, 15 min, stored in React context (memory only — never localStorage).
+- **Refresh token:** JWT, 30 days, hashed in DB, sent as httpOnly cookie. Rotated on each refresh.
+- Fetch wrapper auto-refreshes on 401 and retries once.
+- `lib/auth.ts` — token signing/verification, password hashing.
+- `lib/permissions.ts` — `requirePermission(request, resource, action)` RBAC middleware. `master_admin` and `admin` bypass all checks.
+
+### API Design
+
+- All inputs validated with Zod.
+- Error shape: `{ error: string, code: string }`.
+- Success shape: `{ data: T }`.
+- List endpoints support `?page=1&limit=20`.
+
+### Adventure Module
+
+GPS-based location game. Key patterns:
+
+- Location visit: verify ownership → check `visibleWhen` flag condition → verify GPS distance ≤ `radiusM` → apply grants (flags) → return narrative.
+- `modules/adventure/haversine.ts` — GPS distance.
+- `modules/adventure/condition.ts` — evaluates flag-based visibility conditions.
+- **iOS Safari critical:** All overlays on the map page use `absolute` positioning inside a `relative` parent. Never use `position: fixed` or React portals — they get clipped by the Leaflet map container.
+- CircleMarker colors: orange = unvisited, gray = visited, green = in range.
+
+### i18n
+
+Custom `LocaleContext` (no library). Locales: `en`, `it`, `es`. `locales/en.ts` exports the authoritative `Translations` type — all other locales must implement it exactly (missing keys = TypeScript error). Hook: `useLocale()` → `{ t, locale, setLocale }`.
+
+### Testing Setup
+
+- Test DB configured via `TEST_DATABASE_URL` env var.
+- Global setup: `__tests__/setup/global.ts` (seed test DB).
+- Per-test isolation: `__tests__/setup/each.ts`.
+- Helpers in `__tests__/helpers.ts`: `registerAndLogin`, `authHeaders`, `uniqueEmail`.

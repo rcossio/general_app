@@ -1,14 +1,15 @@
 'use client'
 
-import { useEffect, useState, useCallback, useRef, useMemo } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useLocale } from '@/contexts/LocaleContext'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
 import { LocationSheet } from '@/modules/adventure/components/LocationSheet'
+import { usePlayerPosition } from '@/modules/adventure/lib/usePlayerPosition'
 import { distanceMeters } from '@/modules/adventure/lib/haversine'
-import { ArrowLeft, MapPin, Trophy, RefreshCw, Settings, RotateCcw } from 'lucide-react'
+import { ArrowLeft, MapPin, Trophy, RefreshCw, Settings, RotateCcw, Crosshair, X } from 'lucide-react'
 import type { MapLocation } from '@/modules/adventure/components/AdventureMap'
 
 // Dynamic import: Leaflet requires browser environment
@@ -20,7 +21,7 @@ const AdventureMap = dynamic(
 function MapPlaceholder() {
   return (
     <div className="flex items-center justify-center h-full bg-gray-100 dark:bg-gray-800">
-      <div className="animate-pulse text-gray-400 text-sm">Loading map...</div>
+      <div className="animate-pulse text-gray-400 text-sm">…</div>
     </div>
   )
 }
@@ -63,12 +64,6 @@ interface SessionState {
   locations: ApiLocation[]
 }
 
-interface PlayerPosition {
-  lat: number
-  lng: number
-  accuracy: number
-}
-
 interface VisitResult {
   narrative: I18nString
   newFlags: string[]
@@ -95,17 +90,15 @@ function GameMap({ sessionId }: { sessionId: string }) {
   const router = useRouter()
 
   const [state, setState] = useState<SessionState | null>(null)
-  const [playerPos, setPlayerPos] = useState<PlayerPosition | null>(null)
-  const [gpsError, setGpsError] = useState<string | null>(null)
+  const [fakeMode, setFakeMode] = useState(false)
+  const { playerPos, gpsError } = usePlayerPosition(fakeMode)
   const [selectedLocation, setSelectedLocation] = useState<MapLocation | null>(null)
   const [visiting, setVisiting] = useState(false)
   const [visitResult, setVisitResult] = useState<VisitResult | null>(null)
   const [loading, setLoading] = useState(true)
   const [menuOpen, setMenuOpen] = useState(false)
   const [confirmRestart, setConfirmRestart] = useState(false)
-  const watchIdRef = useRef<number | null>(null)
-  // Track which location id was last auto-opened so we only open once per entry
-  const autoOpenedRef = useRef<string | null>(null)
+  const [completeBannerDismissed, setCompleteBannerDismissed] = useState(false)
 
   const loadState = useCallback(
     async (sid: string) => {
@@ -121,36 +114,10 @@ function GameMap({ sessionId }: { sessionId: string }) {
     loadState(sessionId)
   }, [sessionId, loadState])
 
-  // GPS tracking
+  // Re-show chapter complete banner when chapter just completed
   useEffect(() => {
-    if (!navigator.geolocation) {
-      setGpsError('Geolocation is not supported by your browser.')
-      return
-    }
-
-    watchIdRef.current = navigator.geolocation.watchPosition(
-      (pos) => {
-        setGpsError(null)
-        setPlayerPos({
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-          accuracy: pos.coords.accuracy,
-        })
-      },
-      (err) => {
-        if (err.code === err.PERMISSION_DENIED) {
-          setGpsError('Location access denied. Enable GPS to play.')
-        }
-      },
-      { enableHighAccuracy: true, maximumAge: 5000 }
-    )
-
-    return () => {
-      if (watchIdRef.current !== null) {
-        navigator.geolocation.clearWatch(watchIdRef.current)
-      }
-    }
-  }, [])
+    if (visitResult?.completesChapter) setCompleteBannerDismissed(false)
+  }, [visitResult?.completesChapter])
 
   // Resolve multilingual fields for the current locale
   const resolvedLocations: MapLocation[] = useMemo(
@@ -174,25 +141,6 @@ function GameMap({ sessionId }: { sessionId: string }) {
     }
     return ids
   })()
-
-  // Auto-open the sheet when GPS places the player inside a location's radius.
-  // Depends on playerPos (state) so it reliably fires on every GPS update.
-  useEffect(() => {
-    if (!playerPos || !state) return
-    for (const loc of resolvedLocations) {
-      if (!loc.visible || loc.visited) continue
-      const dist = distanceMeters(playerPos.lat, playerPos.lng, loc.lat, loc.lng)
-      if (dist <= loc.radiusM) {
-        // Only auto-open once per location entry; user closing the sheet won't reopen it
-        if (autoOpenedRef.current === loc.id) return
-        autoOpenedRef.current = loc.id
-        setSelectedLocation(loc)
-        return
-      }
-    }
-    // Player left all radii — reset so re-entering will auto-open again
-    autoOpenedRef.current = null
-  }, [playerPos, state]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleVisit = async () => {
     if (!selectedLocation || !playerPos || selectedLocation.visited) return
@@ -232,7 +180,7 @@ function GameMap({ sessionId }: { sessionId: string }) {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-64px)]">
-        <div className="animate-pulse text-gray-400 text-sm">Loading adventure...</div>
+        <div className="animate-pulse text-gray-400 text-sm">{t('adventure.loading')}</div>
       </div>
     )
   }
@@ -240,9 +188,9 @@ function GameMap({ sessionId }: { sessionId: string }) {
   if (!state) {
     return (
       <div className="flex flex-col items-center justify-center h-[calc(100vh-64px)] gap-4 text-gray-500">
-        <p>Session not found.</p>
+        <p>{t('adventure.sessionNotFound')}</p>
         <button onClick={() => router.push('/adventure')} className="text-blue-600 underline text-sm">
-          Back to adventures
+          {t('adventure.backToAdventures')}
         </button>
       </div>
     )
@@ -257,47 +205,17 @@ function GameMap({ sessionId }: { sessionId: string }) {
   return (
     <div className="relative flex flex-col" style={{ height: '100dvh' }}>
 
+      {/* Fake GPS active banner */}
+      {fakeMode && (
+        <div className="px-4 py-1.5 bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 text-xs text-center border-b border-amber-200 dark:border-amber-800 shrink-0">
+          {t('adventure.fakeGpsActive')}
+        </div>
+      )}
+
       {/* GPS error banner */}
       {gpsError && (
         <div className="px-4 py-2 bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300 text-xs text-center border-b border-red-200 dark:border-red-800 shrink-0">
           {gpsError}
-        </div>
-      )}
-
-      {/* Chapter complete banner */}
-      {state.session.completedAt && (
-        <div className="px-4 py-3 bg-green-50 dark:bg-green-950 border-b border-green-200 dark:border-green-800 shrink-0">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-green-600" />
-              <div>
-                <p className="font-semibold text-green-700 dark:text-green-300 text-sm">
-                  Chapter Complete!
-                </p>
-                <p className="text-xs text-green-600 dark:text-green-400">
-                  Completed {new Date(state.session.completedAt).toLocaleDateString()}
-                </p>
-              </div>
-            </div>
-            {state.game.nextGameId && (
-              <button
-                onClick={async () => {
-                  const res = await fetchWithAuth('/api/adventure/sessions', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ gameId: state.game.nextGameId }),
-                  })
-                  const body = await res.json()
-                  if (body.data?.sessionId) {
-                    router.push(`/adventure/${body.data.sessionId}`)
-                  }
-                }}
-                className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded-lg"
-              >
-                Next chapter →
-              </button>
-            )}
-          </div>
         </div>
       )}
 
@@ -311,27 +229,21 @@ function GameMap({ sessionId }: { sessionId: string }) {
         />
       </div>
 
-      {/* Visit result toast */}
+      {/* Visit result toast — all visits */}
       {visitResult && (
         <div
-          className="absolute bottom-32 left-4 right-4 z-[2000] p-4 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-xl"
+          className="absolute bottom-14 left-4 right-4 z-[2000] p-4 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-xl"
           onClick={() => setVisitResult(null)}
         >
-          {visitResult.completesChapter ? (
-            <div className="flex items-center gap-2 mb-2">
-              <Trophy className="h-5 w-5 text-yellow-500" />
-              <span className="font-bold text-green-700 dark:text-green-400">Chapter Complete!</span>
-            </div>
-          ) : null}
           <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
             {resolveI18n(visitResult.narrative, locale)}
           </p>
           {visitResult.newFlags.length > 0 && (
             <p className="text-xs text-blue-600 mt-2">
-              + {visitResult.newFlags.join(', ')}
+              {t('adventure.flagsEarned')}: {visitResult.newFlags.join(', ')}
             </p>
           )}
-          <p className="text-xs text-gray-400 mt-2 text-right">Tap to dismiss</p>
+          <p className="text-xs text-gray-400 mt-2 text-right">{t('adventure.tapToDismiss')}</p>
         </div>
       )}
 
@@ -347,10 +259,10 @@ function GameMap({ sessionId }: { sessionId: string }) {
           <MapPin className="h-3.5 w-3.5" />
           {visitedCount}/{visibleCount}
         </span>
-        <button onClick={() => loadState(sessionId)} className="p-1 hover:text-blue-600" title="Refresh">
+        <button onClick={() => loadState(sessionId)} className="p-1 hover:text-blue-600">
           <RefreshCw className="h-3.5 w-3.5" />
         </button>
-        <button onClick={() => setMenuOpen((v) => !v)} className="p-1 hover:text-blue-600" title="Settings">
+        <button onClick={() => setMenuOpen((v) => !v)} className="p-1 hover:text-blue-600">
           <Settings className="h-4 w-4" />
         </button>
 
@@ -364,6 +276,14 @@ function GameMap({ sessionId }: { sessionId: string }) {
             {!confirmRestart ? (
               <>
                 <p className="text-xs text-gray-400 uppercase tracking-wide mb-3">{t('adventure.chapterSettings')}</p>
+                <button
+                  onClick={() => { setFakeMode((v) => !v); setMenuOpen(false) }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium mb-1 ${fakeMode ? 'bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300' : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'}`}
+                >
+                  <Crosshair className="h-4 w-4" />
+                  {t('adventure.fakeGps')}
+                  {fakeMode && <span className="ml-auto text-xs font-normal">ON</span>}
+                </button>
                 <button
                   onClick={() => setConfirmRestart(true)}
                   className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 dark:hover:bg-red-950 text-sm font-medium"
@@ -403,6 +323,42 @@ function GameMap({ sessionId }: { sessionId: string }) {
         </div>
       )}
 
+      {/* Chapter complete banner — dismissible, non-blocking */}
+      {state.session.completedAt && !completeBannerDismissed && (
+        <div className="absolute top-0 left-0 right-0 z-[2000] px-4 py-3 bg-green-600 text-white shadow-lg">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 min-w-0">
+              <Trophy className="h-4 w-4 text-yellow-300 shrink-0" />
+              <p className="font-semibold text-sm truncate">{t('adventure.chapterComplete')}</p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              {state.game.nextGameId && (
+                <button
+                  onClick={async () => {
+                    const res = await fetchWithAuth('/api/adventure/sessions', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ gameId: state.game.nextGameId }),
+                    })
+                    const body = await res.json()
+                    if (body.data?.sessionId) router.push(`/adventure/${body.data.sessionId}`)
+                  }}
+                  className="px-3 py-1 bg-white/20 hover:bg-white/30 rounded-lg text-xs font-medium"
+                >
+                  {t('adventure.nextChapter')}
+                </button>
+              )}
+              <button
+                onClick={() => setCompleteBannerDismissed(true)}
+                className="p-1 hover:bg-white/20 rounded"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Nearby hint bar — shown when in range but sheet is closed */}
       {nearbyLocation && !nearbyLocation.visited && !selectedLocation && !visitResult && !state.session.completedAt && (
         <div className="absolute bottom-10 left-0 right-0 z-[1500] px-4 pb-2 pt-2">
@@ -414,7 +370,7 @@ function GameMap({ sessionId }: { sessionId: string }) {
               <span className="text-lg">📍</span>
               <div className="text-left">
                 <p className="font-semibold text-sm leading-tight">{nearbyLocation.name}</p>
-                <p className="text-xs text-green-100">New location achieved! Tap to interact</p>
+                <p className="text-xs text-green-100">{t('adventure.newLocationFound')}</p>
               </div>
             </div>
             <span className="text-xl">→</span>
