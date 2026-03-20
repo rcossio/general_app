@@ -152,7 +152,7 @@ model WorkoutExercise {
 model Game {
   id          String   @id @default(cuid())
   slug        String   @unique
-  title       String
+  title       Json
   description String?
   chapter     Int      @default(1)
   nextGameId  String?  @unique @map("next_game_id")
@@ -170,13 +170,13 @@ model GameLocation {
   id          String @id @default(cuid())
   gameId      String @map("game_id")
   externalId  String @map("external_id")
-  name        String
+  name        Json
   lat         Float
   lng         Float
   radiusM     Int    @default(30) @map("radius_m")
   // null | "flag_string" | { and: Condition[] } | { or: Condition[] }
   visibleWhen Json?  @map("visible_when")
-  // Array of { when: Condition | null, content: string, completesChapter?: true }
+  // Array of { when: Condition | null, content: { en, it, es }, completesChapter?: true }
   values      Json
   // Array of { flag: string }
   grants      Json

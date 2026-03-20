@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 import { X, Navigation } from 'lucide-react'
+import { useLocale } from '@/contexts/LocaleContext'
 
 interface LocationSheetProps {
   name: string
@@ -24,6 +25,7 @@ export function LocationSheet({
   onClose,
   visiting,
 }: LocationSheetProps) {
+  const { t } = useLocale()
   useEffect(() => {
     if (withinRange) onVisit()
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -51,7 +53,7 @@ export function LocationSheet({
             {distance !== null && !withinRange && (
               <p className="text-xs text-gray-400 flex items-center gap-1 mt-1">
                 <Navigation className="h-3 w-3" />
-                {Math.round(distance)}m away
+                {Math.round(distance)}m
               </p>
             )}
           </div>
@@ -73,7 +75,7 @@ export function LocationSheet({
           )
         ) : (
           <p className="text-gray-400 italic text-sm">
-            Get closer to discover this location.
+            {t('adventure.outOfRange')}
           </p>
         )}
       </div>

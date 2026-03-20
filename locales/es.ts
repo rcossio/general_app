@@ -122,6 +122,11 @@ const es: Translations = {
     flagsEarned: 'Recogidos',
     distanceAway: '{distance}m de distancia',
     locations: 'lugares',
+    chapterSettings: 'Ajustes del capítulo',
+    restartChapter: 'Reiniciar capítulo',
+    restartChapterConfirm: '¿Reiniciar el capítulo?',
+    restartChapterWarning: 'Todo el progreso de este capítulo se borrará permanentemente. Esta acción no se puede deshacer.',
+    restart: 'Reiniciar',
   },
 }
 

@@ -8,20 +8,20 @@ type Params = { params: Promise<{ id: string }> }
 
 type LocationValue = {
   when: Condition
-  content: string
+  content: Record<string, string>
   completesChapter?: boolean
 }
 
 function resolveNarrative(
   values: LocationValue[],
   flags: Set<string>
-): { content: string; completesChapter: boolean } {
+): { content: Record<string, string>; completesChapter: boolean } {
   for (const v of values) {
     if (evaluate(v.when as Condition, flags)) {
       return { content: v.content, completesChapter: v.completesChapter ?? false }
     }
   }
-  return { content: '', completesChapter: false }
+  return { content: {}, completesChapter: false }
 }
 
 export async function GET(request: NextRequest, { params }: Params) {
@@ -72,7 +72,7 @@ export async function GET(request: NextRequest, { params }: Params) {
     return {
       id: loc.id,
       externalId: loc.externalId,
-      name: loc.name,
+      name: loc.name as Record<string, string>,
       lat: loc.lat,
       lng: loc.lng,
       radiusM: loc.radiusM,

@@ -54,14 +54,13 @@ async function main() {
 
   const file = args['file']
   const slug = args['slug']
-  const title = args['title']
   const chapter = parseInt(args['chapter'] ?? '1', 10)
   const description = args['description']
   const nextChapterSlug = args['next-chapter-slug']
   const activate = 'activate' in args
 
-  if (!file || !slug || !title) {
-    console.error('Usage: npx tsx scripts/import-game.ts --file=<path> --slug=<slug> --title=<title> [--chapter=N] [--description=...] [--next-chapter-slug=<slug>] [--activate]')
+  if (!file || !slug) {
+    console.error('Usage: npx tsx scripts/import-game.ts --file=<path> --slug=<slug> [--title=<en-title>] [--chapter=N] [--description=...] [--next-chapter-slug=<slug>] [--activate]')
     process.exit(1)
   }
 
@@ -73,9 +72,10 @@ async function main() {
 
   const raw = fs.readFileSync(filePath, 'utf-8')
   const data = JSON.parse(raw) as {
+    title?: Record<string, string>
     locations: Array<{
       id: string
-      name: string
+      name: Record<string, string>
       coordinates: { lat: number; lng: number }
       radiusM?: number
       visibleWhen: unknown
@@ -86,6 +86,12 @@ async function main() {
 
   if (!Array.isArray(data.locations)) {
     console.error('JSON must have a "locations" array')
+    process.exit(1)
+  }
+
+  const title = data.title
+  if (!title || typeof title !== 'object' || !title['en']) {
+    console.error('JSON must have a "title" object with at least an "en" key')
     process.exit(1)
   }
 
@@ -120,7 +126,8 @@ async function main() {
     },
   })
 
-  console.log(`Game "${game.title}" (${game.slug}) — id: ${game.id}`)
+  const titleEn = (game.title as Record<string, string>)['en'] ?? JSON.stringify(game.title)
+  console.log(`Game "${titleEn}" (${game.slug}) — id: ${game.id}`)
 
   // Upsert locations
   for (let i = 0; i < data.locations.length; i++) {
@@ -150,7 +157,7 @@ async function main() {
         order: i,
       },
     })
-    console.log(`  [${i + 1}/${data.locations.length}] ${loc.name} (${loc.id})`)
+    console.log(`  [${i + 1}/${data.locations.length}] ${loc.name.en ?? JSON.stringify(loc.name)} (${loc.id})`)
   }
 
   if (!game.isActive) {

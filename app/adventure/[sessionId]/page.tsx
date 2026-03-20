@@ -1,9 +1,10 @@
 'use client'
 
-import { useEffect, useState, useCallback, useRef } from 'react'
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
+import { useLocale } from '@/contexts/LocaleContext'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
 import { LocationSheet } from '@/modules/adventure/components/LocationSheet'
 import { distanceMeters } from '@/modules/adventure/lib/haversine'
@@ -24,6 +25,25 @@ function MapPlaceholder() {
   )
 }
 
+type I18nString = string | Record<string, string>
+
+function resolveI18n(value: I18nString | null | undefined, locale: string): string {
+  if (!value) return ''
+  if (typeof value === 'string') return value
+  return value[locale] ?? value['en'] ?? ''
+}
+
+interface ApiLocation {
+  id: string
+  name: I18nString
+  lat: number
+  lng: number
+  radiusM: number
+  visible: boolean
+  visited: boolean
+  narrative: I18nString | null
+}
+
 interface SessionState {
   session: {
     id: string
@@ -40,7 +60,7 @@ interface SessionState {
     chapter: number
     nextGameId: string | null
   }
-  locations: MapLocation[]
+  locations: ApiLocation[]
 }
 
 interface PlayerPosition {
@@ -50,7 +70,7 @@ interface PlayerPosition {
 }
 
 interface VisitResult {
-  narrative: string
+  narrative: I18nString
   newFlags: string[]
   completesChapter: boolean
   alreadyVisited: boolean
@@ -71,6 +91,7 @@ export default function SessionPage({
 
 function GameMap({ sessionId }: { sessionId: string }) {
   const { fetchWithAuth } = useAuth()
+  const { locale, t } = useLocale()
   const router = useRouter()
 
   const [state, setState] = useState<SessionState | null>(null)
@@ -131,6 +152,17 @@ function GameMap({ sessionId }: { sessionId: string }) {
     }
   }, [])
 
+  // Resolve multilingual fields for the current locale
+  const resolvedLocations: MapLocation[] = useMemo(
+    () =>
+      (state?.locations ?? []).map((loc) => ({
+        ...loc,
+        name: resolveI18n(loc.name, locale),
+        narrative: loc.narrative ? resolveI18n(loc.narrative, locale) : null,
+      })),
+    [state, locale]
+  )
+
   // All visible locations currently within range (for green coloring and hint bar)
   const nearbyLocationIds: Set<string> = (() => {
     if (!playerPos || !state) return new Set()
@@ -147,7 +179,7 @@ function GameMap({ sessionId }: { sessionId: string }) {
   // Depends on playerPos (state) so it reliably fires on every GPS update.
   useEffect(() => {
     if (!playerPos || !state) return
-    for (const loc of state.locations) {
+    for (const loc of resolvedLocations) {
       if (!loc.visible || loc.visited) continue
       const dist = distanceMeters(playerPos.lat, playerPos.lng, loc.lat, loc.lng)
       if (dist <= loc.radiusM) {
@@ -216,10 +248,9 @@ function GameMap({ sessionId }: { sessionId: string }) {
     )
   }
 
-  const visibleCount = state.locations.filter((l) => l.visible).length
+  const visibleCount = resolvedLocations.filter((l) => l.visible).length
   const visitedCount = state.session.visitedLocationIds.length
-  const flagCount = state.session.flags.length
-  const nearbyLocation = state.locations.find(
+  const nearbyLocation = resolvedLocations.find(
     (l) => nearbyLocationIds.has(l.id) && !l.visited
   ) ?? null
 
@@ -273,7 +304,7 @@ function GameMap({ sessionId }: { sessionId: string }) {
       {/* Map — fills all space except stats bar */}
       <div className="flex-1 relative overflow-hidden">
         <AdventureMap
-          locations={state.locations}
+          locations={resolvedLocations}
           playerPosition={playerPos}
           onLocationClick={setSelectedLocation}
           nearbyLocationIds={nearbyLocationIds}
@@ -293,7 +324,7 @@ function GameMap({ sessionId }: { sessionId: string }) {
             </div>
           ) : null}
           <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-            {visitResult.narrative}
+            {resolveI18n(visitResult.narrative, locale)}
           </p>
           {visitResult.newFlags.length > 0 && (
             <p className="text-xs text-blue-600 mt-2">
@@ -332,27 +363,27 @@ function GameMap({ sessionId }: { sessionId: string }) {
             <div className="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mb-4" />
             {!confirmRestart ? (
               <>
-                <p className="text-xs text-gray-400 uppercase tracking-wide mb-3">Chapter settings</p>
+                <p className="text-xs text-gray-400 uppercase tracking-wide mb-3">{t('adventure.chapterSettings')}</p>
                 <button
                   onClick={() => setConfirmRestart(true)}
                   className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 dark:hover:bg-red-950 text-sm font-medium"
                 >
                   <RotateCcw className="h-4 w-4" />
-                  Restart chapter
+                  {t('adventure.restartChapter')}
                 </button>
               </>
             ) : (
               <>
-                <p className="font-bold text-base mb-2">Restart chapter?</p>
+                <p className="font-bold text-base mb-2">{t('adventure.restartChapterConfirm')}</p>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-                  All progress for this chapter will be permanently erased. This cannot be undone.
+                  {t('adventure.restartChapterWarning')}
                 </p>
                 <div className="flex gap-3">
                   <button
                     onClick={() => setConfirmRestart(false)}
                     className="flex-1 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-sm"
                   >
-                    Cancel
+                    {t('common.cancel')}
                   </button>
                   <button
                     onClick={async () => {
@@ -363,7 +394,7 @@ function GameMap({ sessionId }: { sessionId: string }) {
                     }}
                     className="flex-1 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold"
                   >
-                    Restart
+                    {t('adventure.restart')}
                   </button>
                 </div>
               </>

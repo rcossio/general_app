@@ -120,6 +120,11 @@ const en = {
     flagsEarned: 'Collected',
     distanceAway: '{distance}m away',
     locations: 'locations',
+    chapterSettings: 'Chapter settings',
+    restartChapter: 'Restart chapter',
+    restartChapterConfirm: 'Restart chapter?',
+    restartChapterWarning: 'All progress for this chapter will be permanently erased. This cannot be undone.',
+    restart: 'Restart',
   },
 }
 

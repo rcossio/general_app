@@ -12,7 +12,7 @@ export const visitLocationSchema = z.object({
 
 export const createGameSchema = z.object({
   slug: z.string().min(1).max(80).regex(/^[a-z0-9-]+$/, 'slug must be lowercase letters, numbers and hyphens'),
-  title: z.string().min(1).max(200),
+  title: z.record(z.string(), z.string().min(1).max(200)),
   description: z.string().max(1000).optional(),
   chapter: z.number().int().positive().default(1),
   nextGameSlug: z.string().optional(),

@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
     }
 
     const game = await prisma.game.create({
-      data: { slug, title, description, chapter, nextGameId },
+      data: { slug, title: title as never, description, chapter, nextGameId },
       select: { id: true, slug: true, title: true, chapter: true, isActive: true },
     })
 

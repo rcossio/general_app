@@ -16,11 +16,15 @@ interface GameSession {
 interface Game {
   id: string
   slug: string
-  title: string
+  title: Record<string, string>
   description: string | null
   chapter: number
   nextGameId: string | null
   session: GameSession | null
+}
+
+function resolveI18n(value: Record<string, string>, locale: string): string {
+  return value[locale] ?? value['en'] ?? ''
 }
 
 export default function AdventurePage() {
@@ -33,7 +37,7 @@ export default function AdventurePage() {
 
 function AdventureList() {
   const { fetchWithAuth } = useAuth()
-  const { t } = useLocale()
+  const { t, locale } = useLocale()
   const router = useRouter()
   const [games, setGames] = useState<Game[]>([])
   const [loading, setLoading] = useState(true)
@@ -105,7 +109,7 @@ function AdventureList() {
                       </span>
                     )}
                   </div>
-                  <h2 className="font-semibold text-lg leading-tight truncate">{game.title}</h2>
+                  <h2 className="font-semibold text-lg leading-tight truncate">{resolveI18n(game.title, locale)}</h2>
                   {game.description && (
                     <p className="text-sm text-gray-500 mt-1 line-clamp-2">{game.description}</p>
                   )}

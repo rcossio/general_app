@@ -122,6 +122,11 @@ const it: Translations = {
     flagsEarned: 'Raccolti',
     distanceAway: '{distance}m di distanza',
     locations: 'luoghi',
+    chapterSettings: 'Impostazioni capitolo',
+    restartChapter: 'Ricomincia il capitolo',
+    restartChapterConfirm: 'Ricominciare il capitolo?',
+    restartChapterWarning: 'Tutti i progressi di questo capitolo saranno cancellati definitivamente. Questa azione non può essere annullata.',
+    restart: 'Ricomincia',
   },
 }
 
