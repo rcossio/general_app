@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { activeModules } from '@/config/modules'
 import * as Icons from 'lucide-react'
 import { useLocale } from '@/contexts/LocaleContext'
+import { useChrome } from '@/contexts/ChromeContext'
 
 const MODULE_NAV_KEYS: Record<string, string> = {
   workout: 'nav.workout',
@@ -15,7 +16,8 @@ const MODULE_NAV_KEYS: Record<string, string> = {
 export function BottomNav() {
   const pathname = usePathname()
   const { t } = useLocale()
-  if (/^\/adventure\/.+/.test(pathname)) return null
+  const { hideChrome } = useChrome()
+  if (hideChrome) return null
 
   const navItems = [
     { label: t('nav.home'), href: '/', icon: 'Home' },

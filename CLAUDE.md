@@ -45,6 +45,7 @@ npm run lint              # ESLint
 # Testing
 npm test                  # Run all tests once (Vitest)
 npm run test:watch        # Watch mode
+npx vitest run __tests__/auth.test.ts   # Run a single test file
 
 # Database
 npx prisma migrate dev --name <name>   # Create and apply migration
@@ -101,7 +102,9 @@ GPS-based location game. Key patterns:
 - `modules/adventure/haversine.ts` — GPS distance.
 - `modules/adventure/condition.ts` — evaluates flag-based visibility conditions.
 - **iOS Safari critical:** All overlays on the map page use `absolute` positioning inside a `relative` parent. Never use `position: fixed` or React portals — they get clipped by the Leaflet map container.
+- **Leaflet mobile taps:** Do not add `Tooltip` to markers — Leaflet's internal tap plugin intercepts touch events and makes markers unclickable on iOS. Use `eventHandlers={{ click: () => handler() }}` on `CircleMarker` only.
 - CircleMarker colors: orange = unvisited, gray = visited, green = in range.
+- Multilingual game content (`title`, `name`, `values[].content`) is returned as raw `{ en, it, es }` objects from the API. Resolve to a string on the client with `resolveI18n(value, locale)` (falls back to `en`). Use `useMemo([state, locale])` so it re-resolves on language change without a refetch.
 
 ### i18n
 

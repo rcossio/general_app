@@ -8,6 +8,7 @@ import * as Icons from 'lucide-react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useLocale } from '@/contexts/LocaleContext'
+import { useChrome } from '@/contexts/ChromeContext'
 
 const MODULE_NAV_KEYS: Record<string, string> = {
   workout: 'nav.workout',
@@ -20,7 +21,8 @@ export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false)
   const { user } = useAuth()
   const { t } = useLocale()
-  if (/^\/adventure\/.+/.test(pathname)) return null
+  const { hideChrome } = useChrome()
+  if (hideChrome) return null
 
   const isAdmin = user?.roles.some((r) => ['master_admin', 'admin'].includes(r))
 

@@ -1,14 +1,13 @@
 'use client'
 
 import { useAuth } from '@/contexts/AuthContext'
+import { useChrome } from '@/contexts/ChromeContext'
 import { Moon, Sun, LogOut } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { usePathname } from 'next/navigation'
 
 export function Header() {
   const { user, logout } = useAuth()
-  const pathname = usePathname()
-  if (/^\/adventure\/.+/.test(pathname)) return null
+  const { hideChrome } = useChrome()
   const [dark, setDark] = useState(false)
 
   useEffect(() => {
@@ -17,6 +16,8 @@ export function Header() {
     setDark(isDark)
     document.documentElement.classList.toggle('dark', isDark)
   }, [])
+
+  if (hideChrome) return null
 
   const toggleTheme = () => {
     const next = !dark

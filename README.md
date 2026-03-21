@@ -1,5 +1,11 @@
 # General App — Modular PWA Platform
 
+## Tech Summary
+
+Next.js is a React-based framework that generates UI elements outlined in `app/route-name/page.tsx` and manages the API in `app/api/route-name/route.ts`. `[id]` is a wildcard route segment and `(group)` is an invisible grouping that doesn't affect the URL. It can import shared components from anywhere in the project. When built, output goes to `.next/`; PM2 manages the `next start` process that serves it. *(To be continued...)*
+
+---
+
 A full-stack PWA built with the T3 Stack pattern. Single Next.js project handling both
 frontend and backend via Route Handlers. Modular architecture: drop a new folder into
 `modules/` and register it in `config/modules.ts` to add a feature.

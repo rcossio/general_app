@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useLocale } from '@/contexts/LocaleContext'
+import { useChrome } from '@/contexts/ChromeContext'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
 import { LocationSheet } from '@/modules/adventure/components/LocationSheet'
 import { usePlayerPosition } from '@/modules/adventure/lib/usePlayerPosition'
@@ -87,6 +88,7 @@ export default function SessionPage({
 function GameMap({ sessionId }: { sessionId: string }) {
   const { fetchWithAuth } = useAuth()
   const { locale, t } = useLocale()
+  const { setHideChrome } = useChrome()
   const router = useRouter()
 
   const [state, setState] = useState<SessionState | null>(null)
@@ -109,6 +111,11 @@ function GameMap({ sessionId }: { sessionId: string }) {
     },
     [fetchWithAuth]
   )
+
+  useEffect(() => {
+    setHideChrome(true)
+    return () => setHideChrome(false)
+  }, [setHideChrome])
 
   useEffect(() => {
     loadState(sessionId)
