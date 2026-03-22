@@ -11,7 +11,6 @@ export async function GET(request: NextRequest) {
     where: { isActive: true },
     select: {
       id: true,
-      slug: true,
       title: true,
       description: true,
       chapter: true,

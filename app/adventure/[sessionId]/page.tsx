@@ -13,6 +13,8 @@ import { distanceMeters } from '@/modules/adventure/lib/haversine'
 import { ArrowLeft, MapPin, Trophy, RefreshCw, Settings, RotateCcw, Crosshair, X } from 'lucide-react'
 import type { MapLocation } from '@/modules/adventure/components/AdventureMap'
 
+type ResolvedLocation = MapLocation & { narrative: string | null }
+
 // Dynamic import: Leaflet requires browser environment
 const AdventureMap = dynamic(
   () => import('@/modules/adventure/components/AdventureMap'),
@@ -57,7 +59,6 @@ interface SessionState {
   }
   game: {
     id: string
-    slug: string
     title: string
     chapter: number
     nextGameId: string | null
@@ -94,7 +95,7 @@ function GameMap({ sessionId }: { sessionId: string }) {
   const [state, setState] = useState<SessionState | null>(null)
   const [fakeMode, setFakeMode] = useState(false)
   const { playerPos, gpsError } = usePlayerPosition(fakeMode)
-  const [selectedLocation, setSelectedLocation] = useState<MapLocation | null>(null)
+  const [selectedLocation, setSelectedLocation] = useState<ResolvedLocation | null>(null)
   const [visiting, setVisiting] = useState(false)
   const [visitResult, setVisitResult] = useState<VisitResult | null>(null)
   const [loading, setLoading] = useState(true)
@@ -122,7 +123,7 @@ function GameMap({ sessionId }: { sessionId: string }) {
   }, [sessionId, loadState])
 
   // Resolve multilingual fields for the current locale
-  const resolvedLocations: MapLocation[] = useMemo(
+  const resolvedLocations: ResolvedLocation[] = useMemo(
     () =>
       (state?.locations ?? []).map((loc) => ({
         ...loc,
@@ -226,7 +227,7 @@ function GameMap({ sessionId }: { sessionId: string }) {
         <AdventureMap
           locations={resolvedLocations}
           playerPosition={playerPos}
-          onLocationClick={setSelectedLocation}
+          onLocationClick={(loc) => setSelectedLocation(loc as ResolvedLocation)}
           nearbyLocationIds={nearbyLocationIds}
         />
       </div>

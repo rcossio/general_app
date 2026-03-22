@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requirePermission, isNextResponse } from '@/lib/permissions'
 import { prisma } from '@/lib/prisma'
 import { evaluate, type Condition } from '@/modules/adventure/lib/condition'
-import type { Prisma } from '@prisma/client'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -36,7 +35,6 @@ export async function GET(request: NextRequest, { params }: Params) {
       game: {
         select: {
           id: true,
-          slug: true,
           title: true,
           chapter: true,
           nextGameId: true,
@@ -94,7 +92,6 @@ export async function GET(request: NextRequest, { params }: Params) {
       },
       game: {
         id: session.game.id,
-        slug: session.game.slug,
         title: session.game.title,
         chapter: session.game.chapter,
         nextGameId: session.game.nextGameId,

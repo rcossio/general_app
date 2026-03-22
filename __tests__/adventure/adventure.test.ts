@@ -40,7 +40,7 @@ describe('Adventure: Games list', () => {
       headers: authHeaders(accessToken),
     })
     const body = await res.json()
-    const chapter1 = body.data.find((g: { slug: string }) => g.slug === 'chapter-1')
+    const chapter1 = body.data.find((g: { chapter: number }) => g.chapter === 1)
     expect(chapter1).toBeDefined()
     gameId = chapter1.id
   })
@@ -59,7 +59,7 @@ describe('Adventure: Session lifecycle', () => {
         headers: authHeaders(accessToken),
       })
       const body = await res.json()
-      const ch1 = body.data.find((g: { slug: string }) => g.slug === 'chapter-1')
+      const ch1 = body.data.find((g: { chapter: number }) => g.chapter === 1)
       gameId = ch1?.id
     }
   })
@@ -120,7 +120,7 @@ describe('Adventure: Session lifecycle', () => {
     const visible = data.locations.filter((l: { visible: boolean }) => l.visible)
     expect(visible.length).toBe(1)
     expect(visible[0].name.en).toBe('Notice Board')
-    expect(data.game.slug).toBe('chapter-1')
+    expect(data.game.chapter).toBe(1)
   })
 
   it('returns 404 for another user trying to access session', async () => {
@@ -149,7 +149,7 @@ describe('Adventure: Visit flow', () => {
         headers: authHeaders(accessToken),
       })
       const body = await res.json()
-      const ch1 = body.data.find((g: { slug: string }) => g.slug === 'chapter-1')
+      const ch1 = body.data.find((g: { chapter: number }) => g.chapter === 1)
       gameId = ch1?.id
     }
 
