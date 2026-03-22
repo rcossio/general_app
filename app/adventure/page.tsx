@@ -15,7 +15,6 @@ interface GameSession {
 
 interface Game {
   id: string
-  slug: string
   title: Record<string, string>
   description: string | null
   chapter: number

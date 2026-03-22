@@ -117,7 +117,7 @@ const es: Translations = {
     loading: 'Cargando aventura...',
     sessionNotFound: 'Sesión no encontrada.',
     backToAdventures: 'Volver a aventuras',
-    visitLocation: 'Visitar este lugar',
+    visitLocation: 'Listo',
     youAreHere: 'Estás aquí',
     alreadyVisited: 'Ya visitado',
     withinRange: '¡Estás dentro del radio!',

@@ -229,8 +229,8 @@ users with public tracker entries. The seed is idempotent — safe to re-run.
 
 After seeding, import the adventure game data:
 ```bash
-npx tsx scripts/import-game.ts \
-  --file=scripts/chapter1.json \
+npx tsx scripts/adventure/import-game.ts \
+  --file=scripts/adventure/chapter1.json \
   --slug=chapter-1 \
   --chapter=1 \
   --activate

@@ -5,12 +5,15 @@ import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useLocale } from '@/contexts/LocaleContext'
+import { useChrome } from '@/contexts/ChromeContext'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
 import { LocationSheet } from '@/modules/adventure/components/LocationSheet'
 import { usePlayerPosition } from '@/modules/adventure/lib/usePlayerPosition'
 import { distanceMeters } from '@/modules/adventure/lib/haversine'
 import { ArrowLeft, MapPin, Trophy, RefreshCw, Settings, RotateCcw, Crosshair, X } from 'lucide-react'
 import type { MapLocation } from '@/modules/adventure/components/AdventureMap'
+
+type ResolvedLocation = MapLocation & { narrative: string | null }
 
 // Dynamic import: Leaflet requires browser environment
 const AdventureMap = dynamic(
@@ -56,7 +59,6 @@ interface SessionState {
   }
   game: {
     id: string
-    slug: string
     title: string
     chapter: number
     nextGameId: string | null
@@ -87,12 +89,13 @@ export default function SessionPage({
 function GameMap({ sessionId }: { sessionId: string }) {
   const { fetchWithAuth } = useAuth()
   const { locale, t } = useLocale()
+  const { setHideChrome } = useChrome()
   const router = useRouter()
 
   const [state, setState] = useState<SessionState | null>(null)
   const [fakeMode, setFakeMode] = useState(false)
   const { playerPos, gpsError } = usePlayerPosition(fakeMode)
-  const [selectedLocation, setSelectedLocation] = useState<MapLocation | null>(null)
+  const [selectedLocation, setSelectedLocation] = useState<ResolvedLocation | null>(null)
   const [visiting, setVisiting] = useState(false)
   const [visitResult, setVisitResult] = useState<VisitResult | null>(null)
   const [loading, setLoading] = useState(true)
@@ -111,16 +114,16 @@ function GameMap({ sessionId }: { sessionId: string }) {
   )
 
   useEffect(() => {
+    setHideChrome(true)
+    return () => setHideChrome(false)
+  }, [setHideChrome])
+
+  useEffect(() => {
     loadState(sessionId)
   }, [sessionId, loadState])
 
-  // Re-show chapter complete banner when chapter just completed
-  useEffect(() => {
-    if (visitResult?.completesChapter) setCompleteBannerDismissed(false)
-  }, [visitResult?.completesChapter])
-
   // Resolve multilingual fields for the current locale
-  const resolvedLocations: MapLocation[] = useMemo(
+  const resolvedLocations: ResolvedLocation[] = useMemo(
     () =>
       (state?.locations ?? []).map((loc) => ({
         ...loc,
@@ -224,7 +227,7 @@ function GameMap({ sessionId }: { sessionId: string }) {
         <AdventureMap
           locations={resolvedLocations}
           playerPosition={playerPos}
-          onLocationClick={setSelectedLocation}
+          onLocationClick={(loc) => setSelectedLocation(loc as ResolvedLocation)}
           nearbyLocationIds={nearbyLocationIds}
         />
       </div>
@@ -360,7 +363,7 @@ function GameMap({ sessionId }: { sessionId: string }) {
       )}
 
       {/* Nearby hint bar — shown when in range but sheet is closed */}
-      {nearbyLocation && !nearbyLocation.visited && !selectedLocation && !visitResult && !state.session.completedAt && (
+      {nearbyLocation && !nearbyLocation.visited && !selectedLocation && !visitResult && (
         <div className="absolute bottom-10 left-0 right-0 z-[1500] px-4 pb-2 pt-2">
           <button
             onClick={() => setSelectedLocation(nearbyLocation)}

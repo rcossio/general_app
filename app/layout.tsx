@@ -3,6 +3,7 @@ import localFont from 'next/font/local'
 import './globals.css'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { LocaleProvider } from '@/contexts/LocaleContext'
+import { ChromeProvider } from '@/contexts/ChromeContext'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { Header } from '@/components/layout/Header'
@@ -36,11 +37,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+        <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
       </head>
       <body className={`${geistSans.variable} antialiased bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white`}>
         <LocaleProvider>
+        <ChromeProvider>
         <AuthProvider>
           <div className="flex min-h-screen">
             <Sidebar />
@@ -54,6 +57,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <BottomNav />
           <ServiceWorkerRegistrar />
         </AuthProvider>
+        </ChromeProvider>
         </LocaleProvider>
       </body>
     </html>

@@ -14,6 +14,7 @@ const adventureManifest: ModuleManifest = {
     'adventure:manage',
   ],
   apiPrefix: '/api/adventure',
+  testEndpoint: '/api/adventure/games',
 }
 
 export default adventureManifest

@@ -16,6 +16,7 @@ export interface ModuleManifest {
   navItem: ModuleNavItem
   permissions: string[]
   apiPrefix: string
+  testEndpoint: string
 }
 
 export const activeModules: ModuleManifest[] = [lifeTracker, adventure].filter(

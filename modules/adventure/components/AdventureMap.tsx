@@ -12,7 +12,6 @@ export interface MapLocation {
   radiusM: number
   visible: boolean
   visited: boolean
-  narrative: string | null
 }
 
 interface PlayerPosition {

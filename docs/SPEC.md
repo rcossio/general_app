@@ -144,8 +144,9 @@ project-root/
 │           ├── AdventureMap.tsx   # Leaflet map (dynamic import, SSR disabled)
 │           └── LocationSheet.tsx  # bottom sheet overlay for location interaction
 ├── scripts/
-│   ├── import-game.ts        # CLI tool to seed game data from JSON
-│   └── chapter1.json         # Chapter 1 game definition with multilingual content
+│   └── adventure/
+│       ├── import-game.ts    # CLI tool to seed game data from JSON
+│       └── chapter1.json     # Chapter 1 game definition with multilingual content
 ├── config/
 │   └── modules.ts
 ├── contexts/
@@ -237,8 +238,8 @@ project-root/
 
 Import command:
 ```bash
-npx tsx scripts/import-game.ts \
-  --file=scripts/chapter1.json \
+npx tsx scripts/adventure/import-game.ts \
+  --file=scripts/adventure/chapter1.json \
   --slug=chapter-1 \
   --chapter=1 \
   --activate
@@ -496,8 +497,8 @@ not visible in the UI.
 
 **Game data (not in seed.ts — run separately):**
 ```bash
-npx tsx scripts/import-game.ts \
-  --file=scripts/chapter1.json \
+npx tsx scripts/adventure/import-game.ts \
+  --file=scripts/adventure/chapter1.json \
   --slug=chapter-1 \
   --chapter=1 \
   --activate

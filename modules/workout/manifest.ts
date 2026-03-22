@@ -16,6 +16,7 @@ const workoutManifest: ModuleManifest = {
     'workout:delete',
   ],
   apiPrefix: '/api/workout',
+  testEndpoint: '/api/workout/routines',
 }
 
 export default workoutManifest

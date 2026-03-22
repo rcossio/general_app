@@ -17,6 +17,7 @@ const lifeTrackerManifest: ModuleManifest = {
     'tracker:manage',
   ],
   apiPrefix: '/api/tracker',
+  testEndpoint: '/api/tracker/entries',
 }
 
 export default lifeTrackerManifest

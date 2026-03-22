@@ -115,7 +115,7 @@ const en = {
     loading: 'Loading adventure...',
     sessionNotFound: 'Session not found.',
     backToAdventures: 'Back to adventures',
-    visitLocation: 'Visit this location',
+    visitLocation: 'Done',
     youAreHere: 'You are here',
     alreadyVisited: 'Already visited',
     withinRange: 'You are within range!',
