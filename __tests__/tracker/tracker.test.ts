@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { BASE, registerAndLogin, authHeaders } from './helpers'
+import { BASE, registerAndLogin, authHeaders } from '../helpers'
 
 const ENTRY_PAYLOAD = { type: 'GOAL', title: 'Test goal', score: 7 }
 

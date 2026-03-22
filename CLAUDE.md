@@ -53,7 +53,7 @@ npx prisma db seed                      # Seed roles, permissions, admin user
 npx prisma studio                       # Visual DB browser
 
 # Game content import
-npx tsx scripts/import-game.ts --file=scripts/chapter1.json --slug=chapter-1 --chapter=1 --activate
+npx tsx scripts/adventure/import-game.ts --file=scripts/adventure/chapter1.json --slug=chapter-1 --chapter=1 --activate
 
 # Production — no deploy script. Run in order on the server:
 npm install                                        # if dependencies changed

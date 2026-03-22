@@ -2,16 +2,15 @@
 
 ## Tech Summary
 
-Next.js is a React-based framework that generates UI elements outlined in `app/route-name/page.tsx` and manages the API in `app/api/route-name/route.ts`. `[id]` is a wildcard route segment and `(group)` is an invisible grouping that doesn't affect the URL. It can import shared components from anywhere in the project. When built, output goes to `.next/`; PM2 manages the `next start` process that serves it. *(To be continued...)*
+Next.js is a React-based framework that generates UI elements outlined in `app/route-name/page.tsx` and manages the API in `app/api/route-name/route.ts` (App Router). `[id]` is a wildcard route segment and `(group)` is an invisible grouping that doesn't affect the URL. Client components are indicated with a `'use client'` tag. Shared components can be imported from anywhere in the project. When built, output goes to `.next/`; PM2 manages the `next start` process that serves it. Tailwind is used without custom component classes.
 
----
+Language is managed through app locales stored in a context, and game locales saved in the DB resolved on the client with a helper function.
 
-A full-stack PWA built with the T3 Stack pattern. Single Next.js project handling both
-frontend and backend via Route Handlers. Modular architecture: drop a new folder into
-`modules/` and register it in `config/modules.ts` to add a feature.
+Module logic is implemented in the `modules/` folder and imported in `config/modules.ts` to define `activeModules`, which is loaded dynamically in the nav bar and used to seed permissions. To disable a module: comment out its import in `config/modules.ts` and prefix its folders with `_` in `app/`, `app/api/`, and `__tests__/`.
 
-**Active modules:** Life Tracker, Adventure
-**Disabled modules:** Workout (code intact, comment out removed from `config/modules.ts`)
+The API is protected with RBAC. The DB is managed by Prisma, which defines the schema and applies migrations when the schema changes. On a fresh deploy the DB is seeded with roles, permissions, and initial data.
+
+The app is a PWA. Nginx acts as reverse proxy handling gzip, static asset caching, and rate limiting on auth endpoints (10 req/min per IP). API integration tests are run with Vitest in `__tests__/`.
 
 ---
 
@@ -170,7 +169,7 @@ Missing keys cause a TypeScript build error — completeness is enforced at comp
 # Development
 npm run dev              # start dev server
 npm run build            # production build
-npm run test             # run Vitest tests (43 tests across auth/rbac/tracker/workout)
+npm run test             # run Vitest tests (auth, rbac, tracker, adventure)
 
 # Prisma
 npx prisma studio        # visual database browser
@@ -183,9 +182,8 @@ pm2 logs                 # tail logs
 pm2 reload app           # zero-downtime reload
 pm2 monit                # live monitoring dashboard
 
-# Deployment
-bash deploy.sh           # pull, migrate, build, reload PM2
-bash backup.sh           # manual database backup to R2
+# Deployment (run in order on the server)
+npm install && npx prisma migrate deploy && pm2 stop all && npm run build && pm2 reload ecosystem.config.js --update-env && pm2 save
 ```
 
 ---

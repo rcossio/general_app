@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vysi-v2'
+const CACHE_NAME = 'vysi-v3'
 const APP_SHELL = [
   '/',
   '/login',
@@ -26,6 +26,9 @@ self.addEventListener('fetch', (event) => {
   // Only cache GET requests for navigation / app shell
   if (event.request.method !== 'GET') return
   if (event.request.url.includes('/api/')) return
+
+  const url = new URL(event.request.url)
+  if (url.protocol !== 'https:' && url.protocol !== 'http:') return
 
   event.respondWith(
     fetch(event.request).then((response) => {

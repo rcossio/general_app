@@ -121,11 +121,6 @@ function GameMap({ sessionId }: { sessionId: string }) {
     loadState(sessionId)
   }, [sessionId, loadState])
 
-  // Re-show chapter complete banner when chapter just completed
-  useEffect(() => {
-    if (visitResult?.completesChapter) setCompleteBannerDismissed(false)
-  }, [visitResult?.completesChapter])
-
   // Resolve multilingual fields for the current locale
   const resolvedLocations: MapLocation[] = useMemo(
     () =>
@@ -367,7 +362,7 @@ function GameMap({ sessionId }: { sessionId: string }) {
       )}
 
       {/* Nearby hint bar — shown when in range but sheet is closed */}
-      {nearbyLocation && !nearbyLocation.visited && !selectedLocation && !visitResult && !state.session.completedAt && (
+      {nearbyLocation && !nearbyLocation.visited && !selectedLocation && !visitResult && (
         <div className="absolute bottom-10 left-0 right-0 z-[1500] px-4 pb-2 pt-2">
           <button
             onClick={() => setSelectedLocation(nearbyLocation)}

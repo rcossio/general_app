@@ -1,23 +1,22 @@
 import { describe, it, expect, beforeAll } from 'vitest'
-import { BASE, registerAndLogin, authHeaders } from './helpers'
+import { BASE, registerAndLogin, authHeaders } from '../helpers'
 
 // -------------------------------------------------------------------------
 // These tests require the chapter-1 game to be imported AND active.
 // Run before testing:
-//   npx tsx scripts/import-game.ts --file=scripts/chapter1.json \
-//     --slug=chapter-1 --title="Chapter 1" --chapter=1 --activate
+//   npx tsx scripts/adventure/import-game.ts --file=scripts/adventure/chapter1.json \
+//     --slug=chapter-1 --chapter=1 --activate
 // -------------------------------------------------------------------------
 
 let gameId: string
 let sessionId: string
 
-// Coordinates of loc_1_start (Notice Board) — within any radius
-const LOC_1_LAT = 45.01513449199466
-const LOC_1_LNG = 8.62788452481497
+// Coordinates match chapter1.json exactly (distance = 0, always within radius)
+const LOC_1_LAT = 45.01582683234417
+const LOC_1_LNG = 8.628133553657252
 
-// Coordinates of loc_5_gate (Locked Gate)
-const LOC_5_LAT = 45.01480624368455
-const LOC_5_LNG = 8.627613672090963
+const LOC_5_LAT = 45.014486301008176
+const LOC_5_LNG = 8.62806747813587
 
 describe('Adventure: Games list', () => {
   it('requires auth', async () => {
@@ -120,7 +119,7 @@ describe('Adventure: Session lifecycle', () => {
     // Only the start location should be visible (visibleWhen: null)
     const visible = data.locations.filter((l: { visible: boolean }) => l.visible)
     expect(visible.length).toBe(1)
-    expect(visible[0].name).toBe('Notice Board')
+    expect(visible[0].name.en).toBe('Notice Board')
     expect(data.game.slug).toBe('chapter-1')
   })
 
@@ -236,7 +235,7 @@ describe('Adventure: Visit flow', () => {
     const body = await res.json()
     expect(body.data.alreadyVisited).toBe(true)
     expect(body.data.newFlags).toEqual([])
-    expect(body.data.narrative).toContain('already read the board')
+    expect(body.data.narrative.en).toContain('already read the board')
   })
 
   it('after visiting Notice Board, more locations become visible', async () => {
@@ -247,7 +246,7 @@ describe('Adventure: Visit flow', () => {
     const visible = body.data.locations.filter((l: { visible: boolean }) => l.visible)
     expect(visible.length).toBeGreaterThan(1)
     // Gate, Friend's House, Shed, Toolbox should now be visible
-    const names = visible.map((l: { name: string }) => l.name)
+    const names = visible.map((l: { name: { en: string } }) => l.name.en)
     expect(names).toContain("Friend's House")
     expect(names).toContain('Old Shed')
     expect(names).toContain('Locked Gate')
@@ -259,8 +258,8 @@ describe('Adventure: Visit flow', () => {
       headers: authHeaders(accessToken),
       body: JSON.stringify({
         locationId: locFriend,
-        lat: 45.014987959911174,
-        lng: 8.628290416329916,
+        lat: 45.01535001146662,
+        lng: 8.628346083424557,
       }),
     })
     expect(res.status).toBe(200)
@@ -274,8 +273,8 @@ describe('Adventure: Visit flow', () => {
       headers: authHeaders(accessToken),
       body: JSON.stringify({
         locationId: locShed,
-        lat: 45.0153837176548,
-        lng: 8.628024375589824,
+        lat: 45.01490700011301,
+        lng: 8.628122450339523,
       }),
     })
     expect(res.status).toBe(200)
@@ -296,7 +295,7 @@ describe('Adventure: Visit flow', () => {
     expect(res.status).toBe(200)
     const body = await res.json()
     expect(body.data.completesChapter).toBe(true)
-    expect(body.data.narrative).toContain('force open the gate')
+    expect(body.data.narrative.en).toContain('force open the gate')
   })
 
   it('session is marked completed after chapter win', async () => {
@@ -324,7 +323,7 @@ describe('Adventure: Visit flow', () => {
 
 describe('Adventure: Condition evaluator', () => {
   it('evaluates simple flag correctly', async () => {
-    const { evaluate } = await import('../modules/adventure/lib/condition')
+    const { evaluate } = await import('../../modules/adventure/lib/condition')
     const flags = new Set(['has_friend', 'visited_start'])
     expect(evaluate('has_friend', flags)).toBe(true)
     expect(evaluate('has_key', flags)).toBe(false)
@@ -332,21 +331,21 @@ describe('Adventure: Condition evaluator', () => {
   })
 
   it('evaluates AND condition', async () => {
-    const { evaluate } = await import('../modules/adventure/lib/condition')
+    const { evaluate } = await import('../../modules/adventure/lib/condition')
     const flags = new Set(['has_friend', 'visited_start'])
     expect(evaluate({ and: ['has_friend', 'visited_start'] }, flags)).toBe(true)
     expect(evaluate({ and: ['has_friend', 'has_key'] }, flags)).toBe(false)
   })
 
   it('evaluates OR condition', async () => {
-    const { evaluate } = await import('../modules/adventure/lib/condition')
+    const { evaluate } = await import('../../modules/adventure/lib/condition')
     const flags = new Set(['has_friend'])
     expect(evaluate({ or: ['has_friend', 'has_key'] }, flags)).toBe(true)
     expect(evaluate({ or: ['has_key', 'has_hammer'] }, flags)).toBe(false)
   })
 
   it('evaluates nested AND/OR (gate condition)', async () => {
-    const { evaluate } = await import('../modules/adventure/lib/condition')
+    const { evaluate } = await import('../../modules/adventure/lib/condition')
     const gateCondition = { and: ['has_friend', { or: ['has_key', 'has_hammer'] }] }
 
     expect(evaluate(gateCondition as Parameters<typeof evaluate>[0], new Set(['has_friend', 'has_key']))).toBe(true)
@@ -359,12 +358,12 @@ describe('Adventure: Condition evaluator', () => {
 
 describe('Adventure: Haversine', () => {
   it('distance between same point is 0', async () => {
-    const { distanceMeters } = await import('../modules/adventure/lib/haversine')
+    const { distanceMeters } = await import('../../modules/adventure/lib/haversine')
     expect(distanceMeters(45.0, 8.6, 45.0, 8.6)).toBe(0)
   })
 
   it('distance between Notice Board and Gate is within expected range', async () => {
-    const { distanceMeters } = await import('../modules/adventure/lib/haversine')
+    const { distanceMeters } = await import('../../modules/adventure/lib/haversine')
     const dist = distanceMeters(LOC_1_LAT, LOC_1_LNG, LOC_5_LAT, LOC_5_LNG)
     // They are roughly 40–200m apart based on coordinates
     expect(dist).toBeGreaterThan(20)
