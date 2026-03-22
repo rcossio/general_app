@@ -68,7 +68,7 @@ pm2 save
 
 ## Architecture
 
-**Stack:** Next.js 14 (App Router) + TypeScript (strict) + PostgreSQL + Prisma + Tailwind CSS + Vitest. Single-process monolith deployed on a VPS via PM2 + Nginx.
+**Stack:** Next.js 14 (App Router) + TypeScript (strict, no `any`) + PostgreSQL + Prisma + Tailwind CSS + Vitest. Single-process monolith deployed on a VPS via PM2 + Nginx.
 
 ### Module System
 
@@ -77,7 +77,7 @@ Features are pluggable. Each module has a manifest (`modules/<name>/manifest.ts`
 - **Life Tracker** and **Adventure** are active.
 - **Workout** is disabled: import commented in `config/modules.ts`, routes return 403, DB tables intact.
 
-To enable/disable a module: edit `config/modules.ts`, then run `npx prisma migrate dev`.
+To disable a module: comment out its import in `config/modules.ts` and prefix its folders with `_` in `app/`, `app/api/`, and `__tests__/`. Its nav item disappears and RBAC blocks its routes automatically. Tables stay intact. To re-enable: reverse both steps and run `npx prisma migrate dev`.
 
 ### Auth
 
@@ -93,14 +93,17 @@ To enable/disable a module: edit `config/modules.ts`, then run `npx prisma migra
 - Error shape: `{ error: string, code: string }`.
 - Success shape: `{ data: T }`.
 - List endpoints support `?page=1&limit=20`.
+- Never query without `WHERE` on an indexed column in list endpoints.
+- Use Prisma `select` — never return full rows when only a subset is displayed.
 
 ### Adventure Module
 
 GPS-based location game. Key patterns:
 
 - Location visit: verify ownership → check `visibleWhen` flag condition → verify GPS distance ≤ `radiusM` → apply grants (flags) → return narrative.
-- `modules/adventure/haversine.ts` — GPS distance.
-- `modules/adventure/condition.ts` — evaluates flag-based visibility conditions.
+- `modules/adventure/lib/haversine.ts` — GPS distance.
+- `modules/adventure/lib/condition.ts` — evaluates flag-based visibility conditions. Accepts `null` (always true), `"flag_string"`, `{ "and": [...] }`, or `{ "or": [...] }`.
+- `LocationSheet` auto-calls the visit endpoint on mount (no separate "Visit" button) — grants and narrative apply as soon as the player reaches the location.
 - **iOS Safari critical:** All overlays on the map page use `absolute` positioning inside a `relative` parent. Never use `position: fixed` or React portals — they get clipped by the Leaflet map container.
 - **Leaflet mobile taps:** Do not add `Tooltip` to markers — Leaflet's internal tap plugin intercepts touch events and makes markers unclickable on iOS. Use `eventHandlers={{ click: () => handler() }}` on `CircleMarker` only.
 - CircleMarker colors: orange = unvisited, gray = visited, green = in range.
@@ -109,6 +112,16 @@ GPS-based location game. Key patterns:
 ### i18n
 
 Custom `LocaleContext` (no library). Locales: `en`, `it`, `es`. `locales/en.ts` exports the authoritative `Translations` type — all other locales must implement it exactly (missing keys = TypeScript error). Hook: `useLocale()` → `{ t, locale, setLocale }`.
+
+### Prisma Schema Conventions
+
+- All IDs use `cuid()`.
+- All foreign keys have explicit indexes.
+- `@updatedAt` on every `updated_at` field.
+
+### File Uploads
+
+`lib/storage.ts` — Cloudflare R2 via AWS S3 SDK. Exports `getUploadUrl(key)` (presigned PUT, 5min), `getPublicUrl(key)`, and `deleteFile(key)`. Configured via `R2_*` env vars.
 
 ### Testing Setup
 
