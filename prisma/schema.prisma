@@ -179,7 +179,8 @@ model GameLocation {
   // Array of { when: Condition | null, content: { en, it, es }, completesChapter?: true }
   values      Json
   // "location" (default) | "event" — events auto-fire on radius entry, no sheet
-  type        String @default("location")
+  type        String  @default("location")
+  imageUrl    String? @map("image_url")
   // Array of { flag: string }
   grants      Json
   // Array of { flag: string } — flags removed from session on visit

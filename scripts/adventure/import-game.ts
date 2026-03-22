@@ -76,6 +76,7 @@ async function main() {
     locations: Array<{
       id: string
       type?: string
+      imageUrl?: string
       name: Record<string, string>
       coordinates: { lat: number; lng: number }
       radiusM?: number
@@ -138,6 +139,7 @@ async function main() {
       where: { gameId_externalId: { gameId: game.id, externalId: loc.id } },
       update: {
         type: loc.type ?? 'location',
+        imageUrl: loc.imageUrl ?? null,
         name: loc.name,
         lat: loc.coordinates.lat,
         lng: loc.coordinates.lng,
@@ -150,6 +152,7 @@ async function main() {
       },
       create: {
         type: loc.type ?? 'location',
+        imageUrl: loc.imageUrl ?? null,
         gameId: game.id,
         externalId: loc.id,
         name: loc.name,

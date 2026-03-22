@@ -4,6 +4,9 @@ import { useEffect } from 'react'
 import { X, Navigation } from 'lucide-react'
 import { useLocale } from '@/contexts/LocaleContext'
 
+const DEFAULT_LOCATION_IMAGE = '/images/adventure/default-location.webp'
+const DEFAULT_EVENT_IMAGE = '/images/adventure/default-event.webp'
+
 interface LocationChoice {
   id: string
   label: string
@@ -11,6 +14,8 @@ interface LocationChoice {
 
 interface LocationSheetProps {
   name: string
+  type: string
+  imageUrl: string | null
   narrative: string | null
   visited: boolean
   withinRange: boolean
@@ -25,6 +30,8 @@ interface LocationSheetProps {
 
 export function LocationSheet({
   name,
+  type,
+  imageUrl,
   narrative,
   visited,
   withinRange,
@@ -37,6 +44,7 @@ export function LocationSheet({
   visiting,
 }: LocationSheetProps) {
   const { t } = useLocale()
+
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
       if (e.key === 'Escape' && !locked) onClose()
@@ -46,75 +54,95 @@ export function LocationSheet({
   }, [onClose, locked])
 
   const hasChoices = withinRange && !visited && choices && choices.length > 0
+  const src = imageUrl ?? (type === 'event' ? DEFAULT_EVENT_IMAGE : DEFAULT_LOCATION_IMAGE)
 
   return (
     <div className="absolute inset-0 z-[2000] flex items-end" onClick={locked ? undefined : onClose}>
       <div
-        className="w-full bg-white dark:bg-gray-900 rounded-t-2xl shadow-2xl border-t border-gray-200 dark:border-gray-700 p-5 pb-8 max-h-[70vh] overflow-y-auto"
+        className="w-full bg-white dark:bg-gray-900 rounded-t-2xl shadow-2xl border-t border-gray-200 dark:border-gray-700 max-h-[80vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mb-4" />
-
-        <div className="flex items-start justify-between gap-3 mb-4">
-          <div className="flex-1 min-w-0">
-            <h2 className="text-lg font-bold truncate">{name}</h2>
-            {distance !== null && !withinRange && (
-              <p className="text-xs text-gray-400 flex items-center gap-1 mt-1">
-                <Navigation className="h-3 w-3" />
-                {Math.round(distance)}m
-              </p>
-            )}
-          </div>
-          {!locked && (
-            <button
-              onClick={onClose}
-              className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          )}
+        {/* Drag handle */}
+        <div className="pt-3 flex justify-center">
+          <div className="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full" />
         </div>
 
-        {withinRange || visited ? (
-          visiting ? (
-            <p className="text-gray-400 italic text-sm">...</p>
+        {/* Image — 3:2 ratio */}
+        <div className="px-4 pt-3">
+          <img
+            src={src}
+            alt={name}
+            loading="lazy"
+            className="w-full rounded-xl object-cover bg-gray-100 dark:bg-gray-800"
+            style={{ aspectRatio: '3/2' }}
+          />
+        </div>
+
+        {/* Content */}
+        <div className="px-5 pt-4 pb-8">
+          {/* Title + close */}
+          <div className="flex items-start justify-between gap-3 mb-4">
+            <div className="flex-1 min-w-0">
+              <h2 className="text-lg font-bold truncate">{name}</h2>
+              {distance !== null && !withinRange && (
+                <p className="text-xs text-gray-400 flex items-center gap-1 mt-1">
+                  <Navigation className="h-3 w-3" />
+                  {Math.round(distance)}m
+                </p>
+              )}
+            </div>
+            {!locked && (
+              <button
+                onClick={onClose}
+                className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+
+          {/* Narrative + actions */}
+          {withinRange || visited ? (
+            visiting ? (
+              <p className="text-gray-400 italic text-sm">...</p>
+            ) : (
+              <>
+                <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-sm mb-4">
+                  {narrative}
+                </p>
+                {hasChoices ? (
+                  <>
+                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
+                      {t('adventure.chooseAction')}
+                    </p>
+                    <div className="flex flex-col gap-2">
+                      {choices!.map((choice) => (
+                        <button
+                          key={choice.id}
+                          onClick={() => onChoose(choice.id)}
+                          className="w-full py-3 px-4 rounded-xl border-2 border-green-600 text-green-700 dark:text-green-400 font-semibold text-sm text-left hover:bg-green-50 dark:hover:bg-green-950 transition-colors"
+                        >
+                          {choice.label}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                ) : withinRange && !visited ? (
+                  <button
+                    onClick={onVisit}
+                    className="w-full py-3 rounded-xl bg-green-600 hover:bg-green-700 text-white font-semibold text-sm"
+                  >
+                    {t('adventure.visitLocation')}
+                  </button>
+                ) : null}
+              </>
+            )
           ) : (
-            <>
-              <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-sm mb-4">
-                {narrative}
-              </p>
-              {hasChoices ? (
-                <>
-                  <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
-                    {t('adventure.chooseAction')}
-                  </p>
-                  <div className="flex flex-col gap-2">
-                    {choices!.map((choice) => (
-                      <button
-                        key={choice.id}
-                        onClick={() => onChoose(choice.id)}
-                        className="w-full py-3 px-4 rounded-xl border-2 border-green-600 text-green-700 dark:text-green-400 font-semibold text-sm text-left hover:bg-green-50 dark:hover:bg-green-950 transition-colors"
-                      >
-                        {choice.label}
-                      </button>
-                    ))}
-                  </div>
-                </>
-              ) : withinRange && !visited ? (
-                <button
-                  onClick={onVisit}
-                  className="w-full py-3 rounded-xl bg-green-600 hover:bg-green-700 text-white font-semibold text-sm"
-                >
-                  {t('adventure.visitLocation')}
-                </button>
-              ) : null}
-            </>
-          )
-        ) : (
-          <p className="text-gray-400 italic text-sm">
-            {t('adventure.outOfRange')}
-          </p>
-        )}
+            <p className="text-gray-400 italic text-sm">
+              {t('adventure.outOfRange')}
+            </p>
+          )}
+        </div>
       </div>
     </div>
   )

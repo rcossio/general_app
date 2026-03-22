@@ -8,15 +8,16 @@ import { useLocale } from '@/contexts/LocaleContext'
 import { useChrome } from '@/contexts/ChromeContext'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
 import { LocationSheet } from '@/modules/adventure/components/LocationSheet'
+import { FakeGpsDpad } from '@/modules/adventure/components/FakeGpsDpad'
 import { usePlayerPosition } from '@/modules/adventure/lib/usePlayerPosition'
 import { distanceMeters } from '@/modules/adventure/lib/haversine'
 import { ArrowLeft, MapPin, Trophy, RefreshCw, Settings, RotateCcw, Crosshair, X } from 'lucide-react'
 import type { MapLocation } from '@/modules/adventure/components/AdventureMap'
 
 type ResolvedLocation = MapLocation & {
+  imageUrl: string | null
   narrative: string | null
   choices: { id: string; label: string }[] | null
-  // type is already on MapLocation
 }
 
 // Dynamic import: Leaflet requires browser environment
@@ -53,6 +54,7 @@ interface ApiLocation {
   lng: number
   radiusM: number
   type: string
+  imageUrl: string | null
   visible: boolean
   visited: boolean
   narrative: I18nString | null
@@ -106,7 +108,7 @@ function GameMap({ sessionId }: { sessionId: string }) {
 
   const [state, setState] = useState<SessionState | null>(null)
   const [fakeMode, setFakeMode] = useState(false)
-  const { playerPos, gpsError } = usePlayerPosition(fakeMode)
+  const { playerPos, gpsError, move } = usePlayerPosition(fakeMode)
   const [selectedLocation, setSelectedLocation] = useState<ResolvedLocation | null>(null)
   const [visiting, setVisiting] = useState(false)
   const [visitResult, setVisitResult] = useState<VisitResult | null>(null)
@@ -140,6 +142,7 @@ function GameMap({ sessionId }: { sessionId: string }) {
       (state?.locations ?? []).map((loc) => ({
         ...loc,
         name: resolveI18n(loc.name, locale),
+        imageUrl: loc.imageUrl,
         narrative: loc.narrative ? resolveI18n(loc.narrative, locale) : null,
         choices: loc.choices
           ? loc.choices.map((c) => ({ id: c.id, label: resolveI18n(c.label, locale) }))
@@ -275,8 +278,9 @@ function GameMap({ sessionId }: { sessionId: string }) {
 
       {/* Fake GPS active banner */}
       {fakeMode && (
-        <div className="px-4 py-1.5 bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 text-xs text-center border-b border-amber-200 dark:border-amber-800 shrink-0">
-          {t('adventure.fakeGpsActive')}
+        <div className="px-4 py-2 bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 text-xs border-b border-amber-200 dark:border-amber-800 shrink-0 flex items-center justify-between gap-4">
+          <span>{t('adventure.fakeGpsActive')}</span>
+          <span className="md:hidden"><FakeGpsDpad move={move} /></span>
         </div>
       )}
 
@@ -446,10 +450,19 @@ function GameMap({ sessionId }: { sessionId: string }) {
         </div>
       )}
 
+      {/* Fake GPS D-pad — outside map container to avoid Leaflet clipping */}
+      {fakeMode && (
+        <div className="absolute bottom-14 right-4 z-[1500] md:hidden">
+          <FakeGpsDpad move={move} />
+        </div>
+      )}
+
       {/* Location sheet */}
       {selectedLocation && (
         <LocationSheet
           name={selectedLocation.name}
+          type={selectedLocation.type}
+          imageUrl={selectedLocation.imageUrl}
           narrative={selectedLocation.narrative}
           visited={selectedLocation.visited}
           withinRange={withinRange}

@@ -87,6 +87,7 @@ export async function GET(request: NextRequest, { params }: Params) {
       lng: loc.lng,
       radiusM: loc.radiusM,
       type: loc.type,
+      imageUrl: loc.imageUrl ?? null,
       visible,
       visited,
       narrative: narrative ?? null,
