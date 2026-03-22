@@ -58,6 +58,7 @@ export async function GET(request: NextRequest, { params }: Params) {
           title: true,
           chapter: true,
           nextGameId: true,
+          items: true,
           locations: {
             orderBy: { order: 'asc' },
           },
@@ -120,6 +121,7 @@ export async function GET(request: NextRequest, { params }: Params) {
         title: session.game.title,
         chapter: session.game.chapter,
         nextGameId: session.game.nextGameId,
+        items: session.game.items,
       },
       locations,
     },

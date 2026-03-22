@@ -81,8 +81,7 @@ export function LocationSheet({
             src={src}
             alt={name}
             loading="lazy"
-            className="w-full rounded-xl object-cover bg-gray-100 dark:bg-gray-800"
-            style={{ aspectRatio: '3/2' }}
+            className="w-full rounded-xl object-cover bg-gray-100 dark:bg-gray-800 aspect-[3/2] md:aspect-auto md:h-48"
           />
         </div>
 

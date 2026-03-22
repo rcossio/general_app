@@ -141,6 +141,8 @@ const it: Translations = {
     passwordPrompt: 'Inserisci la password',
     passwordConfirm: 'Conferma',
     wrongPassword: 'Password errata. Continua a esplorare.',
+    inventory: 'Inventario',
+    inventoryEmpty: 'Il tuo inventario è vuoto.',
   },
 }
 

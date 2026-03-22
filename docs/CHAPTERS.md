@@ -113,7 +113,8 @@ Every `values` array should end with a `"when": null` entry as the default fallb
 | `completesChapter` | no | Set to `true` on the value that ends the chapter. Triggers the completion banner. |
 | `choices` | no | Presents the player with decision buttons (see Choices). |
 | `password` | no | Locks the location behind a code the player must enter (see Passwords). |
-| `unvisits` | no | List of location `id`s to un-visit when this value fires (see Unvisits). |
+| `grants` | no | Flags given only when this specific value fires (conditional grants). Same format as location-level `grants`. |
+| `revokes` | no | Flags removed only when this specific value fires (conditional revokes). Same format as location-level `revokes`. |
 
 ---
 
@@ -127,11 +128,12 @@ Conditions appear in `visibleWhen` and `values[].when`. They control visibility 
 | `"flag_name"` | True if the player has this flag. |
 | `{ "and": ["flag_a", "flag_b"] }` | True if the player has **all** listed flags. |
 | `{ "or": ["flag_a", "flag_b"] }` | True if the player has **at least one** listed flag. |
+| `{ "not": "flag_name" }` | True if the player does **not** have this flag. |
 
 Conditions can be nested:
 
 ```json
-{ "and": ["has_friend", { "or": ["has_key", "has_hammer"] }] }
+{ "and": ["visited_start", { "not": "dog_chased" }] }
 ```
 
 ---
@@ -144,11 +146,9 @@ Conditions can be nested:
 "grants": [{ "flag": "visited_start" }]
 ```
 
-**revokes** removes flags from the player on visit. Useful when an event invalidates a previously earned item or companion.
+**revokes** removes flags from the player on visit. Both `grants` and `revokes` on the location root are unconditional — they fire regardless of which `values` entry matched.
 
-```json
-"revokes": [{ "flag": "has_friend" }]
-```
+For conditional grants/revokes that only apply when a specific value entry fires, define them inside the value object (see Value fields above). This is the right pattern for events where the effect depends on the player's state at the time of the visit.
 
 Both are arrays. Use `[]` when nothing should be granted or revoked.
 
@@ -225,24 +225,6 @@ A `password` field on a value entry locks the location behind a code. The player
 **Wrong password behaviour:** the sheet shows "Wrong password. Keep exploring." and a Done button. The location is marked visited but the player can tap the map marker to try again as many times as needed. Once the correct code is entered and the flag is granted, the location switches to its "already collected" narrative and the password input disappears.
 
 > Put the code somewhere in the game world — on a notice board, in a clue at another location — so the player has to find it.
-
----
-
-## Unvisits
-
-`unvisits` in a value entry forces specific locations back to "unvisited" when this value fires. This is used when a story event invalidates a previous visit — typically so the player can re-visit a location to re-earn a companion or item.
-
-```json
-{
-  "when": null,
-  "content": {
-    "en": "A dog charges you. Your friend sprints back to their house."
-  },
-  "unvisits": ["loc_2_friend"]
-}
-```
-
-`unvisits` takes an array of location `id` strings. When the player triggers this value, those locations are reset and can be visited again from scratch (re-granting their flags if the player returns).
 
 ---
 

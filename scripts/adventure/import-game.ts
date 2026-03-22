@@ -73,6 +73,12 @@ async function main() {
   const raw = fs.readFileSync(filePath, 'utf-8')
   const data = JSON.parse(raw) as {
     title?: Record<string, string>
+    items?: Array<{
+      id: string
+      flag: string
+      name: Record<string, string>
+      imageUrl?: string | null
+    }>
     locations: Array<{
       id: string
       type?: string
@@ -118,6 +124,7 @@ async function main() {
       chapter,
       isActive: activate || undefined,
       nextGameId: nextGameId ?? undefined,
+      items: (data.items ?? []) as never,
     },
     create: {
       slug,
@@ -126,6 +133,7 @@ async function main() {
       chapter,
       isActive: activate,
       nextGameId,
+      items: (data.items ?? []) as never,
     },
   })
 

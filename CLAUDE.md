@@ -20,7 +20,7 @@ The only place real values belong is `.env`, which is gitignored.
 
 ## Before Starting Any Task
 
-Read all `.md` files before doing anything. This includes — but is not limited to — `README.md`, `docs/SPEC.md`, and `docs/DEPLOYMENT.md`. These files define the intended architecture, conventions, and constraints. Code must conform to them, not to whatever pattern already exists in the codebase (existing code may already be wrong).
+Read all `.md` files before doing anything. This includes — but is not limited to — `README.md`, `docs/SPEC.md`, `docs/DEPLOYMENT.md`, and `docs/CHAPTERS.md`. These files define the intended architecture, conventions, and constraints. Code must conform to them, not to whatever pattern already exists in the codebase (existing code may already be wrong).
 
 Scan the project structure first. Check what already exists before creating anything new — test folders, config files, scripts, docs. Do not create a file if one already serves the same purpose.
 
@@ -54,6 +54,8 @@ npx prisma studio                       # Visual DB browser
 
 # Game content import — run after every change to chapter JSON files
 npx tsx scripts/adventure/import-game.ts --file=scripts/adventure/chapter1.json --slug=chapter-1 --chapter=1 --activate
+# When linking chapters (import next chapter first, then current referencing it):
+npx tsx scripts/adventure/import-game.ts --file=scripts/adventure/chapter2.json --slug=chapter-2 --chapter=2 --activate --next-chapter-slug=chapter-3
 
 # Production — no deploy script. Run in order on the server:
 npm install                                        # if dependencies changed
@@ -101,14 +103,31 @@ To disable a module: comment out its import in `config/modules.ts` and prefix it
 
 GPS-based location game. Key patterns:
 
-- Location visit: verify ownership → check `visibleWhen` flag condition → verify GPS distance ≤ `radiusM` → apply grants (flags) → return narrative.
+- Location visit: verify ownership → check `visibleWhen` flag condition → verify GPS distance ≤ `radiusM` → apply grants (flags) → revoke flags → return narrative.
 - `modules/adventure/lib/haversine.ts` — GPS distance.
-- `modules/adventure/lib/condition.ts` — evaluates flag-based visibility conditions. Accepts `null` (always true), `"flag_string"`, `{ "and": [...] }`, or `{ "or": [...] }`.
+- `modules/adventure/lib/condition.ts` — evaluates flag-based visibility conditions. Accepts `null` (always true), `"flag_string"`, `{ "and": [...] }`, `{ "or": [...] }`, or `{ "not": <condition> }`.
 - `LocationSheet` auto-calls the visit endpoint on mount (no separate "Visit" button) — grants and narrative apply as soon as the player reaches the location.
 - **iOS Safari critical:** All overlays on the map page use `absolute` positioning inside a `relative` parent. Never use `position: fixed` or React portals — they get clipped by the Leaflet map container.
 - **Leaflet mobile taps:** Do not add `Tooltip` to markers — Leaflet's internal tap plugin intercepts touch events and makes markers unclickable on iOS. Use `eventHandlers={{ click: () => handler() }}` on `CircleMarker` only.
-- CircleMarker colors: orange = unvisited, gray = visited, green = in range.
+- CircleMarker colors: orange = unvisited location, red = unvisited event, gray = visited, green = in range.
 - Multilingual game content (`title`, `name`, `values[].content`) is returned as raw `{ en, it, es }` objects from the API. Resolve to a string on the client with `resolveI18n(value, locale)` (falls back to `en`). Use `useMemo([state, locale])` so it re-resolves on language change without a refetch.
+
+#### Location types
+
+- `type: "location"` (default) — shown as orange circle; player taps hint bar or marker to open sheet.
+- `type: "event"` — shown as red circle; sheet opens **automatically** when player enters radius; cannot be skipped.
+
+#### Game engine features (chapter JSON)
+
+- `grants` / `revokes` — unconditional flag changes on first visit (location root, use `[]` if none).
+- `values[].grants` / `values[].revokes` — conditional flag changes that only apply when that specific value entry fires. Use this instead of location-level when the effect depends on which narrative matched (e.g. an event that only revokes a flag when the player has a companion).
+- `values[].choices` — decision buttons; player must pick one; each choice has `id`, `label`, `outcome`, `grants`. A value with `choices` cannot also have `password`.
+- `values[].password` — locks location behind a code; has `value`, `successContent`, `grants`. Wrong password marks visited but allows retry; correct code grants flags and removes input.
+- `imageUrl` on location — URL shown at top of sheet; omit for default image.
+
+#### Testing game content
+
+Settings → Fake GPS enables a D-pad for simulating player movement on desktop/indoors.
 
 ### i18n
 

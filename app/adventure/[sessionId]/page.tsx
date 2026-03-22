@@ -8,10 +8,11 @@ import { useLocale } from '@/contexts/LocaleContext'
 import { useChrome } from '@/contexts/ChromeContext'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
 import { LocationSheet } from '@/modules/adventure/components/LocationSheet'
+import { InventorySheet, type GameItem } from '@/modules/adventure/components/InventorySheet'
 import { FakeGpsDpad } from '@/modules/adventure/components/FakeGpsDpad'
 import { usePlayerPosition } from '@/modules/adventure/lib/usePlayerPosition'
 import { distanceMeters } from '@/modules/adventure/lib/haversine'
-import { ArrowLeft, MapPin, Trophy, RefreshCw, Settings, RotateCcw, Crosshair, X } from 'lucide-react'
+import { ArrowLeft, MapPin, Trophy, RefreshCw, Settings, RotateCcw, Crosshair, X, Backpack } from 'lucide-react'
 import type { MapLocation } from '@/modules/adventure/components/AdventureMap'
 
 type ResolvedLocation = MapLocation & {
@@ -77,6 +78,7 @@ interface SessionState {
     title: string
     chapter: number
     nextGameId: string | null
+    items: GameItem[]
   }
   locations: ApiLocation[]
 }
@@ -119,6 +121,7 @@ function GameMap({ sessionId }: { sessionId: string }) {
   const [loading, setLoading] = useState(true)
   const [menuOpen, setMenuOpen] = useState(false)
   const [confirmRestart, setConfirmRestart] = useState(false)
+  const [inventoryOpen, setInventoryOpen] = useState(false)
   const [completeBannerDismissed, setCompleteBannerDismissed] = useState(false)
 
   const loadState = useCallback(
@@ -233,7 +236,6 @@ function GameMap({ sessionId }: { sessionId: string }) {
     if (!playerPos || !state) return
     for (const loc of resolvedLocations) {
       if (loc.type !== 'event') continue
-      if (loc.visited) continue
       if (!loc.visible) continue
       if (autoOpenedEventIds.current.has(loc.id)) continue
       const dist = distanceMeters(playerPos.lat, playerPos.lng, loc.lat, loc.lng)
@@ -302,7 +304,6 @@ function GameMap({ sessionId }: { sessionId: string }) {
       {fakeMode && (
         <div className="px-4 py-2 bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 text-xs border-b border-amber-200 dark:border-amber-800 shrink-0 flex items-center justify-between gap-4">
           <span>{t('adventure.fakeGpsActive')}</span>
-          <span className="md:hidden"><FakeGpsDpad move={move} /></span>
         </div>
       )}
 
@@ -355,6 +356,9 @@ function GameMap({ sessionId }: { sessionId: string }) {
         </span>
         <button onClick={() => loadState(sessionId)} className="p-1 hover:text-blue-600">
           <RefreshCw className="h-3.5 w-3.5" />
+        </button>
+        <button onClick={() => setInventoryOpen(true)} className="p-1 hover:text-blue-600">
+          <Backpack className="h-4 w-4" />
         </button>
         <button onClick={() => setMenuOpen((v) => !v)} className="p-1 hover:text-blue-600">
           <Settings className="h-4 w-4" />
@@ -474,9 +478,18 @@ function GameMap({ sessionId }: { sessionId: string }) {
 
       {/* Fake GPS D-pad — outside map container to avoid Leaflet clipping */}
       {fakeMode && (
-        <div className="absolute bottom-14 right-4 z-[1500] md:hidden">
+        <div className="absolute bottom-32 right-4 z-[1500] bg-black/20 rounded-2xl p-1">
           <FakeGpsDpad move={move} />
         </div>
+      )}
+
+      {/* Inventory sheet */}
+      {inventoryOpen && state && (
+        <InventorySheet
+          items={state.game.items}
+          playerFlags={state.session.flags}
+          onClose={() => setInventoryOpen(false)}
+        />
       )}
 
       {/* Location sheet */}

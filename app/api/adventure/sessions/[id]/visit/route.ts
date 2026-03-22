@@ -27,8 +27,9 @@ type LocationValue = {
   content: Record<string, string>
   completesChapter?: boolean
   choices?: Choice[]
-  unvisits?: string[]  // external IDs of locations to unvisit when this value fires
   password?: PasswordData
+  grants?: GrantEntry[]
+  revokes?: GrantEntry[]
 }
 
 function resolveActiveValue(
@@ -210,14 +211,17 @@ export async function POST(request: NextRequest, { params }: Params) {
     const completesChapter = activeValue.completesChapter ?? false
 
     if (!alreadyVisited) {
-      // Location-level grants (unconditional) + choice-level grants
+      // Location-level grants (unconditional) + value-level grants + choice-level grants
       const locationGrants = (location.grants as GrantEntry[]) ?? []
+      const valueGrants = activeValue.grants ?? []
       const choiceGrants = chosenOption?.grants ?? []
-      const allGrants = [...locationGrants, ...choiceGrants]
+      const allGrants = [...locationGrants, ...valueGrants, ...choiceGrants]
       const newFlags = allGrants.map((g) => g.flag).filter((f) => !flagSet.has(f))
 
-      const revokedFlags = ((location.revokes as GrantEntry[]) ?? []).map((r) => r.flag)
-      const unvisitExternalIds = activeValue.unvisits ?? []
+      // Location-level revokes (unconditional) + value-level revokes
+      const locationRevokes = (location.revokes as GrantEntry[]) ?? []
+      const valueRevokes = activeValue.revokes ?? []
+      const revokedFlags = [...locationRevokes, ...valueRevokes].map((r) => r.flag)
 
       await prisma.$transaction(async (tx) => {
         await tx.locationVisit.create({ data: { sessionId, locationId } })
@@ -234,19 +238,6 @@ export async function POST(request: NextRequest, { params }: Params) {
           await tx.sessionFlag.deleteMany({
             where: { sessionId, flag: { in: revokedFlags } },
           })
-        }
-
-        if (unvisitExternalIds.length > 0) {
-          const locsToUnvisit = await tx.gameLocation.findMany({
-            where: { gameId: session.gameId, externalId: { in: unvisitExternalIds } },
-            select: { id: true },
-          })
-          const locIdsToUnvisit = locsToUnvisit.map((l) => l.id)
-          if (locIdsToUnvisit.length > 0) {
-            await tx.locationVisit.deleteMany({
-              where: { sessionId, locationId: { in: locIdsToUnvisit } },
-            })
-          }
         }
 
         if (completesChapter) {

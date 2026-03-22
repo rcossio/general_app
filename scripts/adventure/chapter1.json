@@ -1,5 +1,25 @@
 {
   "title": { "en": "The Garden", "it": "Il Giardino", "es": "El Jardín" },
+  "items": [
+    {
+      "id": "friend",
+      "flag": "has_friend",
+      "name": { "en": "Friend", "it": "Amico", "es": "Amigo" },
+      "imageUrl": null
+    },
+    {
+      "id": "key",
+      "flag": "has_key",
+      "name": { "en": "Rusty Key", "it": "Chiave Arrugginita", "es": "Llave Oxidada" },
+      "imageUrl": null
+    },
+    {
+      "id": "hammer",
+      "flag": "has_hammer",
+      "name": { "en": "Hammer", "it": "Martello", "es": "Martillo" },
+      "imageUrl": null
+    }
+  ],
   "locations": [
     {
       "id": "loc_1_start",
@@ -123,20 +143,29 @@
       "name": { "en": "Loose Dog", "it": "Cane Sciolto", "es": "Perro Suelto" },
       "coordinates": { "lat": 45.014486301008176, "lng": 8.62806747813587 },
       "radiusM": 25,
-      "visibleWhen": "has_friend",
+      "visibleWhen": { "and": ["visited_start", { "not": "dog_chased" }] },
       "values": [
         {
-          "when": null,
+          "when": "has_friend",
           "content": {
             "en": "A large dog bursts from a yard and charges straight at you. Your friend panics and sprints back toward their house — you lose sight of them entirely.",
             "it": "Un grosso cane esce di scatto da un cortile e vi carica. Il tuo amico si fa prendere dal panico e corre verso casa sua — lo perdi completamente di vista.",
             "es": "Un perro grande sale disparado de un patio y se abalanza sobre ustedes. Tu amigo entra en pánico y corre de regreso a su casa — lo pierdes de vista por completo."
           },
-          "unvisits": ["loc_2_friend"]
+          "grants": [{ "flag": "dog_chased" }],
+          "revokes": [{ "flag": "has_friend" }]
+        },
+        {
+          "when": null,
+          "content": {
+            "en": "A large dog watches you from behind a fence, growling softly. It seems agitated — you'd rather not be here with someone else.",
+            "it": "Un grosso cane ti osserva da dietro un recinto, ringhiando piano. Sembra agitato — meglio non essere qui con qualcun altro.",
+            "es": "Un perro grande te mira desde detrás de una valla, gruñendo suavemente. Parece agitado — mejor no estar aquí con otra persona."
+          }
         }
       ],
       "grants": [],
-      "revokes": [{ "flag": "has_friend" }]
+      "revokes": []
     },
     {
       "id": "loc_4_hammer",

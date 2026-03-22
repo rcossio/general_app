@@ -139,6 +139,8 @@ const en = {
     passwordPrompt: 'Enter password',
     passwordConfirm: 'Confirm',
     wrongPassword: 'Wrong password. Keep exploring.',
+    inventory: 'Inventory',
+    inventoryEmpty: 'Your inventory is empty.',
   },
 }
 

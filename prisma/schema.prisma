@@ -157,6 +157,8 @@ model Game {
   chapter     Int      @default(1)
   nextGameId  String?  @unique @map("next_game_id")
   isActive    Boolean  @default(false) @map("is_active")
+  // Array of { id, flag, name: {en,it,es}, imageUrl? }
+  items       Json     @default("[]")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 

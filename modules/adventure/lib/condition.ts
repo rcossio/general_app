@@ -1,4 +1,4 @@
-export type Condition = null | string | { and: Condition[] } | { or: Condition[] }
+export type Condition = null | string | { and: Condition[] } | { or: Condition[] } | { not: Condition }
 
 export function evaluate(condition: Condition, flags: Set<string>): boolean {
   if (condition === null) return true
@@ -8,6 +8,9 @@ export function evaluate(condition: Condition, flags: Set<string>): boolean {
   }
   if (typeof condition === 'object' && 'or' in condition) {
     return condition.or.some((c) => evaluate(c, flags))
+  }
+  if (typeof condition === 'object' && 'not' in condition) {
+    return !evaluate(condition.not, flags)
   }
   return false
 }
