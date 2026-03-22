@@ -7,24 +7,31 @@ import { distanceMeters } from '@/modules/adventure/lib/haversine'
 
 type Params = { params: Promise<{ id: string }> }
 
+type GrantEntry = { flag: string }
+
+type Choice = {
+  id: string
+  label: Record<string, string>
+  outcome: Record<string, string>
+  grants: GrantEntry[]
+}
+
 type LocationValue = {
   when: Condition
   content: Record<string, string>
   completesChapter?: boolean
+  choices?: Choice[]
+  unvisits?: string[]  // external IDs of locations to unvisit when this value fires
 }
 
-type GrantEntry = { flag: string }
-
-function resolveNarrative(
+function resolveActiveValue(
   values: LocationValue[],
   flags: Set<string>
-): { content: Record<string, string>; completesChapter: boolean } {
+): LocationValue | null {
   for (const v of values) {
-    if (evaluate(v.when as Condition, flags)) {
-      return { content: v.content, completesChapter: v.completesChapter ?? false }
-    }
+    if (evaluate(v.when as Condition, flags)) return v
   }
-  return { content: {}, completesChapter: false }
+  return null
 }
 
 export async function POST(request: NextRequest, { params }: Params) {
@@ -43,7 +50,7 @@ export async function POST(request: NextRequest, { params }: Params) {
       )
     }
 
-    const { locationId, lat, lng } = parsed.data
+    const { locationId, lat, lng, choiceId } = parsed.data
 
     // Load session with flags and visits
     const session = await prisma.gameSession.findFirst({
@@ -108,14 +115,50 @@ export async function POST(request: NextRequest, { params }: Params) {
 
     const alreadyVisited = visitedIds.has(locationId)
 
-    // Evaluate narrative BEFORE grants (first-visit narrative should show pre-grant state)
+    // Resolve the active value entry (evaluated before grants, so pre-visit flag state)
     const values = location.values as LocationValue[]
-    const { content: narrative, completesChapter } = resolveNarrative(values, flagSet)
+    const activeValue = resolveActiveValue(values, flagSet)
+    if (!activeValue) {
+      return NextResponse.json(
+        { error: 'No narrative available', code: 'NO_NARRATIVE' },
+        { status: 400 }
+      )
+    }
+
+    const hasChoices = !alreadyVisited && (activeValue.choices?.length ?? 0) > 0
+
+    // If this value offers choices, a choiceId is required
+    if (hasChoices && !choiceId) {
+      return NextResponse.json(
+        { error: 'A choice is required to visit this location', code: 'CHOICE_REQUIRED' },
+        { status: 400 }
+      )
+    }
+
+    // Resolve the chosen option (if any)
+    let chosenOption: Choice | null = null
+    if (hasChoices && choiceId) {
+      chosenOption = activeValue.choices!.find((c) => c.id === choiceId) ?? null
+      if (!chosenOption) {
+        return NextResponse.json(
+          { error: 'Invalid choice', code: 'INVALID_CHOICE' },
+          { status: 400 }
+        )
+      }
+    }
+
+    const narrative = chosenOption ? chosenOption.outcome : activeValue.content
+    const completesChapter = activeValue.completesChapter ?? false
 
     if (!alreadyVisited) {
-      // Apply grants and record visit in a transaction
-      const grants = (location.grants as GrantEntry[]) ?? []
-      const newFlags = grants.map((g) => g.flag).filter((f) => !flagSet.has(f))
+      // Location-level grants (unconditional) + choice-level grants
+      const locationGrants = (location.grants as GrantEntry[]) ?? []
+      const choiceGrants = chosenOption?.grants ?? []
+      const allGrants = [...locationGrants, ...choiceGrants]
+      const newFlags = allGrants.map((g) => g.flag).filter((f) => !flagSet.has(f))
+
+      const revokedFlags = ((location.revokes as GrantEntry[]) ?? []).map((r) => r.flag)
+      const unvisitExternalIds = activeValue.unvisits ?? []
 
       await prisma.$transaction(async (tx) => {
         await tx.locationVisit.create({ data: { sessionId, locationId } })
@@ -126,6 +169,25 @@ export async function POST(request: NextRequest, { params }: Params) {
             update: {},
             create: { sessionId, flag },
           })
+        }
+
+        if (revokedFlags.length > 0) {
+          await tx.sessionFlag.deleteMany({
+            where: { sessionId, flag: { in: revokedFlags } },
+          })
+        }
+
+        if (unvisitExternalIds.length > 0) {
+          const locsToUnvisit = await tx.gameLocation.findMany({
+            where: { gameId: session.gameId, externalId: { in: unvisitExternalIds } },
+            select: { id: true },
+          })
+          const locIdsToUnvisit = locsToUnvisit.map((l) => l.id)
+          if (locIdsToUnvisit.length > 0) {
+            await tx.locationVisit.deleteMany({
+              where: { sessionId, locationId: { in: locIdsToUnvisit } },
+            })
+          }
         }
 
         if (completesChapter) {
@@ -140,6 +202,7 @@ export async function POST(request: NextRequest, { params }: Params) {
         data: {
           narrative,
           newFlags,
+          revokedFlags,
           completesChapter,
           alreadyVisited: false,
           nextGameId: completesChapter ? (session.game.nextGameId ?? null) : null,
@@ -150,7 +213,7 @@ export async function POST(request: NextRequest, { params }: Params) {
     // Revisit: return updated narrative (flags have accumulated since first visit)
     return NextResponse.json({
       data: {
-        narrative,
+        narrative: activeValue.content,
         newFlags: [],
         completesChapter: false,
         alreadyVisited: true,

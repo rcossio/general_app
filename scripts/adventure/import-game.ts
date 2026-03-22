@@ -75,12 +75,14 @@ async function main() {
     title?: Record<string, string>
     locations: Array<{
       id: string
+      type?: string
       name: Record<string, string>
       coordinates: { lat: number; lng: number }
       radiusM?: number
       visibleWhen: unknown
       values: unknown
       grants: unknown
+      revokes?: unknown
     }>
   }
 
@@ -135,6 +137,7 @@ async function main() {
     await prisma.gameLocation.upsert({
       where: { gameId_externalId: { gameId: game.id, externalId: loc.id } },
       update: {
+        type: loc.type ?? 'location',
         name: loc.name,
         lat: loc.coordinates.lat,
         lng: loc.coordinates.lng,
@@ -142,9 +145,11 @@ async function main() {
         visibleWhen: loc.visibleWhen ?? null,
         values: loc.values as never,
         grants: loc.grants as never,
+        revokes: (loc.revokes ?? []) as never,
         order: i,
       },
       create: {
+        type: loc.type ?? 'location',
         gameId: game.id,
         externalId: loc.id,
         name: loc.name,
@@ -154,6 +159,7 @@ async function main() {
         visibleWhen: loc.visibleWhen ?? null,
         values: loc.values as never,
         grants: loc.grants as never,
+        revokes: (loc.revokes ?? []) as never,
         order: i,
       },
     })

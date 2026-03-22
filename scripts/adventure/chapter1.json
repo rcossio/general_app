@@ -69,15 +69,74 @@
           }
         },
         {
+          "when": "talked_to_stranger",
+          "content": {
+            "en": "The shed is empty. The stranger made sure you had no chance at the key.",
+            "it": "Il capanno è vuoto. Lo straniero si è assicurato che non avessi possibilità di prendere la chiave.",
+            "es": "El cobertizo está vacío. El extraño se aseguró de que no tuvieras oportunidad con la llave."
+          }
+        },
+        {
           "when": null,
           "content": {
-            "en": "You find a rusty key hanging on the wall.",
-            "it": "Trovi una chiave arrugginita appesa al muro.",
-            "es": "Encuentras una llave oxidada colgada en la pared."
-          }
+            "en": "A rusty key hangs on the wall. Before you can grab it, a stranger steps in from the doorway and starts talking.",
+            "it": "Una chiave arrugginita è appesa al muro. Prima che tu possa prenderla, uno straniero entra dalla porta e inizia a parlare.",
+            "es": "Una llave oxidada cuelga de la pared. Antes de que puedas tomarla, un extraño entra por la puerta y empieza a hablar."
+          },
+          "choices": [
+            {
+              "id": "grab_key",
+              "label": {
+                "en": "Slip past them and take the key",
+                "it": "Aggirali e prendi la chiave",
+                "es": "Escabúllete y toma la llave"
+              },
+              "outcome": {
+                "en": "You manage to grab the rusty key before the stranger can react. It feels old and heavy.",
+                "it": "Riesci ad afferrare la chiave arrugginita prima che lo straniero reagisca. Sembra vecchia e pesante.",
+                "es": "Logras tomar la llave oxidada antes de que el extraño pueda reaccionar. Se siente vieja y pesada."
+              },
+              "grants": [{ "flag": "has_key" }]
+            },
+            {
+              "id": "talk",
+              "label": {
+                "en": "Stop and hear what they have to say",
+                "it": "Fermati e ascolta cosa hanno da dire",
+                "es": "Detente y escucha lo que tienen que decir"
+              },
+              "outcome": {
+                "en": "An interesting conversation — but when you turn back, the key is gone. You will need another way to open the gate.",
+                "it": "Una conversazione interessante — ma quando ti giri, la chiave è sparita. Dovrai trovare un altro modo per aprire il cancello.",
+                "es": "Una conversación interesante — pero cuando te das vuelta, la llave ha desaparecido. Necesitarás otra forma de abrir la reja."
+              },
+              "grants": [{ "flag": "talked_to_stranger" }]
+            }
+          ]
         }
       ],
-      "grants": [{ "flag": "has_key" }]
+      "grants": []
+    },
+    {
+      "id": "evt_dog",
+      "type": "event",
+      "name": { "en": "Loose Dog", "it": "Cane Sciolto", "es": "Perro Suelto" },
+      "coordinates": { "lat": 45.01496049804234, "lng": 8.629014777694149 },
+      "radiusM": 25,
+      "visibleWhen": "has_friend",
+      "values": [
+        {
+          "when": null,
+          "content": {
+            "en": "A large dog bursts from a yard and charges straight at you. Your friend panics and sprints back toward their house — you lose sight of them entirely.",
+            "it": "Un grosso cane esce di scatto da un cortile e vi carica. Il tuo amico si fa prendere dal panico e corre verso casa sua — lo perdi completamente di vista.",
+            "es": "Un perro grande sale disparado de un patio y se abalanza sobre ustedes. Tu amigo entra en pánico y corre de regreso a su casa — lo pierdes de vista por completo."
+          },
+          "unvisits": ["loc_2_friend"]
+        }
+      ],
+      "grants": [],
+      "revokes": [{ "flag": "has_friend" }]
     },
     {
       "id": "loc_4_hammer",

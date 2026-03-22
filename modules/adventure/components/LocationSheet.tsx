@@ -4,13 +4,21 @@ import { useEffect } from 'react'
 import { X, Navigation } from 'lucide-react'
 import { useLocale } from '@/contexts/LocaleContext'
 
+interface LocationChoice {
+  id: string
+  label: string
+}
+
 interface LocationSheetProps {
   name: string
   narrative: string | null
   visited: boolean
   withinRange: boolean
   distance: number | null
+  choices: LocationChoice[] | null
+  locked: boolean
   onVisit: () => void
+  onChoose: (choiceId: string) => void
   onClose: () => void
   visiting: boolean
 }
@@ -21,21 +29,26 @@ export function LocationSheet({
   visited,
   withinRange,
   distance,
+  choices,
+  locked,
   onVisit,
+  onChoose,
   onClose,
   visiting,
 }: LocationSheetProps) {
   const { t } = useLocale()
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose()
+      if (e.key === 'Escape' && !locked) onClose()
     }
     window.addEventListener('keydown', handleKey)
     return () => window.removeEventListener('keydown', handleKey)
-  }, [onClose])
+  }, [onClose, locked])
+
+  const hasChoices = withinRange && !visited && choices && choices.length > 0
 
   return (
-    <div className="absolute inset-0 z-[2000] flex items-end" onClick={onClose}>
+    <div className="absolute inset-0 z-[2000] flex items-end" onClick={locked ? undefined : onClose}>
       <div
         className="w-full bg-white dark:bg-gray-900 rounded-t-2xl shadow-2xl border-t border-gray-200 dark:border-gray-700 p-5 pb-8 max-h-[70vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
@@ -52,12 +65,14 @@ export function LocationSheet({
               </p>
             )}
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400"
-          >
-            <X className="h-4 w-4" />
-          </button>
+          {!locked && (
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
         </div>
 
         {withinRange || visited ? (
@@ -68,14 +83,31 @@ export function LocationSheet({
               <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-sm mb-4">
                 {narrative}
               </p>
-              {withinRange && !visited && (
+              {hasChoices ? (
+                <>
+                  <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
+                    {t('adventure.chooseAction')}
+                  </p>
+                  <div className="flex flex-col gap-2">
+                    {choices!.map((choice) => (
+                      <button
+                        key={choice.id}
+                        onClick={() => onChoose(choice.id)}
+                        className="w-full py-3 px-4 rounded-xl border-2 border-green-600 text-green-700 dark:text-green-400 font-semibold text-sm text-left hover:bg-green-50 dark:hover:bg-green-950 transition-colors"
+                      >
+                        {choice.label}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              ) : withinRange && !visited ? (
                 <button
                   onClick={onVisit}
                   className="w-full py-3 rounded-xl bg-green-600 hover:bg-green-700 text-white font-semibold text-sm"
                 >
                   {t('adventure.visitLocation')}
                 </button>
-              )}
+              ) : null}
             </>
           )
         ) : (

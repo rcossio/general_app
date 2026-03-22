@@ -118,6 +118,7 @@ const it: Translations = {
     sessionNotFound: 'Sessione non trovata.',
     backToAdventures: 'Torna alle avventure',
     visitLocation: 'Fatto',
+    chooseAction: 'Cosa fai?',
     youAreHere: 'Sei qui',
     alreadyVisited: 'Già visitato',
     withinRange: 'Sei nel raggio!',

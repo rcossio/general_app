@@ -52,7 +52,7 @@ npx prisma migrate dev --name <name>   # Create and apply migration
 npx prisma db seed                      # Seed roles, permissions, admin user
 npx prisma studio                       # Visual DB browser
 
-# Game content import
+# Game content import — run after every change to chapter JSON files
 npx tsx scripts/adventure/import-game.ts --file=scripts/adventure/chapter1.json --slug=chapter-1 --chapter=1 --activate
 
 # Production — no deploy script. Run in order on the server:
@@ -62,6 +62,7 @@ pm2 stop all                                       # must stop before building
 npm run build
 pm2 reload ecosystem.config.js --update-env        # picks up any .env changes
 pm2 save
+# After reloading: re-run game content import if any chapter JSON changed
 ```
 
 ---

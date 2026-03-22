@@ -116,6 +116,7 @@ const en = {
     sessionNotFound: 'Session not found.',
     backToAdventures: 'Back to adventures',
     visitLocation: 'Done',
+    chooseAction: 'What do you do?',
     youAreHere: 'You are here',
     alreadyVisited: 'Already visited',
     withinRange: 'You are within range!',

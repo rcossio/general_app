@@ -10,6 +10,7 @@ export interface MapLocation {
   lat: number
   lng: number
   radiusM: number
+  type: string
   visible: boolean
   visited: boolean
 }
@@ -88,7 +89,8 @@ export default function AdventureMap({
 
       {visibleLocations.map((loc) => {
         const isNearby = nearbyLocationIds.has(loc.id)
-        const color = isNearby ? '#22c55e' : loc.visited ? '#9ca3af' : '#f97316'
+        const unvisitedColor = loc.type === 'event' ? '#ef4444' : '#f97316'
+        const color = isNearby ? '#22c55e' : loc.visited ? '#9ca3af' : unvisitedColor
 
         return (
           <CircleMarker

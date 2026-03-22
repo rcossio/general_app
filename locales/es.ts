@@ -118,6 +118,7 @@ const es: Translations = {
     sessionNotFound: 'Sesión no encontrada.',
     backToAdventures: 'Volver a aventuras',
     visitLocation: 'Listo',
+    chooseAction: '¿Qué haces?',
     youAreHere: 'Estás aquí',
     alreadyVisited: 'Ya visitado',
     withinRange: '¡Estás dentro del radio!',

@@ -178,8 +178,12 @@ model GameLocation {
   visibleWhen Json?  @map("visible_when")
   // Array of { when: Condition | null, content: { en, it, es }, completesChapter?: true }
   values      Json
+  // "location" (default) | "event" — events auto-fire on radius entry, no sheet
+  type        String @default("location")
   // Array of { flag: string }
   grants      Json
+  // Array of { flag: string } — flags removed from session on visit
+  revokes     Json   @default("[]")
   order       Int    @default(0)
 
   game   Game            @relation(fields: [gameId], references: [id], onDelete: Cascade)
