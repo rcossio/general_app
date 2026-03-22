@@ -5,19 +5,33 @@
       "id": "friend",
       "flag": "has_friend",
       "name": { "en": "Friend", "it": "Amico", "es": "Amigo" },
-      "imageUrl": null
+      "imageUrl": null,
+      "itemImageUrl": null
     },
     {
       "id": "key",
       "flag": "has_key",
       "name": { "en": "Rusty Key", "it": "Chiave Arrugginita", "es": "Llave Oxidada" },
-      "imageUrl": null
+      "imageUrl": null,
+      "itemImageUrl": null
     },
     {
       "id": "hammer",
       "flag": "has_hammer",
       "name": { "en": "Hammer", "it": "Martello", "es": "Martillo" },
-      "imageUrl": null
+      "imageUrl": null,
+      "itemImageUrl": null
+    },
+    {
+      "id": "note",
+      "flag": "has_note",
+      "name": { "en": "Note", "it": "Biglietto", "es": "Nota" },
+      "imageUrl": null,
+      "itemImageUrl": {
+        "en": "game-art/tutorial_toolbox_note_en_600x400.webp",
+        "it": "game-art/tutorial_toolbox_note_it_600x400.webp",
+        "es": "game-art/tutorial_toolbox_note_es_600x400.webp"
+      }
     }
   ],
   "locations": [
@@ -31,17 +45,17 @@
         {
           "when": "visited_start",
           "content": {
-            "en": "You already read the board. Your friend, the shed, and the toolbox are nearby. The toolbox combination is 4729.",
-            "it": "Hai già letto la bacheca. Il tuo amico, il capanno e la cassetta degli attrezzi sono vicini. La combinazione della cassetta è 4729.",
-            "es": "Ya leíste el tablón. Tu amigo, el cobertizo y la caja de herramientas están cerca. La combinación de la caja es 4729."
+            "en": "You already read the board. Your friend, the shed, and the toolbox are nearby.",
+            "it": "Hai già letto la bacheca. Il tuo amico, il capanno e la cassetta degli attrezzi sono vicini.",
+            "es": "Ya leíste el tablón. Tu amigo, el cobertizo y la caja de herramientas están cerca."
           }
         },
         {
           "when": null,
           "content": {
-            "en": "A notice board describes the area. You can see a friend's house, a shed, a toolbox, and a locked gate ahead. A note reads: toolbox combination 4729.",
-            "it": "Una bacheca descrive la zona. Puoi vedere la casa di un amico, un capanno, una cassetta degli attrezzi e un cancello chiuso davanti a te. Un foglietto recita: combinazione cassetta 4729.",
-            "es": "Un tablón de anuncios describe el área. Puedes ver la casa de un amigo, un cobertizo, una caja de herramientas y una reja cerrada más adelante. Una nota dice: combinación de la caja 4729."
+            "en": "A notice board describes the area. You can see a friend's house, a shed, a toolbox, and a locked gate ahead.",
+            "it": "Una bacheca descrive la zona. Puoi vedere la casa di un amico, un capanno, una cassetta degli attrezzi e un cancello chiuso davanti a te.",
+            "es": "Un tablón de anuncios describe el área. Puedes ver la casa de un amigo, un cobertizo, una caja de herramientas y una reja cerrada más adelante."
           }
         }
       ],
@@ -201,6 +215,33 @@
         }
       ],
       "grants": []
+    },
+    {
+      "id": "loc_6_note",
+      "name": { "en": "Pinned Note", "it": "Biglietto Appuntato", "es": "Nota Clavada" },
+      "coordinates": { "lat": 45.014883616714485, "lng": 8.627320726788296 },
+      "radiusM": 35,
+      "visibleWhen": "visited_start",
+      "values": [
+        {
+          "when": "has_note",
+          "content": {
+            "en": "You already picked up the note. Check your inventory.",
+            "it": "Hai già preso il biglietto. Controllalo nell'inventario.",
+            "es": "Ya recogiste la nota. Revísala en tu inventario."
+          }
+        },
+        {
+          "when": null,
+          "content": {
+            "en": "A handwritten note is pinned to the fence. You take it.",
+            "it": "Un biglietto scritto a mano è appuntato al recinto. Lo prendi.",
+            "es": "Una nota escrita a mano está clavada en la valla. La tomas."
+          }
+        }
+      ],
+      "grants": [{ "flag": "has_note" }],
+      "revokes": []
     },
     {
       "id": "loc_5_gate",

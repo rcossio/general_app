@@ -38,6 +38,22 @@ import * as path from 'path'
 
 const prisma = new PrismaClient()
 
+// Resolves an R2 key or object of keys to full public URLs.
+// Values that already start with "http" are left unchanged.
+type MaybeI18n = string | Record<string, string> | null | undefined
+function resolveR2(value: MaybeI18n): MaybeI18n {
+  const base = process.env.NEXT_PUBLIC_R2_PUBLIC_URL
+  if (!value || !base) return value ?? null
+  if (typeof value === 'string') {
+    return value.startsWith('http') ? value : `${base}/${value}`
+  }
+  const resolved: Record<string, string> = {}
+  for (const [k, v] of Object.entries(value)) {
+    resolved[k] = v.startsWith('http') ? v : `${base}/${v}`
+  }
+  return resolved
+}
+
 function parseArgs(argv: string[]) {
   const args: Record<string, string> = {}
   for (const arg of argv.slice(2)) {
@@ -78,6 +94,7 @@ async function main() {
       flag: string
       name: Record<string, string>
       imageUrl?: string | null
+      itemImageUrl?: string | Record<string, string> | null
     }>
     locations: Array<{
       id: string
@@ -115,6 +132,12 @@ async function main() {
     nextGameId = next.id
   }
 
+  // Resolve R2 keys in items to full URLs
+  const resolvedItems = (data.items ?? []).map((item) => ({
+    ...item,
+    itemImageUrl: resolveR2(item.itemImageUrl) ?? null,
+  }))
+
   // Upsert game
   const game = await prisma.game.upsert({
     where: { slug },
@@ -124,7 +147,7 @@ async function main() {
       chapter,
       isActive: activate || undefined,
       nextGameId: nextGameId ?? undefined,
-      items: (data.items ?? []) as never,
+      items: resolvedItems as never,
     },
     create: {
       slug,
@@ -133,7 +156,7 @@ async function main() {
       chapter,
       isActive: activate,
       nextGameId,
-      items: (data.items ?? []) as never,
+      items: resolvedItems as never,
     },
   })
 
@@ -147,7 +170,7 @@ async function main() {
       where: { gameId_externalId: { gameId: game.id, externalId: loc.id } },
       update: {
         type: loc.type ?? 'location',
-        imageUrl: loc.imageUrl ?? null,
+        imageUrl: (resolveR2(loc.imageUrl) as string | null) ?? null,
         name: loc.name,
         lat: loc.coordinates.lat,
         lng: loc.coordinates.lng,
@@ -160,7 +183,7 @@ async function main() {
       },
       create: {
         type: loc.type ?? 'location',
-        imageUrl: loc.imageUrl ?? null,
+        imageUrl: (resolveR2(loc.imageUrl) as string | null) ?? null,
         gameId: game.id,
         externalId: loc.id,
         name: loc.name,

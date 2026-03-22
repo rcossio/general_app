@@ -75,14 +75,16 @@ export function LocationSheet({
           <div className="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full" />
         </div>
 
-        {/* Image — 3:2 ratio */}
+        {/* Image — 3:2 ratio on mobile, fixed height on desktop */}
         <div className="px-4 pt-3">
-          <img
-            src={src}
-            alt={name}
-            loading="lazy"
-            className="w-full rounded-xl object-cover bg-gray-100 dark:bg-gray-800 aspect-[3/2] md:aspect-auto md:h-48"
-          />
+          <div className="w-full aspect-[3/2] md:aspect-auto md:h-48 rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800">
+            <img
+              src={src}
+              alt={name}
+              loading="lazy"
+              className="w-full h-full object-cover"
+            />
+          </div>
         </div>
 
         {/* Content */}
