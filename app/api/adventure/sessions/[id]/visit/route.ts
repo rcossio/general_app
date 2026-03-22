@@ -16,12 +16,19 @@ type Choice = {
   grants: GrantEntry[]
 }
 
+type PasswordData = {
+  value: string
+  successContent: Record<string, string>
+  grants: GrantEntry[]
+}
+
 type LocationValue = {
   when: Condition
   content: Record<string, string>
   completesChapter?: boolean
   choices?: Choice[]
   unvisits?: string[]  // external IDs of locations to unvisit when this value fires
+  password?: PasswordData
 }
 
 function resolveActiveValue(
@@ -50,7 +57,7 @@ export async function POST(request: NextRequest, { params }: Params) {
       )
     }
 
-    const { locationId, lat, lng, choiceId } = parsed.data
+    const { locationId, lat, lng, choiceId, password } = parsed.data
 
     // Load session with flags and visits
     const session = await prisma.gameSession.findFirst({
@@ -146,6 +153,58 @@ export async function POST(request: NextRequest, { params }: Params) {
         )
       }
     }
+
+    // --- Password mechanic ---
+    if (activeValue.password) {
+      const pwData = activeValue.password
+      const correct = password === pwData.value
+
+      if (!correct) {
+        // Mark as visited on first wrong attempt so the player can retry via map tap
+        if (!alreadyVisited) {
+          await prisma.locationVisit.create({ data: { sessionId, locationId } })
+        }
+        return NextResponse.json({
+          data: {
+            narrative: activeValue.content,
+            newFlags: [],
+            revokedFlags: [],
+            completesChapter: false,
+            alreadyVisited,
+            nextGameId: null,
+            passwordWrong: true,
+          },
+        })
+      }
+
+      // Correct password — apply grants (works on first visit and retries)
+      const pwGrants = pwData.grants ?? []
+      const newFlags = pwGrants.map((g) => g.flag).filter((f) => !flagSet.has(f))
+      await prisma.$transaction(async (tx) => {
+        if (!alreadyVisited) {
+          await tx.locationVisit.create({ data: { sessionId, locationId } })
+        }
+        for (const flag of newFlags) {
+          await tx.sessionFlag.upsert({
+            where: { sessionId_flag: { sessionId, flag } },
+            update: {},
+            create: { sessionId, flag },
+          })
+        }
+      })
+      return NextResponse.json({
+        data: {
+          narrative: pwData.successContent,
+          newFlags,
+          revokedFlags: [],
+          completesChapter: false,
+          alreadyVisited,
+          nextGameId: null,
+          passwordWrong: false,
+        },
+      })
+    }
+    // --- End password mechanic ---
 
     const narrative = chosenOption ? chosenOption.outcome : activeValue.content
     const completesChapter = activeValue.completesChapter ?? false

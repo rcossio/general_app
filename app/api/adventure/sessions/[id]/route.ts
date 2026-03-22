@@ -12,27 +12,35 @@ type Choice = {
   grants: { flag: string }[]
 }
 
+type PasswordData = {
+  value: string
+  successContent: Record<string, string>
+  grants: { flag: string }[]
+}
+
 type LocationValue = {
   when: Condition
   content: Record<string, string>
   completesChapter?: boolean
   choices?: Choice[]
+  password?: PasswordData
 }
 
 function resolveNarrative(
   values: LocationValue[],
   flags: Set<string>
-): { content: Record<string, string>; completesChapter: boolean; choices: { id: string; label: Record<string, string> }[] | null } {
+): { content: Record<string, string>; completesChapter: boolean; choices: { id: string; label: Record<string, string> }[] | null; hasPassword: boolean } {
   for (const v of values) {
     if (evaluate(v.when as Condition, flags)) {
       return {
         content: v.content,
         completesChapter: v.completesChapter ?? false,
         choices: v.choices?.map((c) => ({ id: c.id, label: c.label })) ?? null,
+        hasPassword: !!v.password,
       }
     }
   }
-  return { content: {}, completesChapter: false, choices: null }
+  return { content: {}, completesChapter: false, choices: null, hasPassword: false }
 }
 
 export async function GET(request: NextRequest, { params }: Params) {
@@ -75,9 +83,9 @@ export async function GET(request: NextRequest, { params }: Params) {
       evaluate(loc.visibleWhen as Condition, flagSet)
     const visited = visitedIds.has(loc.id)
     const values = loc.values as LocationValue[]
-    const { content: narrative, choices } = visible
+    const { content: narrative, choices, hasPassword } = visible
       ? resolveNarrative(values, flagSet)
-      : { content: null, choices: null }
+      : { content: null, choices: null, hasPassword: false }
 
     return {
       id: loc.id,
@@ -93,6 +101,7 @@ export async function GET(request: NextRequest, { params }: Params) {
       narrative: narrative ?? null,
       // Only show choices for locations not yet visited — once visited the choice is final
       choices: visited ? null : (choices ?? null),
+      hasPassword,
     }
   })
 

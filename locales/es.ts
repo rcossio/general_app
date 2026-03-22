@@ -138,6 +138,9 @@ const es: Translations = {
     newLocationFound: '¡Nuevo lugar cerca!',
     fakeGps: 'GPS falso (tester)',
     fakeGpsActive: 'GPS falso activo — usa WASD o flechas',
+    passwordPrompt: 'Introduce la contraseña',
+    passwordConfirm: 'Confirmar',
+    wrongPassword: 'Contraseña incorrecta. Sigue explorando.',
   },
 }
 

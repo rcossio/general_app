@@ -11,17 +11,17 @@
         {
           "when": "visited_start",
           "content": {
-            "en": "You already read the board. Your friend, the shed, and the toolbox are nearby.",
-            "it": "Hai già letto la bacheca. Il tuo amico, il capanno e la cassetta degli attrezzi sono vicini.",
-            "es": "Ya leíste el tablón. Tu amigo, el cobertizo y la caja de herramientas están cerca."
+            "en": "You already read the board. Your friend, the shed, and the toolbox are nearby. The toolbox combination is 4729.",
+            "it": "Hai già letto la bacheca. Il tuo amico, il capanno e la cassetta degli attrezzi sono vicini. La combinazione della cassetta è 4729.",
+            "es": "Ya leíste el tablón. Tu amigo, el cobertizo y la caja de herramientas están cerca. La combinación de la caja es 4729."
           }
         },
         {
           "when": null,
           "content": {
-            "en": "A notice board describes the area. You can see a friend's house, a shed, a toolbox, and a locked gate ahead.",
-            "it": "Una bacheca descrive la zona. Puoi vedere la casa di un amico, un capanno, una cassetta degli attrezzi e un cancello chiuso davanti a te.",
-            "es": "Un tablón de anuncios describe el área. Puedes ver la casa de un amigo, un cobertizo, una caja de herramientas y una reja cerrada más adelante."
+            "en": "A notice board describes the area. You can see a friend's house, a shed, a toolbox, and a locked gate ahead. A note reads: toolbox combination 4729.",
+            "it": "Una bacheca descrive la zona. Puoi vedere la casa di un amico, un capanno, una cassetta degli attrezzi e un cancello chiuso davanti a te. Un foglietto recita: combinazione cassetta 4729.",
+            "es": "Un tablón de anuncios describe el área. Puedes ver la casa de un amigo, un cobertizo, una caja de herramientas y una reja cerrada más adelante. Una nota dice: combinación de la caja 4729."
           }
         }
       ],
@@ -156,13 +156,22 @@
         {
           "when": null,
           "content": {
-            "en": "You find a heavy hammer inside the toolbox.",
-            "it": "Trovi un pesante martello dentro la cassetta degli attrezzi.",
-            "es": "Encuentras un pesado martillo dentro de la caja de herramientas."
+            "en": "A heavy toolbox sits here, locked with a combination. You'll need the code to open it.",
+            "it": "Una pesante cassetta degli attrezzi è qui, chiusa con una combinazione. Ti serve il codice per aprirla.",
+            "es": "Una pesada caja de herramientas está aquí, cerrada con combinación. Necesitas el código para abrirla."
+          },
+          "password": {
+            "value": "4729",
+            "successContent": {
+              "en": "The lock clicks open. Inside you find a heavy hammer — just what you need.",
+              "it": "Il lucchetto scatta. Dentro trovi un pesante martello — proprio quello che ti serve.",
+              "es": "El candado se abre. Dentro encuentras un pesado martillo — justo lo que necesitas."
+            },
+            "grants": [{ "flag": "has_hammer" }]
           }
         }
       ],
-      "grants": [{ "flag": "has_hammer" }]
+      "grants": []
     },
     {
       "id": "loc_5_gate",

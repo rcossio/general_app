@@ -18,6 +18,7 @@ type ResolvedLocation = MapLocation & {
   imageUrl: string | null
   narrative: string | null
   choices: { id: string; label: string }[] | null
+  hasPassword: boolean
 }
 
 // Dynamic import: Leaflet requires browser environment
@@ -59,6 +60,7 @@ interface ApiLocation {
   visited: boolean
   narrative: I18nString | null
   choices: ApiLocationChoice[] | null
+  hasPassword: boolean
 }
 
 interface SessionState {
@@ -86,6 +88,7 @@ interface VisitResult {
   completesChapter: boolean
   alreadyVisited: boolean
   nextGameId: string | null
+  passwordWrong?: boolean
 }
 
 export default function SessionPage({
@@ -112,6 +115,7 @@ function GameMap({ sessionId }: { sessionId: string }) {
   const [selectedLocation, setSelectedLocation] = useState<ResolvedLocation | null>(null)
   const [visiting, setVisiting] = useState(false)
   const [visitResult, setVisitResult] = useState<VisitResult | null>(null)
+  const [passwordWrong, setPasswordWrong] = useState(false)
   const [loading, setLoading] = useState(true)
   const [menuOpen, setMenuOpen] = useState(false)
   const [confirmRestart, setConfirmRestart] = useState(false)
@@ -148,6 +152,7 @@ function GameMap({ sessionId }: { sessionId: string }) {
           ? loc.choices.map((c) => ({ id: c.id, label: resolveI18n(c.label, locale) }))
           : null,
         type: loc.type,
+        hasPassword: loc.hasPassword,
       })),
     [state, locale]
   )
@@ -164,19 +169,31 @@ function GameMap({ sessionId }: { sessionId: string }) {
     return ids
   })()
 
-  const doVisit = async (locationId: string, lat: number, lng: number, choiceId?: string) => {
+  const doVisit = async (locationId: string, lat: number, lng: number, choiceId?: string, password?: string) => {
     setVisiting(true)
     try {
       const res = await fetchWithAuth(`/api/adventure/sessions/${sessionId}/visit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ locationId, lat, lng, ...(choiceId ? { choiceId } : {}) }),
+        body: JSON.stringify({
+          locationId, lat, lng,
+          ...(choiceId ? { choiceId } : {}),
+          ...(password !== undefined ? { password } : {}),
+        }),
       })
       const body = await res.json()
       if (body.data) {
-        setVisitResult(body.data)
-        setSelectedLocation(null)
-        await loadState(sessionId)
+        if (body.data.passwordWrong) {
+          setPasswordWrong(true)
+          // Mark location as visited locally so sheet unlocks for retry
+          setSelectedLocation((prev) => prev ? { ...prev, visited: true } : null)
+          await loadState(sessionId)
+        } else {
+          setPasswordWrong(false)
+          setVisitResult(body.data)
+          setSelectedLocation(null)
+          await loadState(sessionId)
+        }
       }
     } finally {
       setVisiting(false)
@@ -190,6 +207,11 @@ function GameMap({ sessionId }: { sessionId: string }) {
   const handleChoose = (choiceId: string) => {
     if (!selectedLocation || !playerPos || selectedLocation.visited) return
     doVisit(selectedLocation.id, playerPos.lat, playerPos.lng, choiceId)
+  }
+  const handlePassword = (password: string) => {
+    if (!selectedLocation || !playerPos) return
+    setPasswordWrong(false)
+    doVisit(selectedLocation.id, playerPos.lat, playerPos.lng, undefined, password)
   }
 
   const distanceToSelected =
@@ -468,10 +490,13 @@ function GameMap({ sessionId }: { sessionId: string }) {
           withinRange={withinRange}
           distance={distanceToSelected}
           choices={selectedLocation.choices}
+          hasPassword={selectedLocation.hasPassword}
+          passwordWrong={passwordWrong}
           locked={sheetLocked}
           onVisit={handleVisit}
           onChoose={handleChoose}
-          onClose={() => setSelectedLocation(null)}
+          onPassword={handlePassword}
+          onClose={() => { setSelectedLocation(null); setPasswordWrong(false) }}
           visiting={visiting}
         />
       )}

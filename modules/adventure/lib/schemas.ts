@@ -9,6 +9,7 @@ export const visitLocationSchema = z.object({
   lat: z.number(),
   lng: z.number(),
   choiceId: z.string().optional(),
+  password: z.string().optional(),
 })
 
 export const createGameSchema = z.object({

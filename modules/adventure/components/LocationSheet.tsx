@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { X, Navigation } from 'lucide-react'
 import { useLocale } from '@/contexts/LocaleContext'
 
@@ -21,9 +21,12 @@ interface LocationSheetProps {
   withinRange: boolean
   distance: number | null
   choices: LocationChoice[] | null
+  hasPassword: boolean
+  passwordWrong: boolean
   locked: boolean
   onVisit: () => void
   onChoose: (choiceId: string) => void
+  onPassword: (password: string) => void
   onClose: () => void
   visiting: boolean
 }
@@ -37,13 +40,17 @@ export function LocationSheet({
   withinRange,
   distance,
   choices,
+  hasPassword,
+  passwordWrong,
   locked,
   onVisit,
   onChoose,
+  onPassword,
   onClose,
   visiting,
 }: LocationSheetProps) {
   const { t } = useLocale()
+  const [passwordInput, setPasswordInput] = useState('')
 
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
@@ -54,6 +61,7 @@ export function LocationSheet({
   }, [onClose, locked])
 
   const hasChoices = withinRange && !visited && choices && choices.length > 0
+  const showPassword = hasPassword && withinRange
   const src = imageUrl ?? (type === 'event' ? DEFAULT_EVENT_IMAGE : DEFAULT_LOCATION_IMAGE)
 
   return (
@@ -110,7 +118,36 @@ export function LocationSheet({
                 <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-sm mb-4">
                   {narrative}
                 </p>
-                {hasChoices ? (
+                {passwordWrong ? (
+                  <div className="flex flex-col gap-3">
+                    <p className="text-red-500 text-sm font-medium">{t('adventure.wrongPassword')}</p>
+                    <button
+                      onClick={onClose}
+                      className="w-full py-3 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold text-sm"
+                    >
+                      {t('adventure.visitLocation')}
+                    </button>
+                  </div>
+                ) : showPassword ? (
+                  <div className="flex flex-col gap-2">
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={passwordInput}
+                      onChange={(e) => setPasswordInput(e.target.value)}
+                      placeholder={t('adventure.passwordPrompt')}
+                      maxLength={20}
+                      className="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                    />
+                    <button
+                      onClick={() => { onPassword(passwordInput); setPasswordInput('') }}
+                      disabled={!passwordInput || visiting}
+                      className="w-full py-3 rounded-xl bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-semibold text-sm"
+                    >
+                      {t('adventure.passwordConfirm')}
+                    </button>
+                  </div>
+                ) : hasChoices ? (
                   <>
                     <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
                       {t('adventure.chooseAction')}
