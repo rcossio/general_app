@@ -51,7 +51,7 @@ export function InventorySheet({ items, playerFlags, onClose }: InventorySheetPr
             <h2 className="text-base font-bold">{itemName}</h2>
           </div>
           <div className="px-4 pb-8">
-            <div className="w-full aspect-[3/2] md:aspect-auto md:h-64 rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800">
+            <div className="w-full aspect-[3/2] md:aspect-auto md:h-64 rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
               <img
                 src={src}
                 alt={itemName}

@@ -82,7 +82,7 @@ export function LocationSheet({
               src={src}
               alt={name}
               loading="lazy"
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover md:object-contain"
             />
           </div>
         </div>
