@@ -1,8 +1,64 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { MapContainer, TileLayer, CircleMarker, useMap } from 'react-leaflet'
+import { MapContainer, TileLayer, CircleMarker, Marker, useMap } from 'react-leaflet'
+import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+
+function exclamationIcon(color: string) {
+  return L.divIcon({
+    html: `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:15px;color:${color};line-height:1;pointer-events:none;">!</div>`,
+    className: '',
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
+  })
+}
+
+// [id, dark, light]
+const GRADIENTS: [string, string, string][] = [
+  ['loc-grad-orange', '#f97316', '#ffedd5'],
+  ['loc-grad-red',    '#ef4444', '#fee2e2'],
+  ['loc-grad-gray',   '#9ca3af', '#f3f4f6'],
+  ['loc-grad-green',  '#22c55e', '#dcfce7'],
+  ['loc-grad-blue',   '#3b82f6', '#dbeafe'],
+]
+
+const STROKE: Record<string, string> = Object.fromEntries(
+  GRADIENTS.map(([id, dark]) => [id, dark])
+)
+
+function GradientDefs() {
+  const map = useMap()
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => {
+      const svgEl = map.getPanes().overlayPane?.querySelector('svg')
+      if (!svgEl || svgEl.querySelector('#loc-grad-orange')) return
+      let defs = svgEl.querySelector('defs')
+      if (!defs) {
+        defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs')
+        svgEl.insertBefore(defs, svgEl.firstChild)
+      }
+      for (const [id, dark, light] of GRADIENTS) {
+        const grad = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient')
+        grad.id = id
+        grad.setAttribute('x1', '0%')
+        grad.setAttribute('y1', '0%')
+        grad.setAttribute('x2', '100%')
+        grad.setAttribute('y2', '100%')
+        const s1 = document.createElementNS('http://www.w3.org/2000/svg', 'stop')
+        s1.setAttribute('offset', '0%')
+        s1.setAttribute('stop-color', light)
+        const s2 = document.createElementNS('http://www.w3.org/2000/svg', 'stop')
+        s2.setAttribute('offset', '100%')
+        s2.setAttribute('stop-color', dark)
+        grad.append(s1, s2)
+        defs.appendChild(grad)
+      }
+    })
+    return () => cancelAnimationFrame(raf)
+  }, [map])
+  return null
+}
 
 export interface MapLocation {
   id: string
@@ -70,6 +126,7 @@ export default function AdventureMap({
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
 
+      <GradientDefs />
       <PlayerTracker position={playerPosition} />
 
       {playerPosition && (
@@ -82,24 +139,37 @@ export default function AdventureMap({
           <CircleMarker
             center={[playerPosition.lat, playerPosition.lng]}
             radius={8}
-            pathOptions={{ color: '#ffffff', fillColor: '#3b82f6', fillOpacity: 1, weight: 2 }}
+            pathOptions={{ color: STROKE['loc-grad-blue'], fillColor: 'url(#loc-grad-blue)', fillOpacity: 1, weight: 2, opacity: 0.5 }}
           />
         </>
       )}
 
       {visibleLocations.map((loc) => {
         const isNearby = nearbyLocationIds.has(loc.id)
-        const unvisitedColor = loc.type === 'event' ? '#ef4444' : '#f97316'
-        const color = isNearby ? '#22c55e' : loc.visited ? '#9ca3af' : unvisitedColor
+        const gradId = isNearby
+          ? 'loc-grad-green'
+          : loc.visited
+          ? 'loc-grad-gray'
+          : loc.type === 'event'
+          ? 'loc-grad-red'
+          : 'loc-grad-orange'
 
         return (
-          <CircleMarker
-            key={loc.id}
-            center={[loc.lat, loc.lng]}
-            radius={isNearby ? 20 : 14}
-            pathOptions={{ color: '#ffffff', fillColor: color, fillOpacity: 0.9, weight: 2 }}
-            eventHandlers={{ click: () => onLocationClick(loc) }}
-          />
+          <span key={loc.id}>
+            <CircleMarker
+              center={[loc.lat, loc.lng]}
+              radius={isNearby ? 20 : 14}
+              pathOptions={{ color: STROKE[gradId], fillColor: `url(#${gradId})`, fillOpacity: 1, weight: 2, opacity: 0.5 }}
+              eventHandlers={{ click: () => onLocationClick(loc) }}
+            />
+            {loc.type === 'event' && (
+              <Marker
+                position={[loc.lat, loc.lng]}
+                icon={exclamationIcon(STROKE[gradId])}
+                interactive={false}
+              />
+            )}
+          </span>
         )
       })}
     </MapContainer>
