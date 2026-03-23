@@ -21,11 +21,57 @@ The engine is entirely flag-driven. There are no hit points, timers, or inventor
     "it": "Il Giardino",
     "es": "El Jardín"
   },
+  "items": [ ... ],
   "locations": [ ... ]
 }
 ```
 
 `title` is the chapter name shown in the app. All text fields support three languages: `en`, `it`, `es`. The `en` value is always required and used as a fallback when a translation is missing.
+
+`items` defines the chapter's inventory — see **Items** below. Use `[]` if the chapter has no inventory.
+
+### Image URLs
+
+`imageUrl` fields (on locations and items) accept either a full URL (`https://...`) or a relative R2 key (`game-art/foo.webp`). The import script resolves relative keys to full public URLs using `NEXT_PUBLIC_R2_PUBLIC_URL`. Store assets in R2 and reference them by key.
+
+---
+
+## Items
+
+`items` is a top-level array on the chapter JSON. Each item represents something the player can carry. An item appears in the player's inventory (backpack button → bottom bar) when they hold the item's associated flag.
+
+```json
+"items": [
+  {
+    "id": "key",
+    "flag": "has_key",
+    "name": { "en": "Rusty Key", "it": "Chiave Arrugginita", "es": "Llave Oxidada" },
+    "imageUrl": null,
+    "itemImageUrl": null
+  },
+  {
+    "id": "note",
+    "flag": "has_note",
+    "name": { "en": "Note", "it": "Biglietto", "es": "Nota" },
+    "imageUrl": null,
+    "itemImageUrl": {
+      "en": "game-art/note_en_600x400.webp",
+      "it": "game-art/note_it_600x400.webp",
+      "es": "game-art/note_es_600x400.webp"
+    }
+  }
+]
+```
+
+| Field | Required | Description |
+|---|---|---|
+| `id` | yes | Unique string within the items array. |
+| `flag` | yes | The player must hold this flag for the item to appear in inventory. |
+| `name` | yes | Display name shown in the inventory list. Multilingual. |
+| `imageUrl` | yes | Reserved field — use `null` for now. |
+| `itemImageUrl` | yes | Full-screen image shown when the player taps the item. Multilingual (per-locale image path). Use `null` for no image. When provided, the item is tappable in inventory. |
+
+Items are defined once per chapter — not per location. To give a player an item, grant its flag from a location (via `grants`, `choices`, or `password`). Items are never removed from inventory — they persist as long as the player holds the flag.
 
 ---
 
@@ -55,7 +101,7 @@ Every entry in `locations` is either a **location** or an **event** (see `type` 
 | `name` | yes | — | Name shown in the sheet and on the map. Multilingual object. |
 | `coordinates` | yes | — | Real-world GPS coordinates of the centre of the interaction zone. |
 | `radiusM` | no | 30 | Radius in metres. Player must be within this distance to interact. |
-| `imageUrl` | no | `null` | URL of an image shown at the top of the sheet. Uses a default image if omitted. |
+| `imageUrl` | no | `null` | Full URL or relative R2 key (e.g. `"game-art/foo.webp"`) of an image shown at the top of the sheet. Resolved at import time. Uses a default image if omitted. |
 | `visibleWhen` | yes | — | Condition controlling when this location appears on the map (see Conditions). Use `null` for always visible. |
 | `values` | yes | — | Array of narrative entries evaluated top-to-bottom (see Values). |
 | `grants` | yes | — | Flags given to the player unconditionally when they visit. Use `[]` if none. |
@@ -295,4 +341,4 @@ npx tsx scripts/adventure/import-game.ts \
 
 ## Full example — chapter1.json
 
-See `scripts/adventure/chapter1.json` for a complete working example covering all engine features: flag grants, flag revokes, choices, password, events, unvisits, and chapter completion.
+See `scripts/adventure/chapter1.json` for a complete working example covering all engine features: items, flag grants, flag revokes, choices, password, events, and chapter completion.

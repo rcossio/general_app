@@ -137,12 +137,15 @@ project-root/
 │   └── adventure/
 │       ├── manifest.ts
 │       ├── lib/
-│       │   ├── condition.ts  # evaluates visibleWhen/when conditions against flag sets
-│       │   ├── haversine.ts  # GPS distance calculation
-│       │   └── schemas.ts
+│       │   ├── condition.ts         # evaluates visibleWhen/when conditions against flag sets
+│       │   ├── haversine.ts         # GPS distance calculation
+│       │   ├── schemas.ts
+│       │   └── usePlayerPosition.ts # GPS watch + fake GPS keyboard/D-pad hook
 │       └── components/
-│           ├── AdventureMap.tsx   # Leaflet map (dynamic import, SSR disabled)
-│           └── LocationSheet.tsx  # bottom sheet overlay for location interaction
+│           ├── AdventureMap.tsx     # Leaflet map (dynamic import, SSR disabled)
+│           ├── LocationSheet.tsx    # bottom sheet overlay for location interaction
+│           ├── InventorySheet.tsx   # inventory overlay; filters game.items by player flags
+│           └── FakeGpsDpad.tsx      # on-screen D-pad for fake GPS movement
 ├── scripts/
 │   └── adventure/
 │       ├── import-game.ts    # CLI tool to seed game data from JSON
@@ -151,7 +154,8 @@ project-root/
 │   └── modules.ts
 ├── contexts/
 │   ├── AuthContext.tsx
-│   └── LocaleContext.tsx
+│   ├── LocaleContext.tsx
+│   └── ChromeContext.tsx     # hideChrome flag; adventure session page sets true to hide nav
 ├── locales/
 │   ├── en.ts                 # source of truth, exports Translations type
 │   ├── it.ts
@@ -199,7 +203,7 @@ project-root/
 
 ### Adventure module
 
-- **games** — id, slug (unique), title (Json/multilingual), description, chapter, next_game_id (nullable, self-ref), is_active, created_at, updated_at
+- **games** — id, slug (unique), title (Json/multilingual), description, chapter, next_game_id (nullable, self-ref), is_active, items (Json array, default `[]`), created_at, updated_at
 - **game_locations** — id, game_id, external_id, name (Json/multilingual), lat, lng, radius_m (default 35), visible_when (Json/nullable), values (Json array), grants (Json array), order
 - **game_sessions** — id, game_id, user_id, started_at, completed_at (nullable); unique on (game_id, user_id)
 - **session_flags** — id, session_id, flag, set_at; unique on (session_id, flag)
@@ -207,7 +211,7 @@ project-root/
 
 #### Multilingual fields
 
-`game.title` and `game_location.name` are `JSONB` columns storing `{ "en": "...", "it": "...", "es": "..." }` objects. The `values` array in `game_location` contains objects whose `content` field is also multilingual. Resolution happens entirely on the client using `useLocale()` — the API returns the raw multilingual objects and the frontend picks the correct locale string.
+`game.title` and `game_location.name` are `JSONB` columns storing `{ "en": "...", "it": "...", "es": "..." }` objects. The `values` array in `game_location` contains objects whose `content` field is also multilingual. The `game.items` array contains objects with `name` and `itemImageUrl` fields that are multilingual (`itemImageUrl` can be a per-locale image path). Resolution happens entirely on the client using `useLocale()` — the API returns the raw multilingual objects and the frontend picks the correct locale string.
 
 #### Game content format (chapter JSON)
 
@@ -323,8 +327,8 @@ POST   /api/adventure/sessions/[id]/visit       → visit a location (GPS-verifi
 2. Evaluate `visibleWhen` condition against current flag set — return 403 if not visible
 3. Check GPS distance against `radius_m` — return 400 with distance if too far
 4. Evaluate `values` array to resolve narrative (first matching `when` condition wins)
-5. If not already visited: record visit, apply grants (new flags), mark chapter complete if `completesChapter: true`
-6. Return `{ narrative, newFlags, completesChapter, alreadyVisited, nextGameId }`
+5. If not already visited: record visit, apply grants (new flags), revoke flags, mark chapter complete if `completesChapter: true`
+6. Return `{ narrative, newFlags, revokedFlags, completesChapter, alreadyVisited, nextGameId }`
 
 All narrative and name fields returned from the API are raw multilingual objects `{ en, it, es }` — resolution to a string happens on the client.
 
@@ -358,8 +362,7 @@ GET    /api/tracker/stats                   → score averages by type (cached 6
 - Nav labels are translated via `useLocale()` / `t()`
 - Dark/light mode toggle stored in localStorage
 - `LocaleProvider` wraps `AuthProvider` wraps entire app
-- Both nav components check the current pathname: if it matches `/adventure/[sessionId]`,
-  they render `null` — the adventure session page is always full-screen with no chrome
+- The adventure session page calls `setHideChrome(true)` via `ChromeContext` on mount and cleans up on unmount. Nav components read `hideChrome` from `ChromeContext` and render `null` when it is true.
 
 ### i18n
 
@@ -393,7 +396,9 @@ GET    /api/tracker/stats                   → score averages by type (cached 6
   - Locations rendered as colored `CircleMarker`: orange (unvisited), gray (visited), green (in range)
   - Tapping a marker opens a `LocationSheet` bottom sheet
   - On entering a location's radius, the sheet opens automatically and the visit is recorded
-  - Bottom bar: back arrow, visited/visible count, refresh, settings gear
+  - Bottom bar: back arrow, visited/visible count, refresh, inventory (backpack), settings gear
+  - Inventory sheet: tappable list of items the player currently holds (filtered by flags); items with `itemImageUrl` show a full-view image on tap
+  - Pending location persistence: if the app closes while a location is in-range and unvisited, its id is saved to `localStorage` (`adventure_pending_<sessionId>`) and the sheet re-opens on next load
   - Settings sheet: restart chapter (with confirmation)
 
 ---
