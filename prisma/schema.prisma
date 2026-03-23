@@ -157,6 +157,8 @@ model Game {
   chapter     Int      @default(1)
   nextGameId  String?  @unique @map("next_game_id")
   isActive    Boolean  @default(false) @map("is_active")
+  // Array of { id, flag, name: {en,it,es}, imageUrl? }
+  items       Json     @default("[]")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
@@ -178,8 +180,13 @@ model GameLocation {
   visibleWhen Json?  @map("visible_when")
   // Array of { when: Condition | null, content: { en, it, es }, completesChapter?: true }
   values      Json
+  // "location" (default) | "event" — events auto-fire on radius entry, no sheet
+  type        String  @default("location")
+  imageUrl    String? @map("image_url")
   // Array of { flag: string }
   grants      Json
+  // Array of { flag: string } — flags removed from session on visit
+  revokes     Json   @default("[]")
   order       Int    @default(0)
 
   game   Game            @relation(fields: [gameId], references: [id], onDelete: Cascade)

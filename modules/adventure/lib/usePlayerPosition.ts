@@ -90,5 +90,13 @@ export function usePlayerPosition(fakeMode: boolean) {
     return () => window.removeEventListener('keydown', handleKey)
   }, [fakeMode])
 
-  return { playerPos, gpsError }
+  function move(dlat: number, dlng: number) {
+    if (!fakeMode) return
+    setPlayerPos((prev) => {
+      const base = prev ?? { lat: 0, lng: 0, accuracy: 5 }
+      return { lat: base.lat + dlat, lng: base.lng + dlng, accuracy: 5 }
+    })
+  }
+
+  return { playerPos, gpsError, move }
 }

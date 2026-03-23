@@ -8,6 +8,8 @@ export const visitLocationSchema = z.object({
   locationId: z.string().min(1),
   lat: z.number(),
   lng: z.number(),
+  choiceId: z.string().optional(),
+  password: z.string().optional(),
 })
 
 export const createGameSchema = z.object({

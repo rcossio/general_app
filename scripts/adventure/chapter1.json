@@ -1,5 +1,43 @@
 {
-  "title": { "en": "The Garden", "it": "Il Giardino", "es": "El Jardín" },
+  "title": { 
+      "en": "The Garden", 
+      "it": "Il Giardino", 
+      "es": "El Jardín" 
+    },
+  "items": [
+    {
+      "id": "friend",
+      "flag": "has_friend",
+      "name": { "en": "Friend", "it": "Amico", "es": "Amigo" },
+      "imageUrl": null,
+      "itemImageUrl": null
+    },
+    {
+      "id": "key",
+      "flag": "has_key",
+      "name": { "en": "Rusty Key", "it": "Chiave Arrugginita", "es": "Llave Oxidada" },
+      "imageUrl": null,
+      "itemImageUrl": null
+    },
+    {
+      "id": "hammer",
+      "flag": "has_hammer",
+      "name": { "en": "Hammer", "it": "Martello", "es": "Martillo" },
+      "imageUrl": null,
+      "itemImageUrl": null
+    },
+    {
+      "id": "note",
+      "flag": "has_note",
+      "name": { "en": "Note", "it": "Biglietto", "es": "Nota" },
+      "imageUrl": null,
+      "itemImageUrl": {
+        "en": "game-art/tutorial_toolbox_note_en_600x400.webp",
+        "it": "game-art/tutorial_toolbox_note_it_600x400.webp",
+        "es": "game-art/tutorial_toolbox_note_es_600x400.webp"
+      }
+    }
+  ],
   "locations": [
     {
       "id": "loc_1_start",
@@ -69,21 +107,91 @@
           }
         },
         {
+          "when": "talked_to_stranger",
+          "content": {
+            "en": "The shed is empty. The stranger made sure you had no chance at the key.",
+            "it": "Il capanno è vuoto. Lo straniero si è assicurato che non avessi possibilità di prendere la chiave.",
+            "es": "El cobertizo está vacío. El extraño se aseguró de que no tuvieras oportunidad con la llave."
+          }
+        },
+        {
           "when": null,
           "content": {
-            "en": "You find a rusty key hanging on the wall.",
-            "it": "Trovi una chiave arrugginita appesa al muro.",
-            "es": "Encuentras una llave oxidada colgada en la pared."
+            "en": "A rusty key hangs on the wall. Before you can grab it, a stranger steps in from the doorway and starts talking.",
+            "it": "Una chiave arrugginita è appesa al muro. Prima che tu possa prenderla, uno straniero entra dalla porta e inizia a parlare.",
+            "es": "Una llave oxidada cuelga de la pared. Antes de que puedas tomarla, un extraño entra por la puerta y empieza a hablar."
+          },
+          "choices": [
+            {
+              "id": "grab_key",
+              "label": {
+                "en": "Slip past them and take the key",
+                "it": "Aggirali e prendi la chiave",
+                "es": "Escabúllete y toma la llave"
+              },
+              "outcome": {
+                "en": "You manage to grab the rusty key before the stranger can react. It feels old and heavy.",
+                "it": "Riesci ad afferrare la chiave arrugginita prima che lo straniero reagisca. Sembra vecchia e pesante.",
+                "es": "Logras tomar la llave oxidada antes de que el extraño pueda reaccionar. Se siente vieja y pesada."
+              },
+              "grants": [{ "flag": "has_key" }]
+            },
+            {
+              "id": "talk",
+              "label": {
+                "en": "Stop and hear what they have to say",
+                "it": "Fermati e ascolta cosa hanno da dire",
+                "es": "Detente y escucha lo que tienen que decir"
+              },
+              "outcome": {
+                "en": "An interesting conversation — but when you turn back, the key is gone. You will need another way to open the gate.",
+                "it": "Una conversazione interessante — ma quando ti giri, la chiave è sparita. Dovrai trovare un altro modo per aprire il cancello.",
+                "es": "Una conversación interesante — pero cuando te das vuelta, la llave ha desaparecido. Necesitarás otra forma de abrir la reja."
+              },
+              "grants": [{ "flag": "talked_to_stranger" }]
+            }
+          ]
+        }
+      ],
+      "grants": []
+    },
+    {
+      "id": "evt_dog",
+      "type": "event",
+      "name": { "en": "Loose Dog", "it": "Cane Sciolto", "es": "Perro Suelto" },
+      "coordinates": { "lat": 45.014486301008176, "lng": 8.62806747813587 },
+      "radiusM": 25,
+      "imageUrl": "game-art/event_dog_600x400.webp",
+      "visibleWhen": { "and": ["visited_start", { "not": "dog_chased" }] },
+      "values": [
+        {
+          "when": "has_friend",
+          "content": {
+            "en": "A large dog bursts from a yard and charges straight at you. Your friend panics and sprints back toward their house — you lose sight of them entirely.",
+            "it": "Un grosso cane esce di scatto da un cortile e vi carica. Il tuo amico si fa prendere dal panico e corre verso casa sua — lo perdi completamente di vista.",
+            "es": "Un perro grande sale disparado de un patio y se abalanza sobre ustedes. Tu amigo entra en pánico y corre de regreso a su casa — lo pierdes de vista por completo."
+          },
+          "grants": [{ "flag": "dog_chased" }],
+          "revokes": [{ "flag": "has_friend" }]
+        },
+        {
+          "when": null,
+          "content": {
+            "en": "A large dog watches you from behind a fence, growling softly. It seems agitated — you'd rather not be here with someone else.",
+            "it": "Un grosso cane ti osserva da dietro un recinto, ringhiando piano. Sembra agitato — meglio non essere qui con qualcun altro.",
+            "es": "Un perro grande te mira desde detrás de una valla, gruñendo suavemente. Parece agitado — mejor no estar aquí con otra persona."
           }
         }
       ],
-      "grants": [{ "flag": "has_key" }]
+      "grants": [],
+      "revokes": []
     },
     {
       "id": "loc_4_hammer",
       "name": { "en": "Toolbox", "it": "Cassetta degli Attrezzi", "es": "Caja de Herramientas" },
       "coordinates": { "lat": 45.01477694667256, "lng": 8.62756105427572 },
       "radiusM": 35,
+      "imageUrl": "game-art/loc_toolbox_600x400.webp",
       "visibleWhen": "visited_start",
       "values": [
         {
@@ -97,18 +205,54 @@
         {
           "when": null,
           "content": {
-            "en": "You find a heavy hammer inside the toolbox.",
-            "it": "Trovi un pesante martello dentro la cassetta degli attrezzi.",
-            "es": "Encuentras un pesado martillo dentro de la caja de herramientas."
+            "en": "A heavy toolbox sits here, locked with a combination. You'll need the code to open it.",
+            "it": "Una pesante cassetta degli attrezzi è qui, chiusa con una combinazione. Ti serve il codice per aprirla.",
+            "es": "Una pesada caja de herramientas está aquí, cerrada con combinación. Necesitas el código para abrirla."
+          },
+          "password": {
+            "value": "4729",
+            "successContent": {
+              "en": "The lock clicks open. Inside you find a heavy hammer — just what you need.",
+              "it": "Il lucchetto scatta. Dentro trovi un pesante martello — proprio quello che ti serve.",
+              "es": "El candado se abre. Dentro encuentras un pesado martillo — justo lo que necesitas."
+            },
+            "grants": [{ "flag": "has_hammer" }]
           }
         }
       ],
-      "grants": [{ "flag": "has_hammer" }]
+      "grants": []
+    },
+    {
+      "id": "loc_6_note",
+      "name": { "en": "Pinned Note", "it": "Biglietto Appuntato", "es": "Nota Clavada" },
+      "coordinates": { "lat": 45.014883616714485, "lng": 8.627320726788296 },
+      "radiusM": 35,
+      "visibleWhen": "visited_start",
+      "values": [
+        {
+          "when": "has_note",
+          "content": {
+            "en": "You already picked up the note. Check your inventory.",
+            "it": "Hai già preso il biglietto. Controllalo nell'inventario.",
+            "es": "Ya recogiste la nota. Revísala en tu inventario."
+          }
+        },
+        {
+          "when": null,
+          "content": {
+            "en": "A handwritten note is pinned to the fence. You take it.",
+            "it": "Un biglietto scritto a mano è appuntato al recinto. Lo prendi.",
+            "es": "Una nota escrita a mano está clavada en la valla. La tomas."
+          }
+        }
+      ],
+      "grants": [{ "flag": "has_note" }],
+      "revokes": []
     },
     {
       "id": "loc_5_gate",
       "name": { "en": "Locked Gate", "it": "Cancello Chiuso", "es": "Reja Cerrada" },
-      "coordinates": { "lat": 45.014486301008176, "lng": 8.62806747813587 },
+      "coordinates": { "lat": 45.01368518191782, "lng": 8.62782806152771 },
       "radiusM": 35,
       "visibleWhen": "visited_start",
       "values": [

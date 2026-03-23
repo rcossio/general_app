@@ -20,7 +20,7 @@ The only place real values belong is `.env`, which is gitignored.
 
 ## Before Starting Any Task
 
-Read all `.md` files before doing anything. This includes — but is not limited to — `README.md`, `docs/SPEC.md`, and `docs/DEPLOYMENT.md`. These files define the intended architecture, conventions, and constraints. Code must conform to them, not to whatever pattern already exists in the codebase (existing code may already be wrong).
+Read all `.md` files before doing anything. This includes — but is not limited to — `README.md`, `docs/SPEC.md`, `docs/DEPLOYMENT.md`, and `docs/CHAPTERS.md`. These files define the intended architecture, conventions, and constraints. Code must conform to them, not to whatever pattern already exists in the codebase (existing code may already be wrong).
 
 Scan the project structure first. Check what already exists before creating anything new — test folders, config files, scripts, docs. Do not create a file if one already serves the same purpose.
 
@@ -52,8 +52,10 @@ npx prisma migrate dev --name <name>   # Create and apply migration
 npx prisma db seed                      # Seed roles, permissions, admin user
 npx prisma studio                       # Visual DB browser
 
-# Game content import
+# Game content import — run after every change to chapter JSON files
 npx tsx scripts/adventure/import-game.ts --file=scripts/adventure/chapter1.json --slug=chapter-1 --chapter=1 --activate
+# When linking chapters (import next chapter first, then current referencing it):
+npx tsx scripts/adventure/import-game.ts --file=scripts/adventure/chapter2.json --slug=chapter-2 --chapter=2 --activate --next-chapter-slug=chapter-3
 
 # Production — no deploy script. Run in order on the server:
 npm install                                        # if dependencies changed
@@ -62,13 +64,14 @@ pm2 stop all                                       # must stop before building
 npm run build
 pm2 reload ecosystem.config.js --update-env        # picks up any .env changes
 pm2 save
+# After reloading: re-run game content import if any chapter JSON changed
 ```
 
 ---
 
 ## Architecture
 
-**Stack:** Next.js 14 (App Router) + TypeScript (strict) + PostgreSQL + Prisma + Tailwind CSS + Vitest. Single-process monolith deployed on a VPS via PM2 + Nginx.
+**Stack:** Next.js 14 (App Router) + TypeScript (strict, no `any`) + PostgreSQL + Prisma + Tailwind CSS + Vitest. Single-process monolith deployed on a VPS via PM2 + Nginx.
 
 ### Module System
 
@@ -77,7 +80,7 @@ Features are pluggable. Each module has a manifest (`modules/<name>/manifest.ts`
 - **Life Tracker** and **Adventure** are active.
 - **Workout** is disabled: import commented in `config/modules.ts`, routes return 403, DB tables intact.
 
-To enable/disable a module: edit `config/modules.ts`, then run `npx prisma migrate dev`.
+To disable a module: comment out its import in `config/modules.ts` and prefix its folders with `_` in `app/`, `app/api/`, and `__tests__/`. Its nav item disappears and RBAC blocks its routes automatically. Tables stay intact. To re-enable: reverse both steps and run `npx prisma migrate dev`.
 
 ### Auth
 
@@ -93,22 +96,52 @@ To enable/disable a module: edit `config/modules.ts`, then run `npx prisma migra
 - Error shape: `{ error: string, code: string }`.
 - Success shape: `{ data: T }`.
 - List endpoints support `?page=1&limit=20`.
+- Never query without `WHERE` on an indexed column in list endpoints.
+- Use Prisma `select` — never return full rows when only a subset is displayed.
 
 ### Adventure Module
 
 GPS-based location game. Key patterns:
 
-- Location visit: verify ownership → check `visibleWhen` flag condition → verify GPS distance ≤ `radiusM` → apply grants (flags) → return narrative.
-- `modules/adventure/haversine.ts` — GPS distance.
-- `modules/adventure/condition.ts` — evaluates flag-based visibility conditions.
+- Location visit: verify ownership → check `visibleWhen` flag condition → verify GPS distance ≤ `radiusM` → apply grants (flags) → revoke flags → return narrative.
+- `modules/adventure/lib/haversine.ts` — GPS distance.
+- `modules/adventure/lib/condition.ts` — evaluates flag-based visibility conditions. Accepts `null` (always true), `"flag_string"`, `{ "and": [...] }`, `{ "or": [...] }`, or `{ "not": <condition> }`.
+- `LocationSheet` auto-calls the visit endpoint on mount (no separate "Visit" button) — grants and narrative apply as soon as the player reaches the location.
 - **iOS Safari critical:** All overlays on the map page use `absolute` positioning inside a `relative` parent. Never use `position: fixed` or React portals — they get clipped by the Leaflet map container.
 - **Leaflet mobile taps:** Do not add `Tooltip` to markers — Leaflet's internal tap plugin intercepts touch events and makes markers unclickable on iOS. Use `eventHandlers={{ click: () => handler() }}` on `CircleMarker` only.
-- CircleMarker colors: orange = unvisited, gray = visited, green = in range.
+- CircleMarker colors: orange = unvisited location, red = unvisited event, gray = visited, green = in range.
 - Multilingual game content (`title`, `name`, `values[].content`) is returned as raw `{ en, it, es }` objects from the API. Resolve to a string on the client with `resolveI18n(value, locale)` (falls back to `en`). Use `useMemo([state, locale])` so it re-resolves on language change without a refetch.
+
+#### Location types
+
+- `type: "location"` (default) — shown as orange circle; player taps hint bar or marker to open sheet.
+- `type: "event"` — shown as red circle; sheet opens **automatically** when player enters radius; cannot be skipped.
+
+#### Game engine features (chapter JSON)
+
+- `grants` / `revokes` — unconditional flag changes on first visit (location root, use `[]` if none).
+- `values[].grants` / `values[].revokes` — conditional flag changes that only apply when that specific value entry fires. Use this instead of location-level when the effect depends on which narrative matched (e.g. an event that only revokes a flag when the player has a companion).
+- `values[].choices` — decision buttons; player must pick one; each choice has `id`, `label`, `outcome`, `grants`. A value with `choices` cannot also have `password`.
+- `values[].password` — locks location behind a code; has `value`, `successContent`, `grants`. Wrong password marks visited but allows retry; correct code grants flags and removes input.
+- `imageUrl` on location — URL shown at top of sheet; omit for default image.
+
+#### Testing game content
+
+Settings → Fake GPS enables a D-pad for simulating player movement on desktop/indoors.
 
 ### i18n
 
 Custom `LocaleContext` (no library). Locales: `en`, `it`, `es`. `locales/en.ts` exports the authoritative `Translations` type — all other locales must implement it exactly (missing keys = TypeScript error). Hook: `useLocale()` → `{ t, locale, setLocale }`.
+
+### Prisma Schema Conventions
+
+- All IDs use `cuid()`.
+- All foreign keys have explicit indexes.
+- `@updatedAt` on every `updated_at` field.
+
+### File Uploads
+
+`lib/storage.ts` — Cloudflare R2 via AWS S3 SDK. Exports `getUploadUrl(key)` (presigned PUT, 5min), `getPublicUrl(key)`, and `deleteFile(key)`. Configured via `R2_*` env vars.
 
 ### Testing Setup
 

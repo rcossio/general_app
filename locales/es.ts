@@ -118,6 +118,7 @@ const es: Translations = {
     sessionNotFound: 'Sesión no encontrada.',
     backToAdventures: 'Volver a aventuras',
     visitLocation: 'Listo',
+    chooseAction: '¿Qué haces?',
     youAreHere: 'Estás aquí',
     alreadyVisited: 'Ya visitado',
     withinRange: '¡Estás dentro del radio!',
@@ -137,6 +138,11 @@ const es: Translations = {
     newLocationFound: '¡Nuevo lugar cerca!',
     fakeGps: 'GPS falso (tester)',
     fakeGpsActive: 'GPS falso activo — usa WASD o flechas',
+    passwordPrompt: 'Introduce la contraseña',
+    passwordConfirm: 'Confirmar',
+    wrongPassword: 'Contraseña incorrecta. Sigue explorando.',
+    inventory: 'Inventario',
+    inventoryEmpty: 'Tu inventario está vacío.',
   },
 }
 

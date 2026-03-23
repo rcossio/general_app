@@ -1,0 +1,1 @@
+ALTER TABLE "games" ADD COLUMN "items" JSONB NOT NULL DEFAULT '[]';

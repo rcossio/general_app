@@ -116,6 +116,7 @@ const en = {
     sessionNotFound: 'Session not found.',
     backToAdventures: 'Back to adventures',
     visitLocation: 'Done',
+    chooseAction: 'What do you do?',
     youAreHere: 'You are here',
     alreadyVisited: 'Already visited',
     withinRange: 'You are within range!',
@@ -135,6 +136,11 @@ const en = {
     newLocationFound: 'New location nearby!',
     fakeGps: 'Fake GPS (tester)',
     fakeGpsActive: 'Fake GPS active — use WASD or arrows',
+    passwordPrompt: 'Enter password',
+    passwordConfirm: 'Confirm',
+    wrongPassword: 'Wrong password. Keep exploring.',
+    inventory: 'Inventory',
+    inventoryEmpty: 'Your inventory is empty.',
   },
 }
 
