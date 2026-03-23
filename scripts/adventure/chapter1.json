@@ -1,5 +1,9 @@
 {
-  "title": { "en": "The Garden", "it": "Il Giardino", "es": "El Jardín" },
+  "title": { 
+      "en": "The Garden", 
+      "it": "Il Giardino", 
+      "es": "El Jardín" 
+    },
   "items": [
     {
       "id": "friend",

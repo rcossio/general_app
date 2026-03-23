@@ -204,7 +204,7 @@ function GameMap({ sessionId }: { sessionId: string }) {
   }
 
   const handleVisit = () => {
-    if (!selectedLocation || !playerPos || selectedLocation.visited) return
+    if (!selectedLocation || !playerPos) return
     doVisit(selectedLocation.id, playerPos.lat, playerPos.lng)
   }
   const handleChoose = (choiceId: string) => {

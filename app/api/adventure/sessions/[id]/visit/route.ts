@@ -77,13 +77,6 @@ export async function POST(request: NextRequest, { params }: Params) {
       )
     }
 
-    if (session.completedAt) {
-      return NextResponse.json(
-        { error: 'Session already completed', code: 'SESSION_COMPLETE' },
-        { status: 400 }
-      )
-    }
-
     // Load the target location
     const location = await prisma.gameLocation.findFirst({
       where: { id: locationId, gameId: session.gameId },
@@ -210,64 +203,54 @@ export async function POST(request: NextRequest, { params }: Params) {
     const narrative = chosenOption ? chosenOption.outcome : activeValue.content
     const completesChapter = activeValue.completesChapter ?? false
 
-    if (!alreadyVisited) {
-      // Location-level grants (unconditional) + value-level grants + choice-level grants
-      const locationGrants = (location.grants as GrantEntry[]) ?? []
-      const valueGrants = activeValue.grants ?? []
-      const choiceGrants = chosenOption?.grants ?? []
-      const allGrants = [...locationGrants, ...valueGrants, ...choiceGrants]
-      const newFlags = allGrants.map((g) => g.flag).filter((f) => !flagSet.has(f))
+    // Grants and revokes are flag-state driven — fire on every visit where conditions match,
+    // not gated by alreadyVisited. The visit record (for map color / hint bar) is first-visit only.
+    const locationGrants = (location.grants as GrantEntry[]) ?? []
+    const valueGrants = activeValue.grants ?? []
+    const choiceGrants = chosenOption?.grants ?? []
+    const allGrants = [...locationGrants, ...valueGrants, ...choiceGrants]
+    const newFlags = allGrants.map((g) => g.flag).filter((f) => !flagSet.has(f))
 
-      // Location-level revokes (unconditional) + value-level revokes
-      const locationRevokes = (location.revokes as GrantEntry[]) ?? []
-      const valueRevokes = activeValue.revokes ?? []
-      const revokedFlags = [...locationRevokes, ...valueRevokes].map((r) => r.flag)
+    const locationRevokes = (location.revokes as GrantEntry[]) ?? []
+    const valueRevokes = activeValue.revokes ?? []
+    const revokedFlags = [...locationRevokes, ...valueRevokes].map((r) => r.flag)
 
-      await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx) => {
+      // Visit record: first visit only (drives map color and hint bar)
+      if (!alreadyVisited) {
         await tx.locationVisit.create({ data: { sessionId, locationId } })
+      }
 
-        for (const flag of newFlags) {
-          await tx.sessionFlag.upsert({
-            where: { sessionId_flag: { sessionId, flag } },
-            update: {},
-            create: { sessionId, flag },
-          })
-        }
+      for (const flag of newFlags) {
+        await tx.sessionFlag.upsert({
+          where: { sessionId_flag: { sessionId, flag } },
+          update: {},
+          create: { sessionId, flag },
+        })
+      }
 
-        if (revokedFlags.length > 0) {
-          await tx.sessionFlag.deleteMany({
-            where: { sessionId, flag: { in: revokedFlags } },
-          })
-        }
+      if (revokedFlags.length > 0) {
+        await tx.sessionFlag.deleteMany({
+          where: { sessionId, flag: { in: revokedFlags } },
+        })
+      }
 
-        if (completesChapter) {
-          await tx.gameSession.update({
-            where: { id: sessionId },
-            data: { completedAt: new Date() },
-          })
-        }
-      })
+      if (completesChapter && !session.completedAt) {
+        await tx.gameSession.update({
+          where: { id: sessionId },
+          data: { completedAt: new Date() },
+        })
+      }
+    })
 
-      return NextResponse.json({
-        data: {
-          narrative,
-          newFlags,
-          revokedFlags,
-          completesChapter,
-          alreadyVisited: false,
-          nextGameId: completesChapter ? (session.game.nextGameId ?? null) : null,
-        },
-      })
-    }
-
-    // Revisit: return updated narrative (flags have accumulated since first visit)
     return NextResponse.json({
       data: {
-        narrative: activeValue.content,
-        newFlags: [],
-        completesChapter: false,
-        alreadyVisited: true,
-        nextGameId: null,
+        narrative,
+        newFlags,
+        revokedFlags,
+        completesChapter,
+        alreadyVisited,
+        nextGameId: completesChapter ? (session.game.nextGameId ?? null) : null,
       },
     })
   } catch {

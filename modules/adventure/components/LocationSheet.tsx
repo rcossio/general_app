@@ -165,7 +165,7 @@ export function LocationSheet({
                       ))}
                     </div>
                   </>
-                ) : withinRange && !visited ? (
+                ) : withinRange ? (
                   <button
                     onClick={onVisit}
                     className="w-full py-3 rounded-xl bg-green-600 hover:bg-green-700 text-white font-semibold text-sm"
