@@ -15,6 +15,7 @@ export function usePlayerPosition(fakeMode: boolean) {
   const { t } = useLocale()
   const [playerPos, setPlayerPos] = useState<PlayerPosition | null>(null)
   const [gpsError, setGpsError] = useState<string | null>(null)
+  const [recenterKey, setRecenterKey] = useState(0)
   const watchIdRef = useRef<number | null>(null)
 
   // Real GPS
@@ -101,7 +102,8 @@ export function usePlayerPosition(fakeMode: boolean) {
   function teleport(lat: number, lng: number) {
     if (!fakeMode) return
     setPlayerPos({ lat, lng, accuracy: 5 })
+    setRecenterKey((k) => k + 1)
   }
 
-  return { playerPos, gpsError, move, teleport }
+  return { playerPos, gpsError, move, teleport, recenterKey }
 }

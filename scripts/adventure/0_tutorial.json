@@ -32,9 +32,9 @@
       "name": { "en": "Note", "it": "Biglietto", "es": "Nota" },
       "imageUrl": null,
       "itemImageUrl": {
-        "en": "game-art/tutorial/tutorial_toolbox_note_en_600x400.webp",
-        "it": "game-art/tutorial/tutorial_toolbox_note_it_600x400.webp",
-        "es": "game-art/tutorial/tutorial_toolbox_note_es_600x400.webp"
+        "en": "game-art/0_tutorial/tutorial_toolbox_note_en_600x400.webp",
+        "it": "game-art/0_tutorial/tutorial_toolbox_note_it_600x400.webp",
+        "es": "game-art/0_tutorial/tutorial_toolbox_note_es_600x400.webp"
       }
     }
   ],
@@ -162,7 +162,7 @@
       "name": { "en": "Loose Dog", "it": "Cane Sciolto", "es": "Perro Suelto" },
       "coordinates": { "lat": 45.014486301008176, "lng": 8.62806747813587 },
       "radiusM": 25,
-      "imageUrl": "game-art/tutorial/event_dog_600x400.webp",
+      "imageUrl": "game-art/0_tutorial/event_dog_600x400.webp",
       "visibleWhen": { "and": ["visited_start", { "not": "dog_chased" }] },
       "values": [
         {
@@ -192,7 +192,7 @@
       "name": { "en": "Toolbox", "it": "Cassetta degli Attrezzi", "es": "Caja de Herramientas" },
       "coordinates": { "lat": 45.01477694667256, "lng": 8.62756105427572 },
       "radiusM": 35,
-      "imageUrl": "game-art/tutorial/loc_toolbox_600x400.webp",
+      "imageUrl": "game-art/0_tutorial/loc_toolbox_600x400.webp",
       "visibleWhen": "visited_start",
       "values": [
         {

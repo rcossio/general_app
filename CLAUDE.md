@@ -53,9 +53,12 @@ npx prisma db seed                      # Seed roles, permissions, admin user, 1
 npx prisma studio                       # Visual DB browser
 
 # Game content import — run after every change to chapter JSON files
-npx tsx scripts/adventure/import-game.ts --file=scripts/adventure/chapter1.json --slug=chapter-1 --chapter=1 --activate
-# When linking chapters (import next chapter first, then current referencing it):
-npx tsx scripts/adventure/import-game.ts --file=scripts/adventure/chapter2.json --slug=chapter-2 --chapter=2 --activate --next-chapter-slug=chapter-3
+# Import next chapter first, then current one referencing it via --next-chapter-slug
+npx tsx scripts/adventure/import-game.ts --file=scripts/adventure/1_chuch_murder.json --slug=chapter-1 --chapter=1 --activate
+npx tsx scripts/adventure/import-game.ts --file=scripts/adventure/0_tutorial.json --slug=tutorial --chapter=0 --activate --next-chapter-slug=chapter-1
+
+# Trace all story paths (outputs scripts/adventure/paths.md, gitignored):
+npx tsx scripts/adventure/trace-paths.ts
 
 # Production — no deploy script. Run in order on the server:
 npm install                                        # if dependencies changed — never use npm ci (causes SIGBUS on low-memory VPS)
@@ -129,8 +132,8 @@ GPS-based location game. Key patterns:
 - `LocationSheet` auto-calls the visit endpoint on mount (no separate "Visit" button) — grants and narrative apply as soon as the player reaches the location.
 - **iOS Safari critical:** All overlays on the map page use `absolute` positioning inside a `relative` parent. Never use `position: fixed` or React portals — they get clipped by the Leaflet map container.
 - **Leaflet mobile taps:** Do not add `Tooltip` to markers — Leaflet's internal tap plugin intercepts touch events and makes markers unclickable on iOS. Use `eventHandlers={{ click: () => handler() }}` on `CircleMarker` only.
-- CircleMarker colors: dark orange = unvisited location, dark red = unvisited event, light orange = visited, green = in range.
-- Multilingual game content (`title`, `name`, `values[].content`) is returned as raw `{ en, it, es }` objects from the API. Resolve to a string on the client with `resolveI18n(value, locale)` (falls back to `en`). Use `useMemo([state, locale])` so it re-resolves on language change without a refetch.
+- CircleMarker colors: dark orange = unvisited location or event, light orange = visited, green = in range.
+- Multilingual game content (`title`, `name`, `values[].content`) is returned as raw `{ locale: string }` objects from the API. No language is required — define only the languages you have. Resolve to a string on the client with `resolveI18n(value, locale)` (falls back to first available key). Use `useMemo([state, locale])` so it re-resolves on language change without a refetch.
 - **Platform chrome hiding:** the session page calls `setHideChrome(true)` via `ChromeContext` on mount (and cleans up on unmount). Nav components read `hideChrome` from `ChromeContext` to render null — not a pathname check.
 - **Pending location persistence:** if a player closes the app while standing in an unvisited location's radius, the location id is saved to `localStorage` under `adventure_pending_<sessionId>` and the sheet re-opens on next load.
 - Bottom bar: back arrow, visited/visible count, refresh, **inventory (backpack)**, settings gear.
@@ -138,7 +141,7 @@ GPS-based location game. Key patterns:
 #### Location types
 
 - `type: "location"` (default) — shown as orange circle; player taps hint bar or marker to open sheet.
-- `type: "event"` — shown as red circle; sheet opens **automatically** when player enters radius; cannot be skipped.
+- `type: "event"` — shown as orange circle (same as location); sheet opens **automatically** when player enters radius; cannot be skipped.
 
 #### Game engine features (chapter JSON)
 

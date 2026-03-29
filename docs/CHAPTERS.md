@@ -26,7 +26,7 @@ The engine is entirely flag-driven. There are no hit points, timers, or inventor
 }
 ```
 
-`title` is the chapter name shown in the app. All text fields support three languages: `en`, `it`, `es`. The `en` value is always required and used as a fallback when a translation is missing.
+`title` is the chapter name shown in the app. All text fields support any combination of `en`, `it`, `es`. No language is required — define only the ones you have. The app falls back to the first available language when the player's locale is missing.
 
 `items` defines the chapter's inventory — see **Items** below. Use `[]` if the chapter has no inventory.
 
@@ -314,10 +314,9 @@ Import the next chapter first, then import the current one referencing it via `-
 
 | Colour | Meaning |
 |---|---|
-| Orange | Unvisited location |
-| Red | Unvisited event |
+| Orange | Unvisited location or event |
+| Light orange | Visited |
 | Green | Location or event within range |
-| Grey | Visited |
 
 ---
 

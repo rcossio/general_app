@@ -114,7 +114,7 @@ function GameMap({ sessionId }: { sessionId: string }) {
 
   const [state, setState] = useState<SessionState | null>(null)
   const [fakeMode, setFakeMode] = useState(false)
-  const { playerPos, gpsError, move, teleport } = usePlayerPosition(fakeMode)
+  const { playerPos, gpsError, move, teleport, recenterKey } = usePlayerPosition(fakeMode)
   const [selectedLocation, setSelectedLocation] = useState<ResolvedLocation | null>(null)
   const [visiting, setVisiting] = useState(false)
   const [visitResult, setVisitResult] = useState<VisitResult | null>(null)
@@ -322,6 +322,7 @@ function GameMap({ sessionId }: { sessionId: string }) {
           playerPosition={playerPos}
           onLocationClick={(loc) => setSelectedLocation(loc as ResolvedLocation)}
           nearbyLocationIds={nearbyLocationIds}
+          recenterKey={recenterKey}
         />
       </div>
 

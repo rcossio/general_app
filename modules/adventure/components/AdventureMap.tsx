@@ -83,9 +83,10 @@ interface AdventureMapProps {
   playerPosition: PlayerPosition | null
   onLocationClick: (loc: MapLocation) => void
   nearbyLocationIds: Set<string>
+  recenterKey?: number
 }
 
-function PlayerTracker({ position }: { position: PlayerPosition | null }) {
+function PlayerTracker({ position, recenterKey }: { position: PlayerPosition | null; recenterKey?: number }) {
   const map = useMap()
   const centered = useRef(false)
 
@@ -96,6 +97,12 @@ function PlayerTracker({ position }: { position: PlayerPosition | null }) {
     }
   }, [position, map])
 
+  useEffect(() => {
+    if (recenterKey && position) {
+      map.setView([position.lat, position.lng], 17)
+    }
+  }, [recenterKey]) // eslint-disable-line react-hooks/exhaustive-deps
+
   return null
 }
 
@@ -104,6 +111,7 @@ export default function AdventureMap({
   playerPosition,
   onLocationClick,
   nearbyLocationIds,
+  recenterKey,
 }: AdventureMapProps) {
   const visibleLocations = locations.filter((l) => l.visible)
 
@@ -128,7 +136,7 @@ export default function AdventureMap({
       />
 
       <GradientDefs />
-      <PlayerTracker position={playerPosition} />
+      <PlayerTracker position={playerPosition} recenterKey={recenterKey} />
 
       {playerPosition && (
         <>
@@ -152,7 +160,7 @@ export default function AdventureMap({
           : loc.visited
           ? 'loc-grad-orange-light'
           : loc.type === 'event'
-          ? 'loc-grad-red'
+          ? 'loc-grad-orange'
           : 'loc-grad-orange'
 
         return (

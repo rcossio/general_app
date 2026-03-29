@@ -209,7 +209,7 @@ async function main() {
         initialLocation: loc.initialLocation ?? false,
       },
     })
-    console.log(`  [${i + 1}/${data.locations.length}] ${loc.name.en ?? JSON.stringify(loc.name)} (${loc.id})`)
+    console.log(`  [${i + 1}/${data.locations.length}] ${Object.values(loc.name)[0] ?? loc.id} (${loc.id})`)
   }
 
   if (!game.isActive) {

@@ -99,8 +99,8 @@ function applyRevokes(flags: Set<string>, list: Grant[] | undefined): Set<string
   return next
 }
 
-function stateKey(chapterIdx: number, flags: Set<string>, visited: Set<string>): string {
-  return `${chapterIdx}|${[...flags].sort().join(',')}|${[...visited].sort().join(',')}`
+function stateKey(chapterIdx: number, flags: Set<string>): string {
+  return `${chapterIdx}|${[...flags].sort().join(',')}`
 }
 
 // ─── Path types ───────────────────────────────────────────────────────────
@@ -112,7 +112,7 @@ interface Step {
   narrative: string
   choice?: string         // label of chosen option
   outcome?: string        // text shown after choice / password
-  password?: string       // the code itself
+  password?: string       // the code itself (undefined = skipped/wrong)
   gained: string[]
   lost: string[]
 }
@@ -130,7 +130,6 @@ function dfs(
   chapters: Chapter[],
   chapterIdx: number,
   flags: Set<string>,
-  visited: Set<string>,
   steps: Step[],
   results: StoryPath[],
   seen: Set<string>,
@@ -140,16 +139,29 @@ function dfs(
   const chapter = chapters[chapterIdx]
   if (!chapter) return
 
-  // Dedup: same (chapter, flags, visited) → same future stories
-  const key = stateKey(chapterIdx, flags, visited)
+  // Dedup: same (chapter, flags) → same future stories regardless of visit order
+  const key = stateKey(chapterIdx, flags)
   if (seen.has(key)) return
   seen.add(key)
 
   const available = chapter.locations.filter(
-    loc => !visited.has(loc.id) && evaluate(loc.visibleWhen, flags)
+    loc => evaluate(loc.visibleWhen, flags)
   )
 
-  if (available.length === 0) {
+  // Dead end: no location can advance the flag state
+  const canProgress = available.some(loc => {
+    const value = firstMatch(loc.values, flags)
+    if (!value) return false
+    let nf = applyGrants(flags, loc.grants)
+    nf = applyRevokes(nf, loc.revokes)
+    nf = applyGrants(nf, value.grants)
+    nf = applyRevokes(nf, value.revokes)
+    if (value.choices?.length) return value.choices.some(c => stateKey(chapterIdx, applyGrants(nf, c.grants)) !== key)
+    if (value.password) return stateKey(chapterIdx, applyGrants(nf, value.password.grants)) !== key
+    return stateKey(chapterIdx, nf) !== key
+  })
+
+  if (!canProgress) {
     results.push({ steps: [...steps], endFlags: [...flags].sort() })
     return
   }
@@ -164,9 +176,6 @@ function dfs(
     newFlags = applyGrants(newFlags, value.grants)
     newFlags = applyRevokes(newFlags, value.revokes)
 
-    const newVisited = new Set(visited)
-    newVisited.add(loc.id)
-
     const gained = [
       ...loc.grants.map(g => g.flag),
       ...(value.grants ?? []).map(g => g.flag),
@@ -180,12 +189,12 @@ function dfs(
       if (value.completesChapter) {
         const nextIdx = chapterIdx + 1
         if (nextIdx < chapters.length) {
-          dfs(chapters, nextIdx, f, new Set(), s, results, seen)
+          dfs(chapters, nextIdx, f, s, results, seen)
         } else {
           results.push({ steps: s, endFlags: [...f].sort() })
         }
       } else {
-        dfs(chapters, chapterIdx, f, newVisited, s, results, seen)
+        dfs(chapters, chapterIdx, f, s, results, seen)
       }
     }
 
@@ -205,8 +214,9 @@ function dfs(
         continueOrEnd(choiceFlags, [...steps, step])
       }
     } else if (value.password) {
+      // Branch 1: correct password
       const pwdFlags = applyGrants(newFlags, value.password.grants)
-      const step: Step = {
+      const stepSolved: Step = {
         chapter: t(chapter.title),
         location: t(loc.name),
         type: loc.type ?? 'location',
@@ -216,7 +226,18 @@ function dfs(
         gained: [...gained, ...value.password.grants.map(g => g.flag)],
         lost,
       }
-      continueOrEnd(pwdFlags, [...steps, step])
+      continueOrEnd(pwdFlags, [...steps, stepSolved])
+      // Branch 2: wrong / skipped password
+      const stepSkipped: Step = {
+        chapter: t(chapter.title),
+        location: t(loc.name),
+        type: loc.type ?? 'location',
+        narrative: t(value.content),
+        outcome: '(password not solved)',
+        gained,
+        lost,
+      }
+      continueOrEnd(newFlags, [...steps, stepSkipped])
     } else {
       const step: Step = {
         chapter: t(chapter.title),
@@ -235,71 +256,47 @@ function dfs(
 
 function renderPath(p: StoryPath, i: number): string {
   const lines: string[] = [`## Path ${i + 1}`, '']
-  let lastChapter = ''
 
   for (const step of p.steps) {
-    if (step.chapter !== lastChapter) {
-      lines.push(`### ${step.chapter}`, '')
-      lastChapter = step.chapter
-    }
-
-    const badge = step.type === 'event' ? ' `[EVENT]`' : ''
-    lines.push(`**${step.location}**${badge}`)
-    lines.push('')
-
-    // Wrap narrative in blockquote, preserving line breaks
-    const narLines = step.narrative.split(/\n/)
-    narLines.forEach(l => lines.push(`> ${l}`))
-    lines.push('')
-
+    const narrative = step.narrative.replace(/\n+/g, ' ')
+    let line = `**${step.location}** ${narrative}`
     if (step.choice !== undefined) {
-      lines.push(`*→ Choice: **${step.choice}***`)
-      if (step.outcome) lines.push(`*${step.outcome}*`)
-      lines.push('')
+      line += ` *→ ${step.choice}*`
+      if (step.outcome) line += ` ${step.outcome}`
     }
     if (step.password !== undefined) {
-      lines.push(`*→ Password: \`${step.password}\`*`)
-      if (step.outcome) lines.push(`*${step.outcome}*`)
-      lines.push('')
+      line += ` *→ password \`${step.password}\`: ${step.outcome}`
+    } else if (step.outcome === '(password not solved)') {
+      line += ` *(password skipped)*`
     }
-
-    const gained = step.gained.filter(Boolean)
-    const lost = step.lost.filter(Boolean)
-    if (gained.length || lost.length) {
-      const parts: string[] = []
-      if (gained.length) parts.push(`+${gained.join(', ')}`)
-      if (lost.length) parts.push(`−${lost.join(', ')}`)
-      lines.push(`\`flags: ${parts.join(' | ')}\``, '')
-    }
+    lines.push(line, '')
   }
 
-  lines.push(`**End flags:** \`${p.endFlags.join(', ') || '(none)'}\``)
-  lines.push('', '---', '')
+  lines.push('---', '')
   return lines.join('\n')
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────
 
-const dir = path.join(__dirname)
+const fileArg = process.argv.find(a => a.startsWith('--file='))?.split('=')[1]
+if (!fileArg) {
+  console.error('Usage: npx tsx scripts/adventure/trace-paths.ts --file=<path-to-chapter.json> [--lang=en]')
+  process.exit(1)
+}
 
-const chapterFiles: { file: string; nextSlug: string | null }[] = [
-  { file: '0_tutorial.json',     nextSlug: 'chapter-1' },
-  { file: '1_chuch_murder.json', nextSlug: null },
-]
-
-const chapters: Chapter[] = chapterFiles.map(({ file, nextSlug }) => {
-  const raw = fs.readFileSync(path.join(dir, file), 'utf-8')
-  const data = JSON.parse(raw) as ChapterFile
-  return { ...data, slug: file.replace('.json', ''), nextSlug }
-})
+const filePath = path.resolve(fileArg)
+const raw = fs.readFileSync(filePath, 'utf-8')
+const data = JSON.parse(raw) as ChapterFile
+const chapters: Chapter[] = [{ ...data, slug: path.basename(filePath, '.json'), nextSlug: null }]
 
 const results: StoryPath[] = []
-dfs(chapters, 0, new Set(), new Set(), [], results, new Set())
+dfs(chapters, 0, new Set(), [], results, new Set())
 
 const output = [
   '# Adventure Story Paths',
   '',
-  `> Language: \`${lang}\` — Generated from **${chapters.map(c => t(c.title)).join(' → ')}**`,
+  `> Language: \`${lang}\` — Generated from **${t(chapters[0].title)}**`,
+  '',
   `> Found **${results.length}** unique path(s). Capped at ${MAX_PATHS}.`,
   '',
   '---',
@@ -307,6 +304,6 @@ const output = [
   ...results.map((p, i) => renderPath(p, i)),
 ].join('\n')
 
-const outPath = path.join(dir, 'paths.md')
+const outPath = path.join(path.dirname(filePath), 'paths.md')
 fs.writeFileSync(outPath, output, 'utf-8')
 console.log(`${results.length} path(s) written to ${outPath}`)
