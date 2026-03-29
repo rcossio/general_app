@@ -49,7 +49,7 @@ npx vitest run __tests__/auth.test.ts   # Run a single test file
 
 # Database
 npx prisma migrate dev --name <name>   # Create and apply migration
-npx prisma db seed                      # Seed roles, permissions, admin user
+npx prisma db seed                      # Seed roles, permissions, admin user, 10 bot community users (idempotent)
 npx prisma studio                       # Visual DB browser
 
 # Game content import — run after every change to chapter JSON files
@@ -82,6 +82,14 @@ Features are pluggable. Each module has a manifest (`modules/<name>/manifest.ts`
 
 To disable a module: comment out its import in `config/modules.ts` and prefix its folders with `_` in `app/`, `app/api/`, and `__tests__/`. Its nav item disappears and RBAC blocks its routes automatically. Tables stay intact. To re-enable: reverse both steps and run `npx prisma migrate dev`.
 
+To add a new module:
+1. Create `modules/<name>/manifest.ts` and `modules/<name>/lib/schemas.ts`
+2. Write the manifest (`id`, `name`, `isActive`, `navItem: { label, href, icon }`, `permissions: string[]`, `apiPrefix: string`)
+3. Add Prisma models to `prisma/schema.prisma`
+4. Register in `config/modules.ts`
+5. Add pages under `app/<name>/` and API routes under `app/api/<name>/`
+6. Run `npx prisma migrate dev --name add_<name>_module`
+
 ### Auth
 
 - **Access token:** JWT, 15 min, stored in React context (memory only — never localStorage).
@@ -89,6 +97,7 @@ To disable a module: comment out its import in `config/modules.ts` and prefix it
 - Fetch wrapper auto-refreshes on 401 and retries once.
 - `lib/auth.ts` — token signing/verification, password hashing.
 - `lib/permissions.ts` — `requirePermission(request, resource, action)` RBAC middleware. `master_admin` and `admin` bypass all checks.
+- Permissions follow `resource:action` format — e.g. `tracker:create`, `adventure:play`. Seeded automatically from `activeModules[].permissions`.
 
 ### API Design
 
@@ -98,6 +107,17 @@ To disable a module: comment out its import in `config/modules.ts` and prefix it
 - List endpoints support `?page=1&limit=20`.
 - Never query without `WHERE` on an indexed column in list endpoints.
 - Use Prisma `select` — never return full rows when only a subset is displayed.
+
+### Life Tracker Module
+
+Endpoints:
+- `GET /api/tracker/entries` — list my entries (paginated, `?type=EMOTION`)
+- `POST /api/tracker/entries` — create entry
+- `GET /api/tracker/entries/public` — public community feed (no auth required, `isPublic=true` only, limit capped at 100)
+- `GET /api/tracker/entries/[id]` — get single entry
+- `PUT /api/tracker/entries/[id]` — update entry
+- `DELETE /api/tracker/entries/[id]` — delete entry
+- `GET /api/tracker/stats` — score averages by type, cached 60s per user
 
 ### Adventure Module
 
@@ -109,7 +129,7 @@ GPS-based location game. Key patterns:
 - `LocationSheet` auto-calls the visit endpoint on mount (no separate "Visit" button) — grants and narrative apply as soon as the player reaches the location.
 - **iOS Safari critical:** All overlays on the map page use `absolute` positioning inside a `relative` parent. Never use `position: fixed` or React portals — they get clipped by the Leaflet map container.
 - **Leaflet mobile taps:** Do not add `Tooltip` to markers — Leaflet's internal tap plugin intercepts touch events and makes markers unclickable on iOS. Use `eventHandlers={{ click: () => handler() }}` on `CircleMarker` only.
-- CircleMarker colors: orange = unvisited location, red = unvisited event, gray = visited, green = in range.
+- CircleMarker colors: dark orange = unvisited location, dark red = unvisited event, light orange = visited, green = in range.
 - Multilingual game content (`title`, `name`, `values[].content`) is returned as raw `{ en, it, es }` objects from the API. Resolve to a string on the client with `resolveI18n(value, locale)` (falls back to `en`). Use `useMemo([state, locale])` so it re-resolves on language change without a refetch.
 - **Platform chrome hiding:** the session page calls `setHideChrome(true)` via `ChromeContext` on mount (and cleans up on unmount). Nav components read `hideChrome` from `ChromeContext` to render null — not a pathname check.
 - **Pending location persistence:** if a player closes the app while standing in an unvisited location's radius, the location id is saved to `localStorage` under `adventure_pending_<sessionId>` and the sheet re-opens on next load.

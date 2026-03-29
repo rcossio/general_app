@@ -62,6 +62,7 @@ interface ApiLocation {
   narrative: I18nString | null
   choices: ApiLocationChoice[] | null
   hasPassword: boolean
+  initialLocation: boolean
 }
 
 interface SessionState {
@@ -113,7 +114,7 @@ function GameMap({ sessionId }: { sessionId: string }) {
 
   const [state, setState] = useState<SessionState | null>(null)
   const [fakeMode, setFakeMode] = useState(false)
-  const { playerPos, gpsError, move } = usePlayerPosition(fakeMode)
+  const { playerPos, gpsError, move, teleport } = usePlayerPosition(fakeMode)
   const [selectedLocation, setSelectedLocation] = useState<ResolvedLocation | null>(null)
   const [visiting, setVisiting] = useState(false)
   const [visitResult, setVisitResult] = useState<VisitResult | null>(null)
@@ -479,7 +480,11 @@ function GameMap({ sessionId }: { sessionId: string }) {
       {/* Fake GPS D-pad — outside map container to avoid Leaflet clipping */}
       {fakeMode && (
         <div className="absolute bottom-32 right-4 z-[1500] bg-black/20 rounded-2xl p-1">
-          <FakeGpsDpad move={move} />
+          <FakeGpsDpad
+            move={move}
+            teleport={teleport}
+            startLocation={state?.locations.find((l) => l.initialLocation) ?? null}
+          />
         </div>
       )}
 

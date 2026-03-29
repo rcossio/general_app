@@ -98,5 +98,10 @@ export function usePlayerPosition(fakeMode: boolean) {
     })
   }
 
-  return { playerPos, gpsError, move }
+  function teleport(lat: number, lng: number) {
+    if (!fakeMode) return
+    setPlayerPos({ lat, lng, accuracy: 5 })
+  }
+
+  return { playerPos, gpsError, move, teleport }
 }

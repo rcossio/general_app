@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm test)",
+      "Bash(npm run build)",
+      "Bash(npm run dev)",
+      "Bash(npm run lint)",
+      "Bash(npm run test:watch)",
+      "Bash(npx vitest run *)",
+      "Bash(pm2 *)",
+      "Bash(npx prisma migrate *)",
+      "Bash(npx prisma db seed)",
+      "Bash(npx prisma studio)",
+      "Bash(npx tsx scripts/adventure/import-game.ts *)",
+      "Bash(cat *)",
+      "Bash(find *)",
+      "Bash(ls *)",
+      "Bash(grep *)",
+      "Bash(head *)",
+      "Bash(tail *)",
+      "Bash(wc *)",
+      "Bash(echo *)",
+      "Bash(pwd)",
+      "Bash(which *)",
+      "Bash(sed *)",
+      "Bash(awk *)",
+      "Bash(git status)",
+      "Bash(git log *)",
+      "Bash(git diff *)",
+      "Bash(git branch *)"
+    ]
+  }
+}

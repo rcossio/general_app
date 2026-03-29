@@ -187,7 +187,9 @@ model GameLocation {
   grants      Json
   // Array of { flag: string } — flags removed from session on visit
   revokes     Json   @default("[]")
-  order       Int    @default(0)
+  order           Int     @default(0)
+  // True on the one location where the player should start (used by fake GPS to teleport)
+  initialLocation Boolean @default(false) @map("initial_location")
 
   game   Game            @relation(fields: [gameId], references: [id], onDelete: Cascade)
   visits LocationVisit[]

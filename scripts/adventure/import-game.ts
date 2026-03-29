@@ -107,6 +107,7 @@ async function main() {
       values: unknown
       grants: unknown
       revokes?: unknown
+      initialLocation?: boolean
     }>
   }
 
@@ -163,6 +164,15 @@ async function main() {
   const titleEn = (game.title as Record<string, string>)['en'] ?? JSON.stringify(game.title)
   console.log(`Game "${titleEn}" (${game.slug}) — id: ${game.id}`)
 
+  // Remove locations that are no longer in the JSON
+  const incomingIds = data.locations.map((l) => l.id)
+  const deleted = await prisma.gameLocation.deleteMany({
+    where: { gameId: game.id, externalId: { notIn: incomingIds } },
+  })
+  if (deleted.count > 0) {
+    console.log(`  Removed ${deleted.count} stale location(s)`)
+  }
+
   // Upsert locations
   for (let i = 0; i < data.locations.length; i++) {
     const loc = data.locations[i]
@@ -180,6 +190,7 @@ async function main() {
         grants: loc.grants as never,
         revokes: (loc.revokes ?? []) as never,
         order: i,
+        initialLocation: loc.initialLocation ?? false,
       },
       create: {
         type: loc.type ?? 'location',
@@ -195,6 +206,7 @@ async function main() {
         grants: loc.grants as never,
         revokes: (loc.revokes ?? []) as never,
         order: i,
+        initialLocation: loc.initialLocation ?? false,
       },
     })
     console.log(`  [${i + 1}/${data.locations.length}] ${loc.name.en ?? JSON.stringify(loc.name)} (${loc.id})`)

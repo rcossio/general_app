@@ -60,6 +60,13 @@ export function LocationSheet({
     return () => window.removeEventListener('keydown', handleKey)
   }, [onClose, locked])
 
+  function renderNarrative(text: string) {
+    const parts = text.split(/\*\*(.+?)\*\*/g)
+    return parts.map((part, i) =>
+      i % 2 === 1 ? <strong key={i}>{part}</strong> : part
+    )
+  }
+
   const hasChoices = withinRange && !visited && choices && choices.length > 0
   const showPassword = hasPassword && withinRange
   const src = imageUrl ?? (type === 'event' ? DEFAULT_EVENT_IMAGE : DEFAULT_LOCATION_IMAGE)
@@ -117,7 +124,7 @@ export function LocationSheet({
             ) : (
               <>
                 <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-sm mb-4">
-                  {narrative}
+                  {narrative ? renderNarrative(narrative) : null}
                 </p>
                 {passwordWrong ? (
                   <div className="flex flex-col gap-3">

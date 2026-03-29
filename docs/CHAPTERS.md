@@ -106,6 +106,7 @@ Every entry in `locations` is either a **location** or an **event** (see `type` 
 | `values` | yes | — | Array of narrative entries evaluated top-to-bottom (see Values). |
 | `grants` | yes | — | Flags given to the player unconditionally when they visit. Use `[]` if none. |
 | `revokes` | no | `[]` | Flags removed from the player when they visit (see Revokes). |
+| `initialLocation` | no | `false` | Marks the intended starting point of the chapter. Only one location per chapter should have this. When Fake GPS mode is active, a **Start** button appears on the D-pad that teleports the player to 100 m south of this location — just outside the radius, ready to walk in. |
 
 ### type: "location" vs "event"
 

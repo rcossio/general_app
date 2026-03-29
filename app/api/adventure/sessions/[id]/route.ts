@@ -103,6 +103,7 @@ export async function GET(request: NextRequest, { params }: Params) {
       // Only show choices for locations not yet visited — once visited the choice is final
       choices: visited ? null : (choices ?? null),
       hasPassword,
+      initialLocation: loc.initialLocation,
     }
   })
 

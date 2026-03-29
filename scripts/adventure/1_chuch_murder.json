@@ -1,0 +1,672 @@
+{
+  "title": {
+    "es": "El Fuego del Orfebre"
+  },
+  "items": [
+    {
+      "id": "carta_anonima",
+      "flag": "has_letter",
+      "name": {
+        "es": "Carta anónima"
+      },
+      "imageUrl": null,
+      "itemImageUrl": null
+    },
+    {
+      "id": "referto",
+      "flag": "has_report",
+      "name": {
+        "es": "Referto del forense"
+      },
+      "imageUrl": null,
+      "itemImageUrl": null
+    },
+    {
+      "id": "registro",
+      "flag": "found_ledger",
+      "name": {
+        "es": "Registro de Repossi"
+      },
+      "imageUrl": null,
+      "itemImageUrl": null
+    },
+    {
+      "id": "sello_cera",
+      "flag": "found_seal",
+      "name": {
+        "es": "Impronta en cera del punzón"
+      },
+      "imageUrl": null,
+      "itemImageUrl": null
+    },
+    {
+      "id": "broche",
+      "flag": "found_brooch",
+      "name": {
+        "es": "La spilla de la colomba"
+      },
+      "imageUrl": null,
+      "itemImageUrl": null
+    },
+    {
+      "id": "etiqueta_paris",
+      "flag": "found_parisian_link",
+      "name": {
+        "es": "Etiqueta de envío (París)"
+      },
+      "imageUrl": null,
+      "itemImageUrl": null
+    }
+  ],
+  "locations": [
+    {
+      "id": "loc_0_prologue",
+      "type": "event",
+      "name": {
+        "es": "Piazza XXXI Martiri"
+      },
+      "coordinates": {
+        "lat": 45.01485,
+        "lng": 8.6458
+      },
+      "radiusM": 35,
+      "imageUrl": "game-art/ch2_piazza_600x400.webp",
+      "visibleWhen": null,
+      "values": [
+        {
+          "when": "visited_piazza",
+          "content": {
+            "es": "La piazza está animada. El Duomo se alza a tu derecha. Tienes trabajo que hacer."
+          }
+        },
+        {
+          "when": null,
+          "content": {
+            "es": "Valenza, Piamonte. Otoño de 1883.\n\nEres un investigador privado de Alessandria. La Prefectura te ha contratado para revisar un caso que los Carabinieri cerraron demasiado rápido: un orfebre llamado Augusto Repossi apareció muerto en el Duomo hace tres días. Veredicto oficial: paro cardíaco.\n\nPero ayer llegó al Municipio una carta sin firma. El Prefecto quiere discreción.\n\nEntras en la Piazza XXXI Martiri. La catedral domina la plaza. Desde las calles laterales llega el repiqueteo de los orfebre en sus bancos — estás en Valenza, donde el oro lo es todo.\n\nEl secretario del Prefecto te entrega dos documentos.\n\n—— CARTA ANÓNIMA ——\n«El orfebre no murió del corazón. Pregunten quién le recetaba la medicina. Pregunten qué pasó con el broche que vale un rescate de rey. La verdad está donde la confesión encuentra la verdad, en la capilla de la sombra matutina.»\n\n—— REFERTO DEL FORENSE (extracto) ——\n«A. Repossi, varón, 52 años. Hallado sin vida en la nave izquierda del Duomo di S.M. Maggiore. Causa: paro cardíaco. Sin signos de violencia. Un crisol de orfebre en la mano derecha. Nota: un broche de valor significativo, en proceso en el taller del difunto, no ha sido localizado.»\n\nEl Duomo está justo aquí, al otro lado de la plaza."
+          }
+        }
+      ],
+      "grants": [
+        {
+          "flag": "visited_piazza"
+        },
+        {
+          "flag": "has_letter"
+        },
+        {
+          "flag": "has_report"
+        }
+      ],
+      "initialLocation": true
+    },
+    {
+      "id": "loc_1_duomo",
+      "name": {
+        "es": "Duomo di Santa Maria Maggiore"
+      },
+      "coordinates": {
+        "lat": 45.01466,
+        "lng": 8.646262
+      },
+      "radiusM": 25,
+      "imageUrl": "game-art/ch2_duomo_600x400.webp",
+      "visibleWhen": "visited_piazza",
+      "values": [
+        {
+          "when": "found_ledger",
+          "content": {
+            "es": "El Duomo está en silencio. Ya encontraste un libro de cuero oculto en el confesionario — lleno de deudas y nombres. En la última página, un dibujo: una figura musculosa cargando un peso enorme, con las iniciales «A.C.» debajo. ¿Dónde en Valenza hay una figura así?"
+          }
+        },
+        {
+          "when": "visited_duomo",
+          "content": {
+            "es": "El Duomo está en silencio. Las marcas de tiza apenas se distinguen en el suelo de la nave izquierda. La carta anónima decía algo sobre «donde la confesión encuentra la verdad» — quizá valga la pena volver a mirar con más atención."
+          }
+        },
+        {
+          "when": null,
+          "content": {
+            "es": "Entras al Duomo. Tres portales, tres naves. Piedra fría, cera de vela.\n\nLa nave izquierda — la que mira al norte, donde la luz de la mañana nunca llega — es donde encontraron el cuerpo. Marcas de tiza en el suelo, un tenue olor químico junto a la baranda del altar. Según el referto, tenía un crisol de orfebre en la mano. ¿Por qué alguien vendría a una iglesia cargando sus herramientas de trabajo?\n\nLa carta anónima mencionaba «la capilla de la sombra matutina» — esta nave norte, siempre en sombra. Y «donde la confesión encuentra la verdad» — contra el muro hay un confesionario de madera tallada del siglo XVIII.\n\n¿Cómo quieres proceder?"
+          },
+          "choices": [
+            {
+              "id": "search_confessional",
+              "label": {
+                "es": "Examinar el confesionario"
+              },
+              "outcome": {
+                "es": "Pasas los dedos por los paneles tallados. Uno cede ligeramente. Detrás hay un hueco — y dentro, un libro encuadernado en cuero con letra apretada. Deudas con proveedores de oro de Milán, nombres de acreedores, fechas incumplidas. En la última página, un dibujo a tinta: una figura musculosa sosteniendo un peso inmenso, con las iniciales «A.C.» debajo. ¿Un mensaje? ¿Un escondite? Te lo llevas."
+              },
+              "grants": [
+                {
+                  "flag": "found_ledger"
+                },
+                {
+                  "flag": "visited_duomo"
+                }
+              ]
+            },
+            {
+              "id": "examine_scene",
+              "label": {
+                "es": "Estudiar la escena del crimen"
+              },
+              "outcome": {
+                "es": "Estudias el contorno de tiza, la distancia al altar, el residuo químico. Un hombre colapsa con su herramienta de trabajo en la mano — en una iglesia. Vino aquí a propósito. ¿A esconder algo? ¿A encontrarse con alguien? El confesionario sigue ahí si decides volver. Por ahora, necesitas encontrar a la gente que conocía a este hombre."
+              },
+              "grants": [
+                {
+                  "flag": "visited_duomo"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "grants": []
+    },
+    {
+      "id": "loc_3_teatro",
+      "name": {
+        "es": "Teatro Sociale"
+      },
+      "coordinates": {
+        "lat": 45.013147,
+        "lng": 8.644555
+      },
+      "radiusM": 30,
+      "imageUrl": "game-art/ch2_teatro_600x400.webp",
+      "visibleWhen": "visited_duomo",
+      "values": [
+        {
+          "when": "spoke_to_cunioli",
+          "content": {
+            "es": "El pórtico está tranquilo. Ya hablaste con el joven orfebre aquí. Te mencionó un chico que trabaja en el taller, en el claustro de San Domenico — alguien que escuchó cosas pero tiene miedo de hablar."
+          }
+        },
+        {
+          "when": null,
+          "content": {
+            "es": "El Teatro Sociale — construido en 1861 sobre las ruinas de un convento franciscano. Una sala de herradura con tres niveles de palcos, columnas corintias en la entrada. Un pórtico con arcos corre a lo largo del lado que da a Piazza Verdi.\n\nBajo uno de los arcos, un joven con abrigo bien cortado fuma apoyado en una columna. Te mira de arriba abajo.\n\n«¿Viene por lo de Repossi?» Ni saludo ni presentación. «Me llamo Enzo Cunioli. Trabajaba para él. Y antes de que pregunte: no, no lo maté.»\n\nLe preguntas qué sabe.\n\n«Era un hombre difícil. Controlaba todo — quién entraba, quién salía, quién podía hacer negocios por su cuenta. Hace poco cambió las cerraduras de la caja fuerte del taller. No me dijo por qué.» Tira el cigarrillo. «Discutimos, sí. Más de una vez. Pero hay una diferencia entre querer irse y querer que alguien se muera.»\n\nAntes de marcharse, baja la voz: «Hay un chico que trabaja en el taller, en el claustro de San Domenico. Joven, nervioso. Estaba ahí la noche en que todo cambió. Escuchó cosas que no se atreve a repetir. Si consigue que confíe en usted, quizá hable.»"
+          }
+        }
+      ],
+      "grants": [
+        {
+          "flag": "spoke_to_cunioli"
+        }
+      ]
+    },
+    {
+      "id": "loc_6_domenico",
+      "name": {
+        "es": "Complejo de San Domenico"
+      },
+      "coordinates": {
+        "lat": 45.014968,
+        "lng": 8.645642
+      },
+      "radiusM": 25,
+      "imageUrl": "game-art/ch2_domenico_600x400.webp",
+      "visibleWhen": "visited_duomo",
+      "values": [
+        {
+          "when": {
+            "and": [
+              "examined_workshop",
+              "berto_testimony"
+            ]
+          },
+          "content": {
+            "es": "El claustro está tranquilo. Ya examinaste el taller y el muchacho te contó lo que vio. Las columnas de granito se alzan como testigos mudos alrededor del viejo pozzo."
+          }
+        },
+        {
+          "when": {
+            "and": [
+              "examined_workshop",
+              "spoke_to_cunioli"
+            ]
+          },
+          "content": {
+            "es": "Vuelves al claustro. Esta vez el muchacho que mencionó Cunioli está aquí — un chico de unos diecinueve años, escondido detrás de una columna de granito. Te ha visto hablando con Cunioli y parece más dispuesto a acercarse.\n\nSe sienta en el borde del pozzo, mirando al suelo.\n\n«Los escuché discutir esa noche,» murmura sin levantar la vista. «El Maestro le dijo que iba a contarle a todo el mundo lo de Cunioli y una chica. Que lo arruinaría.»\n\nHace una pausa larga.\n\n«Y después... no podía dormir. Me asomé a la ventana. Vi a alguien salir de la casa del Maestro. Era un hombre mayor, delgado, con un maletín. Pasada la medianoche.»\n\nNo dice más. No quiere dar su nombre ni el del hombre que vio. Pero lo que describe es una visita médica nocturna."
+          },
+          "grants": [
+            {
+              "flag": "berto_testimony"
+            }
+          ]
+        },
+        {
+          "when": "examined_workshop",
+          "content": {
+            "es": "Ya examinaste el taller. La correspondencia y la impronta en cera pesan en tu mente. El muchacho nervioso te observa desde detrás de una columna pero no se acerca — no te conoce. Quizá si alguien que trabaja aquí te presentara..."
+          }
+        },
+        {
+          "when": null,
+          "content": {
+            "es": "El complejo de San Domenico — un antiguo convento dominico. Columnas de granito alrededor de un pozzo central. La Torre Cívica arriba. A lo largo de la antigua Contrada Maestra se alinean los talleres que hicieron famosa a Valenza.\n\nEl taller de Repossi está al fondo del claustro. La puerta no tiene llave. Adentro: una caja fuerte con cerraduras nuevas relucientes, un banco de trabajo cubierto de limaduras de oro, y un engaste vacío donde falta una pieza.\n\nSobre el banco encuentras dos cosas:\n\n— Una impronta en cera del punzón de la Oficina de Marcas de Alessandria. El broche fue sellado oficialmente ANTES de desaparecer. Alguien de adentro lo escondió.\n\n— Un fajo de correspondencia. Encima, una carta en francés de una tal «Mme H. Vaubourzeix» con una etiqueta de envío de París, donde habla de un encargo. Debajo, un aviso de deuda dirigido a «Sra. A. Repossi, Palazzo Ceriana, Via Cunietti».\n\nUn muchacho joven te observa desde detrás de una columna del claustro — pero se escabulle cuando levantas la vista."
+          }
+        }
+      ],
+      "grants": [
+        {
+          "flag": "examined_workshop"
+        },
+        {
+          "flag": "found_seal"
+        },
+        {
+          "flag": "found_parisian_link"
+        }
+      ]
+    },
+    {
+      "id": "loc_5_bartolomeo",
+      "name": {
+        "es": "Oratorio de San Bartolomeo"
+      },
+      "coordinates": {
+        "lat": 45.01273,
+        "lng": 8.647065
+      },
+      "radiusM": 30,
+      "imageUrl": "game-art/ch2_bartolomeo_600x400.webp",
+      "visibleWhen": "visited_duomo",
+      "values": [
+        {
+          "when": "spoke_to_lucia",
+          "content": {
+            "es": "El oratorio octagonal está vacío. La joven se ha ido. A través del portal gótico — una puerta rescatada de una iglesia demolida — se ve el jardín donde estaba sentada."
+          }
+        },
+        {
+          "when": {
+            "or": [
+              "spoke_to_cunioli",
+              "examined_workshop"
+            ]
+          },
+          "content": {
+            "es": "El Oratorio de San Bartolomeo — la iglesia más antigua de Valenza. Interior octagonal, arcos neogóticos. El portal de terracota en la entrada fue recuperado de la demolida iglesia de San Francesco.\n\nEn el jardín adyacente — Parco Ferrari-Trecate — una joven está sentada con un libro. Levanta la vista, cautelosa.\n\nMencionas la investigación. Duda. Luego habla, despacio.\n\n«Mi padre es médico. El médico del pueblo, en realidad — el Doctor Fossati. La noche antes de que encontraran al señor Repossi muerto, mi padre salió a hacerle una visita a domicilio. Eso fue raro... normalmente recibe pacientes en el consultorio.»\n\nSe muerde el labio.\n\n«Después, cuando estaba ordenando su vitrina de medicamentos, noté que faltaba un frasco. La etiqueta decía Digitalis purpurea — extracto de dedalera. Sirve para el corazón. Pero en la dosis equivocada...»\n\nNo termina la frase. Agarra el libro con fuerza.\n\n«Mi padre es un buen hombre. Pero no entiendo por qué fue a esa casa tan tarde.»"
+          },
+          "grants": [
+            {
+              "flag": "spoke_to_lucia"
+            },
+            {
+              "flag": "found_vial_clue"
+            }
+          ]
+        },
+        {
+          "when": null,
+          "content": {
+            "es": "Un oratorio octagonal con un portal gótico. En el jardín adyacente, una joven lee sola. Te nota pero desvía la mirada — no parece dispuesta a hablar con un desconocido. Quizá necesites saber más sobre las personas involucradas antes de poder acercarte."
+          }
+        }
+      ],
+      "grants": []
+    },
+    {
+      "id": "loc_4_annunziata",
+      "name": {
+        "es": "Iglesia de la SS. Annunziata"
+      },
+      "coordinates": {
+        "lat": 45.015961,
+        "lng": 8.647322
+      },
+      "radiusM": 30,
+      "imageUrl": "game-art/ch2_annunziata_600x400.webp",
+      "visibleWhen": {
+        "or": [
+          "spoke_to_cunioli",
+          "spoke_to_lucia",
+          "spoke_to_agnese"
+        ]
+      },
+      "values": [
+        {
+          "when": {
+            "and": [
+              "spoke_to_fossati",
+              "found_crypt_register"
+            ]
+          },
+          "content": {
+            "es": "La iglesia está en silencio. Ya hablaste con el doctor y encontraste el registro de la cripta. Las rejas de hierro a los lados del altar capturan la luz — barrotes a través de los cuales las monjas de clausura observaban el mundo sin ser vistas."
+          }
+        },
+        {
+          "when": "spoke_to_fossati",
+          "content": {
+            "es": "El doctor se fue. Una puerta junto al altar lleva a la cripta — celdas sepulcrales de las monjas agustinas. En una repisa de piedra descansa un registro de visitantes.\n\nEl nombre del Doctor Fossati aparece cada jueves, sin excepción, para visitar la celda de su esposa. Cada semana durante años. ¿Devoción? ¿O culpa?"
+          },
+          "grants": [
+            {
+              "flag": "found_crypt_register"
+            }
+          ]
+        },
+        {
+          "when": "found_vial_clue",
+          "content": {
+            "es": "La Iglesia de la SS. Annunziata — barroco piamontés en ladrillo visto. Dos rejas de hierro flanquean el altar mayor, restos del convento agustino: las monjas observaban la misa a través de estos barrotes, sin ser vistas.\n\nUn hombre delgado de manos precisas está arrodillado en un banco cerca de la cripta. Se levanta cuando te acercas.\n\nMencionas a Repossi. Se tensa pero no dice nada. Mencionas la tintura cardíaca. Mantiene la compostura. Entonces mencionas el frasco de digital que falta.\n\nAlgo cambia en su cara. «¿Dónde escuchó eso?» Silencio largo. «Receté digital para las palpitaciones de Repossi. Dosis estándar. Nada más. Si algo pasó con el frasco, no sé nada al respecto.»\n\nLa voz es plana, clínica. Pero le tiemblan las manos."
+          },
+          "grants": [
+            {
+              "flag": "fossati_defensive"
+            }
+          ]
+        },
+        {
+          "when": null,
+          "content": {
+            "es": "Fachada barroca de ladrillo. Rejas de hierro a los lados del altar. Un hombre delgado está arrodillado cerca de la entrada a una cripta.\n\nLe preguntas si conocía a Repossi. Asiente despacio.\n\n«Era mi paciente. Palpitaciones, estrés — los orfebre trabajan con mercurio y ácidos, sus corazones sufren. Le receté una tintura cardíaca. Tratamiento estándar.»\n\nEs cortés pero impenetrable. Sientes que hay muros. Quizá con evidencia más concreta podrías presionar."
+          }
+        }
+      ],
+      "grants": [
+        {
+          "flag": "spoke_to_fossati"
+        }
+      ]
+    },
+    {
+      "id": "loc_7_ceriana",
+      "name": {
+        "es": "Palazzo Ceriana"
+      },
+      "coordinates": {
+        "lat": 45.013965,
+        "lng": 8.643424
+      },
+      "radiusM": 30,
+      "imageUrl": "game-art/ch2_ceriana_600x400.webp",
+      "visibleWhen": "examined_workshop",
+      "values": [
+        {
+          "when": "spoke_to_agnese",
+          "content": {
+            "es": "Las fachadas gemelas de los dos palacios se alzan como espejos en el cruce. La viuda se ha retirado. Mencionó una tintura recetada por un médico. Y su mirada se desvió hacia la calle, en dirección al Municipio..."
+          }
+        },
+        {
+          "when": null,
+          "content": {
+            "es": "Via Cunietti esquina Via Cavallotti. Dos palacios imponentes se enfrentan como imágenes en un espejo — uno a cada lado del cruce.\n\nEl aviso de deuda que encontraste en el taller estaba dirigido a esta dirección. Llamas a la puerta.\n\nAbre una mujer vestida de luto. Se presenta como la viuda de Repossi. Te hace pasar a un vestíbulo en penumbra.\n\nHabla con precisión, sin emoción: los pedidos del taller, las cuentas con Milán, los pagos atrasados. El negocio iba mal desde hacía meses.\n\nDe pronto, casi de paso, dice: «En las últimas semanas, mi marido tomaba una tintura que le recetó un médico. Para el corazón, decía.»\n\nLe preguntas por el broche desaparecido. La compostura se agrieta por un instante. «El broche es asunto de los Carabinieri. No tengo nada que decir al respecto.»\n\nPero mientras lo dice, su mirada se desvía involuntariamente hacia la calle — en dirección al Municipio, calle arriba. Un gesto pequeño. Quizá no significa nada."
+          }
+        }
+      ],
+      "grants": [
+        {
+          "flag": "spoke_to_agnese"
+        }
+      ]
+    },
+    {
+      "id": "loc_2_pellizzari",
+      "name": {
+        "es": "Palazzo Pellizzari"
+      },
+      "coordinates": {
+        "lat": 45.01441,
+        "lng": 8.646108
+      },
+      "radiusM": 20,
+      "imageUrl": "game-art/ch2_pellizzari_600x400.webp",
+      "visibleWhen": {
+        "or": [
+          "found_ledger",
+          "spoke_to_agnese"
+        ]
+      },
+      "values": [
+        {
+          "when": "found_brooch",
+          "content": {
+            "es": "Sostienes el broche — una paloma con un rubí birmano en el pico, de una delicadeza imposible. Las deudas, la desesperación, todo comprimido en este objeto perfecto. El telamón sigue cargando su peso en silencio arriba."
+          }
+        },
+        {
+          "when": {
+            "and": [
+              "found_ledger",
+              "spoke_to_agnese"
+            ]
+          },
+          "content": {
+            "es": "Palazzo Pellizzari — el Municipio neoclásico, construido en 1834. Pasas bajo el atrio con columnas dóricas hacia el patio interior.\n\nY ahí está: el telamón. Una figura musculosa de piedra, tensándose bajo el peso del balcón. La escultura más reconocible de Valenza.\n\nEl dibujo del registro — la figura cargando un peso, las iniciales «A.C.» — y la mirada furtiva de la viuda hacia esta dirección. Todo encaja. «A.C.» — las iniciales de soltera de la esposa de Repossi. Ella creció aquí. Conocería cada piedra.\n\nExaminas la base del telamón. Una piedra junto al pie izquierdo se mueve. Detrás, un hueco. Dentro: una bolsa de terciopelo. Y en la bolsa — el broche. Una paloma con un rubí en el pico. Exquisito.\n\nLa viuda lo escondió para reclamar el seguro contra las deudas de su marido. No lo mató. Pero vio una oportunidad en su muerte."
+          }
+        },
+        {
+          "when": "found_ledger",
+          "content": {
+            "es": "Palazzo Pellizzari — el Municipio neoclásico. Pasas al patio interior. Ahí está: el telamón. Una figura musculosa de piedra bajo el balcón.\n\nEl dibujo del registro — la figura cargando un peso, las iniciales «A.C.» — te trajo aquí. Pero «A.C.»... ¿a quién pertenecen esas iniciales? Sin saberlo, solo puedes examinar la escultura.\n\nRevisas la base. Una piedra junto al pie izquierdo se mueve. Detrás, un hueco. Una bolsa de terciopelo. Dentro: el broche desaparecido. Una paloma con un rubí en el pico.\n\nAlguien lo escondió aquí — alguien que conocía este patio como su propia casa. ¿Quién?"
+          }
+        },
+        {
+          "when": {
+            "and": [
+              "spoke_to_agnese",
+              "spoke_to_cunioli"
+            ]
+          },
+          "content": {
+            "es": "Palazzo Pellizzari — el Municipio neoclásico. La viuda de Repossi miró hacia aquí cuando le preguntaste por el broche. Y Cunioli mencionó que ella había crecido en este barrio.\n\nEn el patio interior encuentras el telamón: una figura musculosa de piedra cargando el balcón. La escultura más conocida de Valenza.\n\nExaminas la base. Una piedra junto al pie izquierdo se mueve. Un hueco. Una bolsa de terciopelo. Y dentro: el broche. Una paloma con un rubí en el pico.\n\nLa viuda lo escondió para cobrar el seguro contra las deudas de su marido. No lo mató. Pero aprovechó su muerte."
+          }
+        },
+        {
+          "when": null,
+          "content": {
+            "es": "El Municipio neoclásico de Valenza. Un patio interior con una escultura notable — un telamón que sostiene el balcón. No estás seguro de qué buscas aquí todavía."
+          }
+        }
+      ],
+      "grants": [
+        {
+          "flag": "found_brooch"
+        },
+        {
+          "flag": "knows_debts"
+        }
+      ]
+    },
+    {
+      "id": "loc_8_terzano",
+      "name": {
+        "es": "Palazzo Terzano"
+      },
+      "coordinates": {
+        "lat": 45.014938,
+        "lng": 8.642863
+      },
+      "radiusM": 30,
+      "imageUrl": "game-art/ch2_terzano_600x400.webp",
+      "visibleWhen": "found_parisian_link",
+      "values": [
+        {
+          "when": "spoke_to_vaubourzeix",
+          "content": {
+            "es": "La reja de hierro forjado entre los patios está entreabierta. La francesa está empacando. Su tren a Alessandria sale esta noche."
+          }
+        },
+        {
+          "when": null,
+          "content": {
+            "es": "Palazzo Terzano — una residencia del siglo XVII en forma de U que abraza tres calles. La etiqueta de envío francesa del taller te trajo aquí.\n\nPreguntas por la remitente de la carta. Te conducen a una sala en el piso noble. Una mujer de unos cuarenta años te recibe sin levantarse de su escritorio.\n\n«Madame Vaubourzeix. Comerciante de joyería, París. ¿Qué necesita?»\n\nDirecta, sin rodeos. Le preguntas por el encargo.\n\n«El broche fue un encargo especial. El engaste a mano del rubí birmano que hacía Repossi no tenía par. La pieza valía más que todo lo que su taller producía en un año.»\n\nHace una pausa. Parece decidir cuánto contarte.\n\n«Mi clienta no es quien parece. El encargo viene de Pforzheim — una firma alemana que estudia las técnicas de Valenza. Espionaje industrial, si prefiere un término cortés.»\n\nSe recuesta en la silla. «Me reuní con Repossi y con su aprendiz por separado. El aprendiz quería venderme directamente, saltándose al maestro. Repossi lo descubrió. Fue el principio del fin entre ellos.»"
+          }
+        }
+      ],
+      "grants": [
+        {
+          "flag": "spoke_to_vaubourzeix"
+        }
+      ]
+    },
+    {
+      "id": "loc_9_bernardino",
+      "name": {
+        "es": "Iglesia de San Bernardino"
+      },
+      "coordinates": {
+        "lat": 45.015874,
+        "lng": 8.645283
+      },
+      "radiusM": 30,
+      "imageUrl": "game-art/ch2_bernardino_600x400.webp",
+      "visibleWhen": {
+        "or": [
+          "berto_testimony",
+          {
+            "and": [
+              "spoke_to_lucia",
+              "spoke_to_agnese"
+            ]
+          }
+        ]
+      },
+      "values": [
+        {
+          "when": "berto_full_testimony",
+          "content": {
+            "es": "San Bernardino está vacío. El órgano — ensamblado con tubos de un instrumento más antiguo — está en silencio. La historia del muchacho es clara: el médico fue la última persona en ver a Repossi con vida."
+          }
+        },
+        {
+          "when": "accused_cunioli_wrongly",
+          "content": {
+            "es": "Vuelves a San Bernardino después de la acusación fallida. El muchacho del taller está aquí. Se enteró de lo que pasó y la falsa acusación a su compañero lo ha sacudido.\n\n«Se lo diré todo. Me llamo Berto Marchese. Esa noche vi al Doctor Fossati salir de la casa de Repossi pasada la medianoche. Llevaba su maletín médico. A la mañana siguiente, el Maestro estaba muerto.»\n\nTe mira a los ojos por primera vez.\n\n«Fossati fue el último en verlo con vida. No Cunioli. El doctor.»"
+          }
+        },
+        {
+          "when": null,
+          "content": {
+            "es": "La Iglesia de San Bernardino — construida alrededor de 1500 por la cofradía más antigua de Valenza. Un órgano ensamblado con los tubos canibalizados de un instrumento anterior. Algo nuevo, construido con los huesos de algo viejo.\n\nEl muchacho del taller está sentado en el último banco. Esta vez parece listo.\n\n«Me llamo Berto Marchese.» Es la primera vez que da su nombre. «Esa noche, después de la discusión, no podía dormir. Fui a la ventana. Vi al Doctor Fossati salir de la casa de Repossi. Pasada la medianoche. Llevaba su maletín médico.»\n\nSilencio.\n\n«A la mañana siguiente, el Maestro estaba muerto en el Duomo.»\n\nTe mira. «Fossati fue el último en verlo con vida. Estoy seguro.»"
+          }
+        }
+      ],
+      "grants": [
+        {
+          "flag": "berto_full_testimony"
+        }
+      ]
+    },
+    {
+      "id": "loc_10_riverside",
+      "type": "event",
+      "name": {
+        "es": "Mirador del Po"
+      },
+      "coordinates": {
+        "lat": 45.0175,
+        "lng": 8.6455
+      },
+      "radiusM": 35,
+      "imageUrl": "game-art/ch2_riverside_600x400.webp",
+      "visibleWhen": {
+        "and": [
+          {
+            "or": [
+              "berto_full_testimony",
+              "found_crypt_register"
+            ]
+          },
+          "spoke_to_vaubourzeix",
+          {
+            "or": [
+              "found_vial_clue",
+              "knows_debts"
+            ]
+          }
+        ]
+      },
+      "values": [
+        {
+          "when": {
+            "and": [
+              "berto_full_testimony",
+              "found_vial_clue",
+              "found_brooch"
+            ]
+          },
+          "content": {
+            "es": "El sendero desciende hacia el Po. El río brilla más allá — la Lomellina, Lombardía, el mundo fuera de Valenza.\n\nEl Doctor Fossati está en el mirador, mirando el agua. La francesa espera cerca, su baúl ya en un carro.\n\nLe presentas las pruebas: la digital en dosis letal, el frasco que falta de su vitrina, el testimonio del muchacho que lo vio salir de la casa pasada la medianoche.\n\nFossati se vuelve despacio. Tiene el rostro gris.\n\n«Iba a destruirla. A mi hija. Una madre soltera en este pueblo — usted sabe lo que eso significa. Habría publicado su vergüenza para mantener al aprendiz encadenado a su banco. Le di a Repossi lo que su corazón ya estaba dejando de hacer. La dosis fue precisa. No sintió nada.»\n\nMira el broche en tu mano. «Nunca se trató de eso, ¿verdad?»\n\nLa viuda de Repossi llega. Ofrece el broche a la francesa, que lo rechaza con una sonrisa fría. «Quédense con su oro. Vine por la técnica, no por baratijas.»\n\nEl verdadero tesoro de Valenza nunca fue el material.\n\nEstás al borde del pueblo. El juego termina no con un veredicto, sino con una pregunta: ¿tú qué habrías hecho?"
+          },
+          "completesChapter": true
+        },
+        {
+          "when": {
+            "and": [
+              "berto_full_testimony",
+              "found_vial_clue"
+            ]
+          },
+          "content": {
+            "es": "El sendero desciende hacia el Po. El Doctor Fossati está en el mirador.\n\nLe presentas la cadena de pruebas: la digital, el frasco que falta, el testigo que lo vio salir de la casa.\n\nFossati se quiebra. «Iba a destruirla. A mi hija. Le di a Repossi lo que su corazón ya estaba dejando de hacer.»\n\nPausa larga. «Lo haría de nuevo. La habría destruido.»\n\nEl oro de Valenza es hermoso. Las manos que lo crean están manchadas."
+          },
+          "completesChapter": true
+        },
+        {
+          "when": {
+            "and": [
+              "found_crypt_register",
+              "knows_debts"
+            ]
+          },
+          "content": {
+            "es": "El sendero desciende hacia el Po. El Doctor Fossati está en el mirador.\n\nLo confrontas con lo que sabes: las visitas obsesivas a la cripta cada jueves — culpa disfrazada de duelo. Las deudas que hacían que el futuro de su hija dependiera del aprendiz. La tintura que recetó.\n\nSu confesión es clínica. «La dosis fue precisa. No sintió nada. Su corazón ya estaba débil — el mercurio y los ácidos habían hecho su trabajo durante décadas. Simplemente aceleré lo inevitable.»\n\nEl oro de Valenza es hermoso. Las manos que lo crean están manchadas."
+          },
+          "completesChapter": true
+        },
+        {
+          "when": "case_closed",
+          "content": {
+            "es": "El caso quedó oficialmente sin resolver. Fossati camina libre. Pero tú sabes la verdad. A veces saber es suficiente.\n\nEl oro de Valenza es hermoso. Las manos que lo crean están manchadas."
+          },
+          "completesChapter": true
+        },
+        {
+          "when": null,
+          "content": {
+            "es": "El sendero desciende hacia el Po. El Doctor Fossati está en el mirador, de espaldas. Tienes suficientes piezas del puzzle. ¿Quién crees que es el responsable?"
+          },
+          "choices": [
+            {
+              "id": "accuse_fossati_weak",
+              "label": {
+                "es": "Confrontar al Doctor Fossati"
+              },
+              "outcome": {
+                "es": "Tu evidencia es circunstancial, pero tu razonamiento es sólido. Fossati sostiene tu mirada un momento largo.\n\n«Es perspicaz. Pero la perspicacia no es una prueba.»\n\nSe da media vuelta y camina de regreso al pueblo."
+              },
+              "grants": [
+                {
+                  "flag": "case_closed"
+                }
+              ]
+            },
+            {
+              "id": "accuse_cunioli",
+              "label": {
+                "es": "Acusar al aprendiz Cunioli"
+              },
+              "outcome": {
+                "es": "Presentas tu caso a los Carabinieri. Cunioli tenía motivo, medios, acceso.\n\nPero produce una coartada: estaba en el Teatro Sociale esa noche, con el gerente y dos espectadores como testigos. La acusación se derrumba.\n\nTe equivocaste. Pero la investigación no ha terminado — vuelve a la Iglesia de San Bernardino. El muchacho del taller, sacudido por la falsa acusación a su compañero, podría finalmente hablar."
+              },
+              "grants": [
+                {
+                  "flag": "accused_cunioli_wrongly"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "grants": []
+    }
+  ]
+}
