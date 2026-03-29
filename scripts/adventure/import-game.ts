@@ -117,8 +117,8 @@ async function main() {
   }
 
   const title = data.title
-  if (!title || typeof title !== 'object' || !title['en']) {
-    console.error('JSON must have a "title" object with at least an "en" key')
+  if (!title || typeof title !== 'object' || Object.keys(title).length === 0) {
+    console.error('JSON must have a "title" object with at least one language key')
     process.exit(1)
   }
 
@@ -161,7 +161,7 @@ async function main() {
     },
   })
 
-  const titleEn = (game.title as Record<string, string>)['en'] ?? JSON.stringify(game.title)
+  const titleEn = Object.values(game.title as Record<string, string>)[0] ?? JSON.stringify(game.title)
   console.log(`Game "${titleEn}" (${game.slug}) — id: ${game.id}`)
 
   // Remove locations that are no longer in the JSON

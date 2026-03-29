@@ -41,7 +41,7 @@ type I18nString = string | Record<string, string>
 function resolveI18n(value: I18nString | null | undefined, locale: string): string {
   if (!value) return ''
   if (typeof value === 'string') return value
-  return value[locale] ?? value['en'] ?? ''
+  return value[locale] ?? Object.values(value)[0] ?? ''
 }
 
 interface ApiLocationChoice {
