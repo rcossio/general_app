@@ -30,6 +30,7 @@ type LocationValue = {
   password?: PasswordData
   grants?: GrantEntry[]
   revokes?: GrantEntry[]
+  imageUrl?: string | null
 }
 
 function resolveActiveValue(
@@ -161,6 +162,7 @@ export async function POST(request: NextRequest, { params }: Params) {
         return NextResponse.json({
           data: {
             narrative: activeValue.content,
+            imageUrl: activeValue.imageUrl ?? location.imageUrl ?? null,
             newFlags: [],
             revokedFlags: [],
             completesChapter: false,
@@ -189,6 +191,7 @@ export async function POST(request: NextRequest, { params }: Params) {
       return NextResponse.json({
         data: {
           narrative: pwData.successContent,
+          imageUrl: activeValue.imageUrl ?? location.imageUrl ?? null,
           newFlags,
           revokedFlags: [],
           completesChapter: false,
@@ -246,6 +249,7 @@ export async function POST(request: NextRequest, { params }: Params) {
     return NextResponse.json({
       data: {
         narrative,
+        imageUrl: activeValue.imageUrl ?? location.imageUrl ?? null,
         newFlags,
         revokedFlags,
         completesChapter,

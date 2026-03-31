@@ -87,26 +87,28 @@
         "lng": 8.6458
       },
       "radiusM": 30,
-      "imageUrl": null,
       "visibleWhen": null,
       "values": [
         {
           "when": "has_escort",
           "content": {
             "es": "Cruzas la piazza con los Carabinieri. La gente se aparta al verlos. Hay que encontrar a Fossati."
-          }
+          },
+          "imageUrl": "game-art/murder_church/piazza_2_600x400.webp"
         },
         {
           "when": "visited_piazza",
           "content": {
             "es": "La piazza está animada. El Duomo se alza a tu derecha. Tienes trabajo que hacer."
-          }
+          },
+          "imageUrl": "game-art/murder_church/piazza_1_600x400.webp"
         },
         {
           "when": null,
           "content": {
             "es": "Valenza, Piamonte. Otoño de 1883.\n\nEres un investigador privado de Alessandria. La Prefectura te ha contratado para revisar un caso que los Carabinieri cerraron demasiado rápido: un orfebre llamado Augusto Repossi apareció muerto en el Duomo hace tres días. Veredicto oficial: paro cardíaco.\n\nPero ayer llegó al Municipio una carta sin firma. El Prefecto quiere discreción.\n\nEntras en la Piazza XXXI Martiri. La catedral domina la plaza. Desde las calles laterales llega el repiqueteo de los orfebres en sus bancos — estás en Valenza, donde el oro lo es todo.\n\nEl secretario del Prefecto te entrega dos documentos.\n\n—— CARTA ANÓNIMA ——\n«El orfebre no murió del corazón. Pregunten quién le recetaba la medicina. Pregunten qué pasó con el broche que vale un rescate de rey. La última noche que lo vi con vida, salió del taller solo, tarde, en dirección al Duomo.»\n\n—— REFERTO DEL FORENSE (extracto) ——\n«A. Repossi, varón, 52 años. Hallado sin vida en la nave izquierda del Duomo di S.M. Maggiore. Causa: paro cardíaco. Sin signos de violencia. El difunto era conocido por su devoción religiosa y visitaba el Duomo con frecuencia, incluso a horas tardías. Nota: un broche de valor significativo, en proceso en el taller del difunto, no ha sido localizado.»\n\nEl Duomo está justo aquí, al otro lado de la plaza."
-          }
+          },
+          "imageUrl": "game-art/murder_church/piazza_1_600x400.webp"
         }
       ],
       "grants": [
@@ -133,26 +135,28 @@
         "lng": 8.646262
       },
       "radiusM": 25,
-      "imageUrl": null,
       "visibleWhen": "visited_piazza",
       "values": [
         {
           "when": "has_escort",
           "content": {
             "es": "El Duomo está vacío. Las marcas de tiza en el suelo, la nave silenciosa. Los Carabinieri esperan. Fossati no está aquí."
-          }
+          },
+          "imageUrl": "game-art/murder_church/duomo_1_600x400.webp"
         },
         {
           "when": "found_ledger",
           "content": {
             "es": "El Duomo está en silencio. Ya encontraste un registro de cuero oculto en el confesionario — lleno de deudas y nombres. En la última página, un dibujo: una figura musculosa cargando un peso enorme, con las iniciales «A.C.» debajo. ¿Dónde en Valenza hay una figura así?"
-          }
+          },
+          "imageUrl": "game-art/murder_church/duomo_2_600x400.webp"
         },
         {
           "when": "visited_duomo",
           "content": {
             "es": "El Duomo está en silencio. Las marcas de tiza apenas se distinguen en el suelo de la nave izquierda. Según el referto, Repossi visitaba este lugar con frecuencia, incluso de noche. La carta decía que lo vieron salir del taller hacia aquí. El confesionario de madera tallada sigue contra el muro. Quizá valga la pena revisarlo."
-          }
+          },
+          "imageUrl": "game-art/murder_church/duomo_1_600x400.webp"
         },
         {
           "when": null,
@@ -191,7 +195,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "imageUrl": "game-art/murder_church/duomo_1_600x400.webp"
         }
       ],
       "grants": []
@@ -206,26 +211,28 @@
         "lng": 8.6468
       },
       "radiusM": 25,
-      "imageUrl": null,
       "visibleWhen": "visited_duomo",
       "values": [
         {
           "when": "has_escort",
           "content": {
             "es": "El consultorio está cerrado. Los Carabinieri miran alrededor. Fossati no está aquí. Hay que buscarlo en otro sitio."
-          }
+          },
+          "imageUrl": "game-art/murder_church/doctor_2_600x400.webp"
         },
         {
           "when": "met_fossati",
           "content": {
             "es": "El consultorio está cerrado. Una vecina te dice que el Doctor Fossati pasa más tiempo en la iglesia de la Annunziata que aquí últimamente."
-          }
+          },
+          "imageUrl": "game-art/murder_church/doctor_2_600x400.webp"
         },
         {
           "when": "spoke_to_lucia",
           "content": {
             "es": "El consultorio está cerrado. Ya terminó su turno. Una vecina que barre la entrada dice: «El Doctor Fossati se fue hace un rato. Últimamente va a una iglesia por las tardes, pero no sé cuál.»"
-          }
+          },
+          "imageUrl": "game-art/murder_church/doctor_2_600x400.webp"
         },
         {
           "when": null,
@@ -236,7 +243,8 @@
             {
               "flag": "met_fossati"
             }
-          ]
+          ],
+          "imageUrl": "game-art/murder_church/doctor_1_600x400.webp"
         }
       ],
       "grants": []
@@ -251,14 +259,14 @@
         "lng": 8.645642
       },
       "radiusM": 25,
-      "imageUrl": null,
       "visibleWhen": "visited_duomo",
       "values": [
         {
           "when": "has_escort",
           "content": {
             "es": "El claustro está desierto. Los Carabinieri revisan el taller. Fossati no está aquí."
-          }
+          },
+          "imageUrl": "game-art/murder_church/workshop_1_600x400.webp"
         },
         {
           "when": {
@@ -269,7 +277,8 @@
           },
           "content": {
             "es": "El claustro está tranquilo. Ya examinaste el taller. El muchacho ya no está — te contó todo lo que sabía en Osteria del Moro."
-          }
+          },
+          "imageUrl": "game-art/murder_church/workshop_1_600x400.webp"
         },
         {
           "when": {
@@ -280,7 +289,8 @@
           },
           "content": {
             "es": "El claustro está tranquilo. Ya examinaste el taller y el muchacho te contó lo que pudo. Dijo que no podía hablar aquí — mencionó que pasa tiempo en la Osteria del Moro, al final de Via Cavallotti."
-          }
+          },
+          "imageUrl": "game-art/murder_church/workshop_1_600x400.webp"
         },
         {
           "when": {
@@ -301,19 +311,22 @@
             {
               "flag": "berto_testimony"
             }
-          ]
+          ],
+          "imageUrl": "game-art/murder_church/workshop_2_600x400.webp"
         },
         {
           "when": "examined_workshop",
           "content": {
             "es": "Ya examinaste el taller. La correspondencia y la impronta en cera pesan en tu mente. Un muchacho nervioso — flaco, pelo oscuro — te observa desde detrás de una columna pero no se acerca. No te conoce y no confía en extraños."
-          }
+          },
+          "imageUrl": "game-art/murder_church/workshop_1_600x400.webp"
         },
         {
           "when": null,
           "content": {
             "es": "El complejo de San Domenico — un antiguo convento dominico. Columnas de granito alrededor de un pozzo central. La Torre Cívica arriba. A lo largo de la antigua Contrada Maestra se alinean los talleres que hicieron famosa a Valenza.\n\nEl taller de Repossi está al fondo del claustro. La puerta tiene un sello de los Carabinieri, roto — la abrieron durante la investigación y no se molestaron en cerrarla bien. Adentro: una caja fuerte con cerraduras nuevas relucientes — llama la atención lo nuevas que son comparadas con el resto del mobiliario, un banco de trabajo cubierto de limaduras de oro, y un estuche forrado en terciopelo, abierto y vacío — aquí guardaban el broche terminado.\n\nSobre el banco encuentras dos cosas:\n\n— Una impronta en cera del punzón de la Oficina de Marcas de Alessandria. El broche fue sellado oficialmente ANTES de desaparecer. Alguien de adentro lo escondió.\n\n— Un fajo de correspondencia. Encima, una carta en francés de una tal «Mme H. Vaubourzeix», con dirección de respuesta en Palazzo Terzano, Via Carducci, y una etiqueta de envío de París. Habla de un encargo de gran valor. Debajo, un aviso de deuda dirigido a «Sra. A. Repossi, Palazzo Ceriana, Via Cunietti».\n\nUn muchacho joven — flaco, pelo oscuro — te observa desde detrás de una columna del claustro, pero se escabulle cuando levantas la vista."
-          }
+          },
+          "imageUrl": "game-art/murder_church/workshop_1_600x400.webp"
         }
       ],
       "grants": [
@@ -338,20 +351,21 @@
         "lng": 8.644555
       },
       "radiusM": 30,
-      "imageUrl": null,
       "visibleWhen": "visited_piazza",
       "values": [
         {
           "when": "has_escort",
           "content": {
             "es": "El pórtico del Teatro está tranquilo. Los Carabinieri esperan. Fossati no está aquí. Hay que buscar en otro sitio."
-          }
+          },
+          "imageUrl": "game-art/murder_church/teatro_2_600x400.webp"
         },
         {
           "when": "spoke_to_cunioli",
           "content": {
             "es": "El pórtico está tranquilo. Ya hablaste con Cunioli aquí. Te dio una moneda de taller como señal para el muchacho del claustro de San Domenico. También mencionó que el chico pasa tiempo en la Osteria del Moro."
-          }
+          },
+          "imageUrl": "game-art/murder_church/teatro_2_600x400.webp"
         },
         {
           "when": "knows_enzo_description",
@@ -393,13 +407,15 @@
                 }
               ]
             }
-          ]
+          ],
+          "imageUrl": "game-art/murder_church/teatro_1_600x400.webp"
         },
         {
           "when": null,
           "content": {
             "es": "El Teatro Sociale — un edificio elegante con columnas corintias y un pórtico con arcos. Hay movimiento: están preparando una función. Gente entrando y saliendo, trabajadores cargando decorados.\n\nNadie llama la atención en particular. Sin saber a quién buscas, es difícil encontrar algo útil aquí."
-          }
+          },
+          "imageUrl": "game-art/murder_church/teatro_2_600x400.webp"
         }
       ],
       "grants": []
@@ -414,20 +430,21 @@
         "lng": 8.647065
       },
       "radiusM": 30,
-      "imageUrl": null,
       "visibleWhen": "visited_piazza",
       "values": [
         {
           "when": "has_escort",
           "content": {
             "es": "Llegas al oratorio con los Carabinieri. El jardín está vacío. No hay nadie aquí. Hay que buscar en otro sitio."
-          }
+          },
+          "imageUrl": "game-art/murder_church/oratorio_2_600x400.webp"
         },
         {
           "when": "spoke_to_lucia",
           "content": {
             "es": "El oratorio octagonal está vacío. La joven se ha ido. A través del portal gótico — una puerta rescatada de una iglesia demolida — se ve el jardín donde estaba sentada."
-          }
+          },
+          "imageUrl": "game-art/murder_church/oratorio_2_600x400.webp"
         },
         {
           "when": "berto_full_testimony",
@@ -469,13 +486,15 @@
                 }
               ]
             }
-          ]
+          ],
+          "imageUrl": "game-art/murder_church/oratorio_1_600x400.webp"
         },
         {
           "when": null,
           "content": {
             "es": "Un oratorio octagonal con un curioso portal gótico en terracota. En el jardín adyacente, una joven lee sola en un banco. Te nota pero desvía la mirada — no parece dispuesta a hablar con un desconocido."
-          }
+          },
+          "imageUrl": "game-art/murder_church/oratorio_2_600x400.webp"
         }
       ],
       "grants": []
@@ -490,7 +509,6 @@
         "lng": 8.647322
       },
       "radiusM": 30,
-      "imageUrl": null,
       "visibleWhen": {
         "or": [
           "spoke_to_lucia",
@@ -502,7 +520,8 @@
           "when": "has_escort",
           "content": {
             "es": "Llegas a la Annunziata con los Carabinieri. La iglesia está vacía. El banco donde Fossati solía arrodillarse está desierto. Se fue. Hay que buscarlo en otro sitio."
-          }
+          },
+          "imageUrl": "game-art/murder_church/annunziata_1_600x400.webp"
         },
         {
           "when": {
@@ -518,7 +537,8 @@
             {
               "flag": "confronted_fossati_crypt"
             }
-          ]
+          ],
+          "imageUrl": "game-art/murder_church/annunziata_2_600x400.webp"
         },
         {
           "when": {
@@ -529,7 +549,8 @@
           },
           "content": {
             "es": "La iglesia está en silencio. Ya hablaste con el doctor y encontraste el registro de la cripta. Las rejas de hierro a los lados del altar capturan la luz — barrotes a través de los cuales las monjas de clausura observaban el mundo sin ser vistas."
-          }
+          },
+          "imageUrl": "game-art/murder_church/annunziata_3_600x400.webp"
         },
         {
           "when": "spoke_to_fossati",
@@ -540,7 +561,8 @@
             {
               "flag": "found_crypt_register"
             }
-          ]
+          ],
+          "imageUrl": "game-art/murder_church/annunziata_3_600x400.webp"
         },
         {
           "when": "found_vial_clue",
@@ -551,19 +573,22 @@
             {
               "flag": "fossati_defensive"
             }
-          ]
+          ],
+          "imageUrl": "game-art/murder_church/annunziata_2_600x400.webp"
         },
         {
           "when": "met_fossati",
           "content": {
             "es": "Reconoces al Doctor Fossati — lo viste en el consultorio. Está arrodillado cerca de la entrada a la cripta.\n\n«Otra vez usted. Ya le dije todo lo que sé. Repossi era mi paciente. Tintura cardíaca. Tratamiento estándar.»\n\nEs cortés pero impenetrable. Quizá con evidencia más concreta podrías presionar."
-          }
+          },
+          "imageUrl": "game-art/murder_church/annunziata_1_600x400.webp"
         },
         {
           "when": null,
           "content": {
             "es": "Fachada barroca de ladrillo. Rejas de hierro a los lados del altar. Un hombre delgado está arrodillado cerca de la entrada a una cripta.\n\nAl preguntarle si conocía a Repossi, asiente despacio.\n\n«Era mi paciente. Palpitaciones, estrés — los orfebres trabajan con mercurio y ácidos, sus corazones sufren. Le receté una tintura cardíaca. Tratamiento estándar.»\n\nEs cortés pero impenetrable. Sientes que hay muros. Quizá con evidencia más concreta podrías presionar."
-          }
+          },
+          "imageUrl": "game-art/murder_church/annunziata_1_600x400.webp"
         }
       ],
       "grants": [
@@ -582,26 +607,28 @@
         "lng": 8.643424
       },
       "radiusM": 30,
-      "imageUrl": null,
       "visibleWhen": "examined_workshop",
       "values": [
         {
           "when": "has_escort",
           "content": {
             "es": "Llamas a la puerta del palazzo. La viuda no abre. Los Carabinieri miran alrededor. Fossati no está aquí."
-          }
+          },
+          "imageUrl": "game-art/murder_church/ceriana_1_600x400.webp"
         },
         {
           "when": "spoke_to_agnese",
           "content": {
             "es": "Las fachadas gemelas de los dos palacios se alzan como espejos en el cruce. La viuda se ha retirado. Mencionó una tintura recetada por un tal Doctor Fossati, y a un joven arrogante con abrigo caro que solía discutir con su marido — lo veía en el Teatro..."
-          }
+          },
+          "imageUrl": "game-art/murder_church/ceriana_1_600x400.webp"
         },
         {
           "when": null,
           "content": {
             "es": "Via Cunietti esquina Via Cavallotti. Dos palacios imponentes se enfrentan como imágenes en un espejo — uno a cada lado del cruce.\n\nEl aviso de deuda que encontraste en el taller estaba dirigido a esta dirección. Llamas a la puerta.\n\nAbre una mujer vestida de luto. Se presenta como la viuda de Repossi. Te hace pasar a un vestíbulo en penumbra.\n\nHabla con precisión, sin emoción: los pedidos del taller, las cuentas con Milán, los pagos atrasados. El negocio iba mal desde hacía meses. Y mi marido se volvió muy religioso de repente — iba al Duomo a todas horas, a veces de noche. Decía que necesitaba pensar. «Un broche como ese podría haber salvado el taller... o pagado todas las deudas de golpe,» dice, y se detiene como si hubiera dicho demasiado.\n\n«En las últimas semanas, mi marido tomaba una tintura que le recetó un tal Doctor Fossati. Para el corazón, decía.»\n\n«Y había un joven... arrogante, siempre con un abrigo caro que no se podía pagar. Discutía con mi marido constantemente. Lo veía a veces rondando el Teatro Sociale.»\n\nAl mencionar el broche desaparecido, la compostura se agrieta. «El broche es asunto de los Carabinieri.»\n\nPero por un momento su mirada se pierde. «Yo crecí en esta zona, ¿sabe? De niña jugaba en los patios de los palacios de la piazza. Conocía cada piedra.» Parece un comentario inocente. Quizá lo sea."
-          }
+          },
+          "imageUrl": "game-art/murder_church/ceriana_1_600x400.webp"
         }
       ],
       "grants": [
@@ -623,14 +650,14 @@
         "lng": 8.646108
       },
       "radiusM": 20,
-      "imageUrl": null,
       "visibleWhen": "visited_piazza",
       "values": [
         {
           "when": "has_escort",
           "content": {
             "es": "Los Carabinieri están listos. Ya diste la orden de arresto. Hay que encontrar a Fossati antes de que huya de Valenza."
-          }
+          },
+          "imageUrl": "game-art/murder_church/pellizzari_2_600x400.webp"
         },
         {
           "when": {
@@ -701,13 +728,15 @@
               },
               "grants": []
             }
-          ]
+          ],
+          "imageUrl": "game-art/murder_church/pellizzari_2_600x400.webp"
         },
         {
           "when": "found_brooch",
           "content": {
             "es": "Sostienes el broche — una paloma con un rubí birmano en el pico, de una delicadeza imposible. ¿Quién lo escondió? ¿Y por qué? El telamón sigue cargando su peso en silencio arriba."
-          }
+          },
+          "imageUrl": "game-art/murder_church/pellizzari_1_600x400.webp"
         },
         {
           "when": {
@@ -723,7 +752,8 @@
             {
               "flag": "found_brooch"
             }
-          ]
+          ],
+          "imageUrl": "game-art/murder_church/pellizzari_1_600x400.webp"
         },
         {
           "when": "found_ledger",
@@ -734,7 +764,8 @@
             {
               "flag": "found_brooch"
             }
-          ]
+          ],
+          "imageUrl": "game-art/murder_church/pellizzari_1_600x400.webp"
         },
         {
           "when": "spoke_to_agnese",
@@ -745,13 +776,15 @@
             {
               "flag": "found_brooch"
             }
-          ]
+          ],
+          "imageUrl": "game-art/murder_church/pellizzari_1_600x400.webp"
         },
         {
           "when": null,
           "content": {
             "es": "Palazzo Pellizzari — el Municipio neoclásico de Valenza. En la entrada, un funcionario te reconoce.\n\n«Ah, usted es el investigador que mandó la Prefectura. Le deseamos suerte. Repossi era un hombre respetado — merece que se haga justicia.»\n\nEn el patio interior hay una escultura notable — un telamón que sostiene el balcón. Un lugar con historia, pero por ahora no encuentras nada relevante para el caso."
-          }
+          },
+          "imageUrl": "game-art/murder_church/pellizzari_3_600x400.webp"
         }
       ],
       "grants": []
@@ -766,20 +799,21 @@
         "lng": 8.642863
       },
       "radiusM": 30,
-      "imageUrl": null,
       "visibleWhen": "found_parisian_link",
       "values": [
         {
           "when": "has_escort",
           "content": {
             "es": "El palazzo está vacío. La francesa ya no está aquí — su carreta sale esta noche desde el mirador del Po. Los Carabinieri esperan. Fossati no está aquí."
-          }
+          },
+          "imageUrl": "game-art/murder_church/terzano_1_600x400.webp"
         },
         {
           "when": "spoke_to_vaubourzeix",
           "content": {
             "es": "La reja de hierro forjado entre los patios está entreabierta. La francesa se fue. Dijo que tomaría una carreta en el mirador del Po, en la salida norte del pueblo."
-          }
+          },
+          "imageUrl": "game-art/murder_church/terzano_1_600x400.webp"
         },
         {
           "when": null,
@@ -821,7 +855,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "imageUrl": "game-art/murder_church/terzano_1_600x400.webp"
         }
       ],
       "grants": [
@@ -843,20 +878,21 @@
         "lng": 8.645283
       },
       "radiusM": 30,
-      "imageUrl": null,
       "visibleWhen": "spoke_to_cunioli",
       "values": [
         {
           "when": "has_escort",
           "content": {
             "es": "La osteria está casi vacía. Unos parroquianos miran a los Carabinieri con curiosidad. Fossati no está aquí."
-          }
+          },
+          "imageUrl": "game-art/murder_church/osteria_1_600x400.webp"
         },
         {
           "when": "berto_full_testimony",
           "content": {
             "es": "La Osteria del Moro está casi vacía. Unas copas sucias en la barra. La historia del muchacho es clara: el médico fue la última persona en ver a Repossi con vida."
-          }
+          },
+          "imageUrl": "game-art/murder_church/osteria_1_600x400.webp"
         },
         {
           "when": {
@@ -874,7 +910,8 @@
             {
               "flag": "berto_full_testimony"
             }
-          ]
+          ],
+          "imageUrl": "game-art/murder_church/osteria_1_600x400.webp"
         },
         {
           "when": "berto_testimony",
@@ -885,7 +922,8 @@
             {
               "flag": "berto_full_testimony"
             }
-          ]
+          ],
+          "imageUrl": "game-art/murder_church/osteria_1_600x400.webp"
         },
         {
           "when": null,
@@ -896,7 +934,8 @@
             {
               "flag": "berto_full_testimony"
             }
-          ]
+          ],
+          "imageUrl": "game-art/murder_church/osteria_1_600x400.webp"
         }
       ],
       "grants": []
@@ -911,7 +950,6 @@
         "lng": 8.6455
       },
       "radiusM": 35,
-      "imageUrl": null,
       "visibleWhen": {
         "or": [
           "spoke_to_vaubourzeix",
@@ -932,7 +970,8 @@
           "content": {
             "es": "El sendero desciende hacia el Po — la salida norte de Valenza.\n\nLlegas con los Carabinieri. Hay una carreta preparada para partir. Junto a ella, una mujer elegante supervisa la carga de un baúl. Y a su lado — con un maletín apretado contra el pecho, mirando nerviosamente hacia el camino — el Doctor Fossati. Iba a huir.\n\nLos Carabinieri lo detienen. Fossati no resiste. Te mira.\n\n«Iba a destruirla. A mi hija. Una madre soltera en este pueblo — usted sabe lo que eso significa. Habría publicado su vergüenza para mantener al aprendiz encadenado a su banco. Le di a Repossi lo que su corazón ya estaba dejando de hacer. La dosis fue precisa. No sintió nada.»\n\nPor el sendero se acerca la viuda de Repossi — la mandaste citar como testigo. Le muestras el broche que encontraste en el Pellizzari. Palidece.\n\n«Lo escondí. Las deudas nos estaban ahogando. Pensé que con el seguro...» No termina la frase. «Pero yo no lo maté.»\n\nLa mujer de la carreta mira el broche con frialdad. «Quédense con su oro.»\n\nFossati sube al carro de los Carabinieri. La viuda se queda mirando el río.\n\nEl verdadero tesoro de Valenza nunca fue el material.\n\nEstás al borde del pueblo. El caso está cerrado. Pero la pregunta queda: ¿tú qué habrías hecho?"
           },
-          "completesChapter": true
+          "completesChapter": true,
+          "imageUrl": "game-art/murder_church/river_1_600x400.webp"
         },
         {
           "when": {
@@ -944,7 +983,8 @@
           "content": {
             "es": "El sendero desciende hacia el Po. El río brilla más allá — la Lomellina, Lombardía, el mundo fuera de Valenza.\n\nLlegas con los Carabinieri. La carreta de la francesa está lista para partir. Vaubourzeix espera junto a su baúl. Y a su lado, con un maletín en la mano, el Doctor Fossati. Iba a huir.\n\nLos Carabinieri lo detienen. Fossati no resiste. Te mira.\n\n«Iba a destruirla. A mi hija. Una madre soltera en este pueblo — usted sabe lo que eso significa. Habría publicado su vergüenza para mantener al aprendiz encadenado a su banco. Le di a Repossi lo que su corazón ya estaba dejando de hacer. La dosis fue precisa. No sintió nada.»\n\nPor el sendero se acerca la viuda de Repossi — la mandaste citar como testigo a través del secretario del Prefecto. Le muestras el broche que encontraste en el Pellizzari. Palidece.\n\n«Lo escondí. Las deudas nos estaban ahogando. Pensé que con el seguro...» No termina la frase. «Pero yo no lo maté. Eso se lo juro.»\n\nLa francesa mira el broche con frialdad. «Quédense con su oro. Vine por la técnica, no por baratijas.»\n\nVaubourzeix sube a la carreta sola. Fossati sube al carro de los Carabinieri. La viuda se queda mirando el río.\n\nEl verdadero tesoro de Valenza nunca fue el material.\n\nEstás al borde del pueblo. El caso está cerrado. Pero la pregunta queda: ¿tú qué habrías hecho?"
           },
-          "completesChapter": true
+          "completesChapter": true,
+          "imageUrl": "game-art/murder_church/river_1_600x400.webp"
         },
         {
           "when": {
@@ -959,7 +999,8 @@
           "content": {
             "es": "El sendero desciende hacia el Po.\n\nLlegas con los Carabinieri. La carreta de la francesa está lista para partir. Vaubourzeix espera junto a su baúl. Y a su lado, con un maletín en la mano, el Doctor Fossati. Iba a huir.\n\nLos Carabinieri lo detienen. Fossati no resiste. Te mira.\n\n«Iba a destruirla. A mi hija. Una madre soltera en este pueblo — usted sabe lo que eso significa. Le di a Repossi lo que su corazón ya estaba dejando de hacer. La dosis fue precisa. No sintió nada.»\n\nVaubourzeix sube a la carreta sin mirar atrás. Fossati sube al carro de los Carabinieri.\n\nEl oro de Valenza es hermoso. Las manos que lo crean están manchadas.\n\nEl caso está cerrado. Pero la pregunta queda: ¿tú qué habrías hecho?"
           },
-          "completesChapter": true
+          "completesChapter": true,
+          "imageUrl": "game-art/murder_church/river_1_600x400.webp"
         },
         {
           "when": {
@@ -976,19 +1017,22 @@
           "content": {
             "es": "El sendero desciende hacia el Po — la salida norte de Valenza.\n\nLlegas con los Carabinieri. Hay una carreta preparada para partir. Junto a ella, un hombre con un maletín apretado contra el pecho mira nerviosamente hacia el camino — el Doctor Fossati. Iba a huir.\n\nLos Carabinieri lo detienen. Fossati no resiste.\n\n«Le di a Repossi lo que su corazón ya estaba dejando de hacer. La dosis fue precisa. No sintió nada. Iba a destruir a mi hija. Usted no entiende lo que eso significa en un pueblo como este.»\n\nFossati sube al carro de los Carabinieri.\n\nEl oro de Valenza es hermoso. Las manos que lo crean están manchadas.\n\nEl caso está cerrado. Pero la pregunta queda: ¿tú qué habrías hecho?"
           },
-          "completesChapter": true
+          "completesChapter": true,
+          "imageUrl": "game-art/murder_church/river_1_600x400.webp"
         },
         {
           "when": "confronted_fossati_crypt",
           "content": {
             "es": "El mirador del Po — la salida norte de Valenza, donde el camino baja hacia el río y la carretera a Alessandria.\n\nLa carreta de la francesa está aquí. Vaubourzeix supervisa la carga de su baúl. Al verte, frunce el ceño.\n\n«¿Sabe qué es curioso? Hace una hora vino un hombre — delgado, nervioso, con un maletín — y me ofreció una suma considerable por un asiento en mi carreta. Esta noche. Dijo que necesitaba llegar a Alessandria con urgencia.»\n\nAlguien está intentando huir de Valenza."
-          }
+          },
+          "imageUrl": "game-art/murder_church/river_3_600x400.webp"
         },
         {
           "when": null,
           "content": {
             "es": "El mirador del Po — la salida norte de Valenza, donde el camino baja hacia el río y la carretera a Alessandria. Un punto de parada para carretas y diligencias.\n\nLa carreta de la francesa está aquí, siendo preparada para el viaje nocturno. Nada más de momento."
-          }
+          },
+          "imageUrl": "game-art/murder_church/river_2_600x400.webp"
         }
       ],
       "grants": [],

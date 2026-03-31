@@ -86,6 +86,7 @@ interface SessionState {
 
 interface VisitResult {
   narrative: I18nString
+  imageUrl: string | null
   newFlags: string[]
   revokedFlags: string[]
   completesChapter: boolean
@@ -503,7 +504,7 @@ function GameMap({ sessionId }: { sessionId: string }) {
         <LocationSheet
           name={selectedLocation.name}
           type={selectedLocation.type}
-          imageUrl={selectedLocation.imageUrl}
+          imageUrl={visitResult?.imageUrl ?? selectedLocation.imageUrl}
           narrative={selectedLocation.narrative}
           visited={selectedLocation.visited}
           withinRange={withinRange}

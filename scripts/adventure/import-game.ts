@@ -54,6 +54,13 @@ function resolveR2(value: MaybeI18n): MaybeI18n {
   return resolved
 }
 
+function resolveValuesR2(values: unknown): unknown {
+  if (!Array.isArray(values)) return values
+  return values.map((v: Record<string, unknown>) =>
+    v.imageUrl !== undefined ? { ...v, imageUrl: resolveR2(v.imageUrl as MaybeI18n) } : v
+  )
+}
+
 function parseArgs(argv: string[]) {
   const args: Record<string, string> = {}
   for (const arg of argv.slice(2)) {
@@ -186,7 +193,7 @@ async function main() {
         lng: loc.coordinates.lng,
         ...(loc.radiusM !== undefined ? { radiusM: loc.radiusM } : {}),
         visibleWhen: loc.visibleWhen ?? null,
-        values: loc.values as never,
+        values: resolveValuesR2(loc.values) as never,
         grants: loc.grants as never,
         revokes: (loc.revokes ?? []) as never,
         order: i,
@@ -202,7 +209,7 @@ async function main() {
         lng: loc.coordinates.lng,
         ...(loc.radiusM !== undefined ? { radiusM: loc.radiusM } : {}),
         visibleWhen: loc.visibleWhen ?? null,
-        values: loc.values as never,
+        values: resolveValuesR2(loc.values) as never,
         grants: loc.grants as never,
         revokes: (loc.revokes ?? []) as never,
         order: i,
