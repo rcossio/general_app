@@ -20,6 +20,7 @@
 
 import * as fs from 'fs'
 import * as path from 'path'
+import { parse as parseYaml } from 'yaml'
 import { evaluate, type Condition } from '../../modules/adventure/lib/condition'
 
 // ─── Types ────────────────────────────────────────────────────────────────
@@ -278,14 +279,16 @@ function renderPath(p: StoryPath, i: number): string {
 
 const fileArg = process.argv.find(a => a.startsWith('--file='))?.split('=')[1]
 if (!fileArg) {
-  console.error('Usage: npx tsx scripts/adventure/trace-paths.ts --file=<path-to-chapter.json> [--lang=en]')
+  console.error('Usage: npx tsx scripts/adventure/trace-paths.ts --file=<path-to-chapter.yaml> [--lang=en]')
   process.exit(1)
 }
 
 const filePath = path.resolve(fileArg)
 const raw = fs.readFileSync(filePath, 'utf-8')
-const data = JSON.parse(raw) as ChapterFile
-const chapters: Chapter[] = [{ ...data, slug: path.basename(filePath, '.json'), nextSlug: null }]
+const ext = path.extname(filePath).toLowerCase()
+const data = (ext === '.yaml' || ext === '.yml' ? parseYaml(raw) : JSON.parse(raw)) as ChapterFile
+const slug = path.basename(filePath).replace(/\.(yaml|yml|json)$/, '')
+const chapters: Chapter[] = [{ ...data, slug, nextSlug: null }]
 
 const results: StoryPath[] = []
 dfs(chapters, 0, new Set(), [], results, new Set())

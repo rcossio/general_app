@@ -16,7 +16,6 @@ export interface GameItem {
   id: string
   flag: string
   name: I18nString
-  imageUrl: string | null
   itemImageUrl: I18nString | null
 }
 

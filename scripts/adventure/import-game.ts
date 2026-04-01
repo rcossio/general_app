@@ -1,40 +1,22 @@
 /**
- * Import a game from a JSON file into the database.
+ * Import a game from a YAML or JSON file into the database.
  *
  * Usage:
- *   npx tsx scripts/import-game.ts \
- *     --file=scripts/chapter1.json \
- *     --slug=chapter-1 \
- *     --title="Chapter 1: The Garden" \
- *     --chapter=1 \
+ *   npx tsx scripts/adventure/import-game.ts \
+ *     --file=scripts/adventure/0_tutorial.yaml \
+ *     --slug=tutorial \
+ *     --chapter=0 \
  *     [--description="..."] \
- *     [--next-chapter-slug=chapter-2] \
+ *     [--next-chapter-slug=chapter-1] \
  *     [--activate]
  *
- * The JSON format expected:
- * {
- *   "locations": [
- *     {
- *       "id": "loc_1_start",           // unique within game, used as externalId
- *       "name": "Notice Board",
- *       "coordinates": [45.01, 8.62],
- *       "visibleWhen": null | "flag" | { "and": [...] } | { "or": [...] },
- *       "values": [
- *         {
- *           "when": null | "flag" | { "and": [...] } | { "or": [...] },
- *           "content": "Narrative text shown to player",
- *           "completesChapter": true   // optional — marks this as the win condition
- *         }
- *       ],
- *       "grants": [{ "flag": "flag_name" }]
- *     }
- *   ]
- * }
+ * Accepts .yaml, .yml, and .json files.
  */
 
 import { PrismaClient } from '@prisma/client'
 import * as fs from 'fs'
 import * as path from 'path'
+import { parse as parseYaml } from 'yaml'
 
 const prisma = new PrismaClient()
 
@@ -94,13 +76,13 @@ async function main() {
   }
 
   const raw = fs.readFileSync(filePath, 'utf-8')
-  const data = JSON.parse(raw) as {
+  const ext = path.extname(filePath).toLowerCase()
+  const data = (ext === '.yaml' || ext === '.yml' ? parseYaml(raw) : JSON.parse(raw)) as {
     title?: Record<string, string>
     items?: Array<{
       id: string
       flag: string
       name: Record<string, string>
-      imageUrl?: string | null
       itemImageUrl?: string | Record<string, string> | null
     }>
     locations: Array<{
