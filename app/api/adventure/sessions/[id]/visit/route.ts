@@ -117,6 +117,14 @@ export async function POST(request: NextRequest, { params }: Params) {
 
     const alreadyVisited = visitedIds.has(locationId)
 
+    // Check current visit status
+    const existingVisit = alreadyVisited
+      ? await prisma.locationVisit.findUnique({
+          where: { sessionId_locationId: { sessionId, locationId } },
+        })
+      : null
+    const currentStatus = existingVisit?.status ?? null
+
     // Resolve the active value entry (evaluated before grants, so pre-visit flag state)
     const values = location.values as LocationValue[]
     const activeValue = resolveActiveValue(values, flagSet)
@@ -127,20 +135,10 @@ export async function POST(request: NextRequest, { params }: Params) {
       )
     }
 
-    const hasChoices = !alreadyVisited && (activeValue.choices?.length ?? 0) > 0
-
-    // If this value offers choices, a choiceId is required
-    if (hasChoices && !choiceId) {
-      return NextResponse.json(
-        { error: 'A choice is required to visit this location', code: 'CHOICE_REQUIRED' },
-        { status: 400 }
-      )
-    }
-
     // Resolve the chosen option (if any)
     let chosenOption: Choice | null = null
-    if (hasChoices && choiceId) {
-      chosenOption = activeValue.choices!.find((c) => c.id === choiceId) ?? null
+    if (choiceId) {
+      chosenOption = activeValue.choices?.find((c) => c.id === choiceId) ?? null
       if (!chosenOption) {
         return NextResponse.json(
           { error: 'Invalid choice', code: 'INVALID_CHOICE' },
@@ -157,7 +155,12 @@ export async function POST(request: NextRequest, { params }: Params) {
       if (!correct) {
         // Mark as visited on first wrong attempt so the player can retry via map tap
         if (!alreadyVisited) {
-          await prisma.locationVisit.create({ data: { sessionId, locationId } })
+          await prisma.locationVisit.create({ data: { sessionId, locationId, status: 'open' } })
+        } else if (currentStatus === 'closed') {
+          await prisma.locationVisit.update({
+            where: { id: existingVisit!.id },
+            data: { status: 'open' },
+          })
         }
         return NextResponse.json({
           data: {
@@ -169,6 +172,7 @@ export async function POST(request: NextRequest, { params }: Params) {
             alreadyVisited,
             nextGameId: null,
             passwordWrong: true,
+            shouldRefresh: true,
           },
         })
       }
@@ -178,7 +182,12 @@ export async function POST(request: NextRequest, { params }: Params) {
       const newFlags = pwGrants.map((g) => g.flag).filter((f) => !flagSet.has(f))
       await prisma.$transaction(async (tx) => {
         if (!alreadyVisited) {
-          await tx.locationVisit.create({ data: { sessionId, locationId } })
+          await tx.locationVisit.create({ data: { sessionId, locationId, status: 'open' } })
+        } else if (currentStatus === 'closed') {
+          await tx.locationVisit.update({
+            where: { id: existingVisit!.id },
+            data: { status: 'open' },
+          })
         }
         for (const flag of newFlags) {
           await tx.sessionFlag.upsert({
@@ -198,30 +207,25 @@ export async function POST(request: NextRequest, { params }: Params) {
           alreadyVisited,
           nextGameId: null,
           passwordWrong: false,
+          shouldRefresh: true,
         },
       })
     }
     // --- End password mechanic ---
 
-    const narrative = chosenOption ? chosenOption.outcome : activeValue.content
-    const completesChapter = activeValue.completesChapter ?? false
-
-    // Grants and revokes are flag-state driven — fire on every visit where conditions match,
-    // not gated by alreadyVisited. The visit record (for map color / hint bar) is first-visit only.
-    const locationGrants = (location.grants as GrantEntry[]) ?? []
-    const valueGrants = activeValue.grants ?? []
+    // Only grant the choice's callback flag during visit — all other grants happen at close time
     const choiceGrants = chosenOption?.grants ?? []
-    const allGrants = [...locationGrants, ...valueGrants, ...choiceGrants]
-    const newFlags = allGrants.map((g) => g.flag).filter((f) => !flagSet.has(f))
-
-    const locationRevokes = (location.revokes as GrantEntry[]) ?? []
-    const valueRevokes = activeValue.revokes ?? []
-    const revokedFlags = [...locationRevokes, ...valueRevokes].map((r) => r.flag)
+    const newFlags = choiceGrants.map((g) => g.flag).filter((f) => !flagSet.has(f))
 
     await prisma.$transaction(async (tx) => {
-      // Visit record: first visit only (drives map color and hint bar)
+      // Visit record: first visit creates with status 'open', re-visit from 'closed' reopens
       if (!alreadyVisited) {
-        await tx.locationVisit.create({ data: { sessionId, locationId } })
+        await tx.locationVisit.create({ data: { sessionId, locationId, status: 'open' } })
+      } else if (currentStatus === 'closed') {
+        await tx.locationVisit.update({
+          where: { id: existingVisit!.id },
+          data: { status: 'open' },
+        })
       }
 
       for (const flag of newFlags) {
@@ -231,30 +235,14 @@ export async function POST(request: NextRequest, { params }: Params) {
           create: { sessionId, flag },
         })
       }
-
-      if (revokedFlags.length > 0) {
-        await tx.sessionFlag.deleteMany({
-          where: { sessionId, flag: { in: revokedFlags } },
-        })
-      }
-
-      if (completesChapter && !session.completedAt) {
-        await tx.gameSession.update({
-          where: { id: sessionId },
-          data: { completedAt: new Date() },
-        })
-      }
     })
 
     return NextResponse.json({
       data: {
-        narrative,
         imageUrl: activeValue.imageUrl ?? location.imageUrl ?? null,
         newFlags,
-        revokedFlags,
-        completesChapter,
         alreadyVisited,
-        nextGameId: completesChapter ? (session.game.nextGameId ?? null) : null,
+        shouldRefresh: true,
       },
     })
   } catch {

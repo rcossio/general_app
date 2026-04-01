@@ -159,6 +159,33 @@
           "imageUrl": "game-art/murder_church/duomo_1_600x400.webp"
         },
         {
+          "when": "duomo_choice_search",
+          "content": {
+            "es": "Pasas los dedos por los paneles tallados. Uno cede ligeramente. Detrás hay un hueco — y dentro, un registro encuadernado en cuero con letra apretada. Deudas con proveedores de oro de Milán, nombres de acreedores, fechas incumplidas. En la última página, un dibujo a tinta: una figura musculosa sosteniendo un peso inmenso, con las iniciales «A.C.» debajo. Alguien lo escondió aquí. Te lo llevas."
+          },
+          "grants": [
+            { "flag": "found_ledger" },
+            { "flag": "visited_duomo" }
+          ],
+          "revokes": [
+            { "flag": "duomo_choice_search" }
+          ],
+          "imageUrl": "game-art/murder_church/duomo_2_600x400.webp"
+        },
+        {
+          "when": "duomo_choice_examine",
+          "content": {
+            "es": "Estudias el contorno de tiza, la distancia al altar. Un hombre que según el referto visitaba este lugar con frecuencia, incluso de noche. ¿A rezar? ¿O a esconder algo? El confesionario sigue ahí si decides volver. Por ahora, necesitas encontrar a la gente que conocía a este hombre."
+          },
+          "grants": [
+            { "flag": "visited_duomo" }
+          ],
+          "revokes": [
+            { "flag": "duomo_choice_examine" }
+          ],
+          "imageUrl": "game-art/murder_church/duomo_1_600x400.webp"
+        },
+        {
           "when": null,
           "content": {
             "es": "Entras al Duomo. Tres portales, tres naves. Piedra fría, cera de vela.\n\nLa nave izquierda — la que mira al norte — es donde encontraron el cuerpo. Marcas de tiza en el suelo. Según el referto, Repossi visitaba el Duomo con frecuencia, incluso a horas tardías.\n\nLa carta anónima decía que alguien lo vio salir del taller de noche en dirección al Duomo. ¿Vino a rezar? ¿O a esconder algo? La nave izquierda es estrecha: algunos bancos, un altar lateral... y contra el muro, un confesionario de madera tallada del siglo XVIII.\n\n¿Cómo quieres proceder?"
@@ -169,16 +196,8 @@
               "label": {
                 "es": "Examinar el confesionario"
               },
-              "outcome": {
-                "es": "Pasas los dedos por los paneles tallados. Uno cede ligeramente. Detrás hay un hueco — y dentro, un registro encuadernado en cuero con letra apretada. Deudas con proveedores de oro de Milán, nombres de acreedores, fechas incumplidas. En la última página, un dibujo a tinta: una figura musculosa sosteniendo un peso inmenso, con las iniciales «A.C.» debajo. Alguien lo escondió aquí. Te lo llevas."
-              },
               "grants": [
-                {
-                  "flag": "found_ledger"
-                },
-                {
-                  "flag": "visited_duomo"
-                }
+                { "flag": "duomo_choice_search" }
               ]
             },
             {
@@ -186,13 +205,8 @@
               "label": {
                 "es": "Estudiar la escena del crimen"
               },
-              "outcome": {
-                "es": "Estudias el contorno de tiza, la distancia al altar. Un hombre que según el referto visitaba este lugar con frecuencia, incluso de noche. ¿A rezar? ¿O a esconder algo? El confesionario sigue ahí si decides volver. Por ahora, necesitas encontrar a la gente que conocía a este hombre."
-              },
               "grants": [
-                {
-                  "flag": "visited_duomo"
-                }
+                { "flag": "duomo_choice_examine" }
               ]
             }
           ],
@@ -368,6 +382,34 @@
           "imageUrl": "game-art/murder_church/teatro_2_600x400.webp"
         },
         {
+          "when": "teatro_choice_press",
+          "content": {
+            "es": "Se tensa. «¿Me está acusando?» Silencio. Luego se obliga a hablar.\n\n«Era un hombre difícil. Controlaba todo — quién entraba, quién salía, quién podía hacer negocios por su cuenta. Cambió las cerraduras de la caja fuerte sin dar explicaciones. Y últimamente se la pasaba en la iglesia — más que nunca. Como si tuviera miedo de algo. Discutimos, sí. Pero hay una diferencia entre querer irse y querer que alguien se muera.»\n\nTira el cigarrillo. «Hay un chico que trabaja en el taller, en el claustro de San Domenico. Flaco, pelo oscuro, manos manchadas de limadura. Estaba ahí la noche en que todo cambió. Pasa mucho tiempo en la Osteria del Moro, la del final de Via Cavallotti. Pero es asustadizo — no va a hablar con un extraño.»\n\nSaca una moneda pequeña de cobre del bolsillo, desgastada. «Mi moneda de taller. Muéstresela. Sabrá que yo lo mando.»"
+          },
+          "grants": [
+            { "flag": "spoke_to_cunioli" },
+            { "flag": "cunioli_token" }
+          ],
+          "revokes": [
+            { "flag": "teatro_choice_press" }
+          ],
+          "imageUrl": "game-art/murder_church/teatro_1_600x400.webp"
+        },
+        {
+          "when": "teatro_choice_gentle",
+          "content": {
+            "es": "Asiente despacio. Baja la guardia un poco.\n\n«Repossi era... complicado. Controlaba todo. Hace poco cambió las cerraduras de la caja fuerte sin explicación. Y últimamente iba a la iglesia a todas horas, como si algo lo persiguiera. Discutimos — más de una vez. Yo quería mi propio taller. Él no quería dejar ir a nadie.»\n\nSe apoya en la columna. «Hay un chico en el taller, en el claustro de San Domenico. Flaco, pelo oscuro, siempre con las manos manchadas. Estaba ahí la noche en que todo se torció. Es miedoso — no habla con desconocidos. Pasa tiempo en la Osteria del Moro, al final de Via Cavallotti.»\n\nSaca una moneda pequeña de cobre del bolsillo. «Mi moneda de taller. Muéstresela al chico y sabrá que viene de mi parte.»"
+          },
+          "grants": [
+            { "flag": "spoke_to_cunioli" },
+            { "flag": "cunioli_token" }
+          ],
+          "revokes": [
+            { "flag": "teatro_choice_gentle" }
+          ],
+          "imageUrl": "game-art/murder_church/teatro_1_600x400.webp"
+        },
+        {
           "when": "knows_enzo_description",
           "content": {
             "es": "El Teatro Sociale — construido en 1861 sobre las ruinas de un convento franciscano. Sala de herradura, tres niveles de palcos, columnas corintias en la entrada. Un pórtico con arcos corre a lo largo del lado que da a Piazza Verdi.\n\nHay movimiento — están preparando una función. Entre la gente reconoces la figura que te describieron: un joven con abrigo bien cortado, apoyado en una columna, fumando.\n\nTe acercas. Te mira de arriba abajo.\n\n«¿Viene por lo de Repossi? En este pueblo no se puede estornudar sin que se enteren todos.» Ni saludo ni presentación. «Enzo Cunioli. Trabajaba para él.»"
@@ -378,16 +420,8 @@
               "label": {
                 "es": "Ir directo — preguntarle dónde estaba la noche de la muerte"
               },
-              "outcome": {
-                "es": "Se tensa. «¿Me está acusando?» Silencio. Luego se obliga a hablar.\n\n«Era un hombre difícil. Controlaba todo — quién entraba, quién salía, quién podía hacer negocios por su cuenta. Cambió las cerraduras de la caja fuerte sin dar explicaciones. Y últimamente se la pasaba en la iglesia — más que nunca. Como si tuviera miedo de algo. Discutimos, sí. Pero hay una diferencia entre querer irse y querer que alguien se muera.»\n\nTira el cigarrillo. «Hay un chico que trabaja en el taller, en el claustro de San Domenico. Flaco, pelo oscuro, manos manchadas de limadura. Estaba ahí la noche en que todo cambió. Pasa mucho tiempo en la Osteria del Moro, la del final de Via Cavallotti. Pero es asustadizo — no va a hablar con un extraño.»\n\nSaca una moneda pequeña de cobre del bolsillo, desgastada. «Mi moneda de taller. Muéstresela. Sabrá que yo lo mando.»"
-              },
               "grants": [
-                {
-                  "flag": "spoke_to_cunioli"
-                },
-                {
-                  "flag": "cunioli_token"
-                }
+                { "flag": "teatro_choice_press" }
               ]
             },
             {
@@ -395,16 +429,8 @@
               "label": {
                 "es": "Con calma — decirle que solo quieres entender qué pasó"
               },
-              "outcome": {
-                "es": "Asiente despacio. Baja la guardia un poco.\n\n«Repossi era... complicado. Controlaba todo. Hace poco cambió las cerraduras de la caja fuerte sin explicación. Y últimamente iba a la iglesia a todas horas, como si algo lo persiguiera. Discutimos — más de una vez. Yo quería mi propio taller. Él no quería dejar ir a nadie.»\n\nSe apoya en la columna. «Hay un chico en el taller, en el claustro de San Domenico. Flaco, pelo oscuro, siempre con las manos manchadas. Estaba ahí la noche en que todo se torció. Es miedoso — no habla con desconocidos. Pasa tiempo en la Osteria del Moro, al final de Via Cavallotti.»\n\nSaca una moneda pequeña de cobre del bolsillo. «Mi moneda de taller. Muéstresela al chico y sabrá que viene de mi parte.»"
-              },
               "grants": [
-                {
-                  "flag": "spoke_to_cunioli"
-                },
-                {
-                  "flag": "cunioli_token"
-                }
+                { "flag": "teatro_choice_gentle" }
               ]
             }
           ],
@@ -447,6 +473,34 @@
           "imageUrl": "game-art/murder_church/oratorio_2_600x400.webp"
         },
         {
+          "when": "bartolomeo_choice_mention",
+          "content": {
+            "es": "Al escuchar el nombre, levanta la vista de golpe. Duda un momento largo. Luego habla, despacio.\n\n«Mi padre es médico. El médico del pueblo — el Doctor Fossati. La noche antes de que encontraran al señor Repossi muerto, mi padre salió a hacerle una visita a domicilio. Eso fue raro... normalmente recibe pacientes en el consultorio.»\n\nSe muerde el labio.\n\n«Después, cuando estaba ordenando su vitrina de medicamentos — mi padre me enseñó a leer las etiquetas desde niña — noté que faltaba un frasco. Digitalis purpurea — extracto de dedalera. Sirve para el corazón. Mi padre siempre decía que la diferencia entre medicina y veneno es la dosis...»\n\nNo termina la frase.\n\n«Mi padre es un buen hombre. Pero no entiendo por qué fue a esa casa tan tarde. Si quiere hablar con él, pasa las tardes en la iglesia de la Annunziata, cerca de la cripta donde está enterrada mi madre.»"
+          },
+          "grants": [
+            { "flag": "spoke_to_lucia" },
+            { "flag": "found_vial_clue" }
+          ],
+          "revokes": [
+            { "flag": "bartolomeo_choice_mention" }
+          ],
+          "imageUrl": "game-art/murder_church/oratorio_1_600x400.webp"
+        },
+        {
+          "when": "bartolomeo_choice_direct",
+          "content": {
+            "es": "Te mira con desconfianza. Luego algo parece decidirse en ella.\n\n«Conozco... conocía al señor Repossi. Mi padre es el Doctor Fossati, el médico del pueblo. La noche antes de que lo encontraran muerto, mi padre salió a hacerle una visita. A domicilio, de noche. No era normal.»\n\nAgarra el libro con fuerza.\n\n«Y después noté que faltaba un frasco de su vitrina. Mi padre me enseñó a reconocer los medicamentos desde chica. La etiqueta decía Digitalis purpurea. Es para el corazón. Mi padre siempre decía: la diferencia entre medicina y veneno es la dosis...»\n\nSilencio.\n\n«Si quiere hablar con mi padre, suele estar en la iglesia de la Annunziata por las tardes. Ahí está la cripta donde enterraron a mi madre.»"
+          },
+          "grants": [
+            { "flag": "spoke_to_lucia" },
+            { "flag": "found_vial_clue" }
+          ],
+          "revokes": [
+            { "flag": "bartolomeo_choice_direct" }
+          ],
+          "imageUrl": "game-art/murder_church/oratorio_1_600x400.webp"
+        },
+        {
           "when": "berto_full_testimony",
           "content": {
             "es": "El Oratorio de San Bartolomeo — la iglesia más antigua de Valenza. Interior octagonal, arcos neogóticos. El portal de terracota en la entrada fue recuperado de la demolida iglesia de San Francesco.\n\nEn el jardín adyacente — Parco Ferrari-Trecate — una joven está sentada con un libro. Berto mencionó que Cunioli se ve con una chica aquí. ¿Será ella?"
@@ -457,16 +511,8 @@
               "label": {
                 "es": "Mencionar a Enzo Cunioli"
               },
-              "outcome": {
-                "es": "Al escuchar el nombre, levanta la vista de golpe. Duda un momento largo. Luego habla, despacio.\n\n«Mi padre es médico. El médico del pueblo — el Doctor Fossati. La noche antes de que encontraran al señor Repossi muerto, mi padre salió a hacerle una visita a domicilio. Eso fue raro... normalmente recibe pacientes en el consultorio.»\n\nSe muerde el labio.\n\n«Después, cuando estaba ordenando su vitrina de medicamentos — mi padre me enseñó a leer las etiquetas desde niña — noté que faltaba un frasco. Digitalis purpurea — extracto de dedalera. Sirve para el corazón. Mi padre siempre decía que la diferencia entre medicina y veneno es la dosis...»\n\nNo termina la frase.\n\n«Mi padre es un buen hombre. Pero no entiendo por qué fue a esa casa tan tarde. Si quiere hablar con él, pasa las tardes en la iglesia de la Annunziata, cerca de la cripta donde está enterrada mi madre.»"
-              },
               "grants": [
-                {
-                  "flag": "spoke_to_lucia"
-                },
-                {
-                  "flag": "found_vial_clue"
-                }
+                { "flag": "bartolomeo_choice_mention" }
               ]
             },
             {
@@ -474,16 +520,8 @@
               "label": {
                 "es": "Presentarte como investigador y preguntar por Repossi"
               },
-              "outcome": {
-                "es": "Te mira con desconfianza. Luego algo parece decidirse en ella.\n\n«Conozco... conocía al señor Repossi. Mi padre es el Doctor Fossati, el médico del pueblo. La noche antes de que lo encontraran muerto, mi padre salió a hacerle una visita. A domicilio, de noche. No era normal.»\n\nAgarra el libro con fuerza.\n\n«Y después noté que faltaba un frasco de su vitrina. Mi padre me enseñó a reconocer los medicamentos desde chica. La etiqueta decía Digitalis purpurea. Es para el corazón. Mi padre siempre decía: la diferencia entre medicina y veneno es la dosis...»\n\nSilencio.\n\n«Si quiere hablar con mi padre, suele estar en la iglesia de la Annunziata por las tardes. Ahí está la cripta donde enterraron a mi madre.»"
-              },
               "grants": [
-                {
-                  "flag": "spoke_to_lucia"
-                },
-                {
-                  "flag": "found_vial_clue"
-                }
+                { "flag": "bartolomeo_choice_direct" }
               ]
             }
           ],
@@ -660,6 +698,49 @@
           "imageUrl": "game-art/murder_church/pellizzari_2_600x400.webp"
         },
         {
+          "when": "pellizzari_choice_fossati",
+          "content": {
+            "es": "Presentas la cadena de pruebas: la digitalis en dosis letal, el frasco que falta de la vitrina, el testimonio del muchacho que lo vio salir de la casa pasada la medianoche, y la confesión que te hizo en la cripta de la Annunziata.\n\nEl secretario asiente. Los Carabinieri se levantan.\n\n«Hay que encontrarlo antes de que huya. Usted conoce el caso mejor que nadie — llévenos a donde esté.»"
+          },
+          "grants": [
+            { "flag": "has_escort" }
+          ],
+          "revokes": [
+            { "flag": "pellizzari_choice_fossati" }
+          ],
+          "imageUrl": "game-art/murder_church/pellizzari_2_600x400.webp"
+        },
+        {
+          "when": "pellizzari_choice_agnese",
+          "content": {
+            "es": "Presentas tu caso: las deudas, el broche escondido, el motivo económico.\n\nEl secretario te mira con escepticismo. «Esconder un broche para cobrar un seguro es un delito, sí. Pero ¿asesinato? ¿Con qué? ¿Cómo? No tiene sentido.»\n\nLos Carabinieri no se mueven. No es suficiente. Quizá deberías reconsiderar."
+          },
+          "revokes": [
+            { "flag": "pellizzari_choice_agnese" }
+          ],
+          "imageUrl": "game-art/murder_church/pellizzari_2_600x400.webp"
+        },
+        {
+          "when": "pellizzari_choice_cunioli",
+          "content": {
+            "es": "Presentas tu caso: el conflicto con Repossi, la ambición, los negocios secretos con la francesa.\n\nEl secretario consulta un papel. «Cunioli tiene coartada. Estuvo en el Teatro Sociale esa noche — el gerente y dos espectadores lo confirman.»\n\nLos Carabinieri no se mueven. No es el camino correcto."
+          },
+          "revokes": [
+            { "flag": "pellizzari_choice_cunioli" }
+          ],
+          "imageUrl": "game-art/murder_church/pellizzari_2_600x400.webp"
+        },
+        {
+          "when": "pellizzari_choice_vaubourzeix",
+          "content": {
+            "es": "Presentas tu caso: el espionaje industrial, la inversión en riesgo, la presión de Pforzheim.\n\nEl secretario frunce el ceño. «¿Una comerciante de joyería asesinando a su propia fuente de ingresos? Eso destruiría su negocio. No tiene lógica.»\n\nLos Carabinieri no se mueven. Quizá deberías reconsiderar."
+          },
+          "revokes": [
+            { "flag": "pellizzari_choice_vaubourzeix" }
+          ],
+          "imageUrl": "game-art/murder_church/pellizzari_2_600x400.webp"
+        },
+        {
           "when": {
             "and": [
               "confronted_fossati_crypt",
@@ -689,13 +770,8 @@
               "label": {
                 "es": "El Doctor Fossati"
               },
-              "outcome": {
-                "es": "Presentas la cadena de pruebas: la digitalis en dosis letal, el frasco que falta de la vitrina, el testimonio del muchacho que lo vio salir de la casa pasada la medianoche, y la confesión que te hizo en la cripta de la Annunziata.\n\nEl secretario asiente. Los Carabinieri se levantan.\n\n«Hay que encontrarlo antes de que huya. Usted conoce el caso mejor que nadie — llévenos a donde esté.»"
-              },
               "grants": [
-                {
-                  "flag": "has_escort"
-                }
+                { "flag": "pellizzari_choice_fossati" }
               ]
             },
             {
@@ -703,30 +779,27 @@
               "label": {
                 "es": "La viuda, Agnese Repossi"
               },
-              "outcome": {
-                "es": "Presentas tu caso: las deudas, el broche escondido, el motivo económico.\n\nEl secretario te mira con escepticismo. «Esconder un broche para cobrar un seguro es un delito, sí. Pero ¿asesinato? ¿Con qué? ¿Cómo? No tiene sentido.»\n\nLos Carabinieri no se mueven. No es suficiente. Quizá deberías reconsiderar."
-              },
-              "grants": []
+              "grants": [
+                { "flag": "pellizzari_choice_agnese" }
+              ]
             },
             {
               "id": "accuse_cunioli",
               "label": {
                 "es": "El aprendiz, Enzo Cunioli"
               },
-              "outcome": {
-                "es": "Presentas tu caso: el conflicto con Repossi, la ambición, los negocios secretos con la francesa.\n\nEl secretario consulta un papel. «Cunioli tiene coartada. Estuvo en el Teatro Sociale esa noche — el gerente y dos espectadores lo confirman.»\n\nLos Carabinieri no se mueven. No es el camino correcto."
-              },
-              "grants": []
+              "grants": [
+                { "flag": "pellizzari_choice_cunioli" }
+              ]
             },
             {
               "id": "accuse_vaubourzeix",
               "label": {
                 "es": "La comerciante francesa, Madame Vaubourzeix"
               },
-              "outcome": {
-                "es": "Presentas tu caso: el espionaje industrial, la inversión en riesgo, la presión de Pforzheim.\n\nEl secretario frunce el ceño. «¿Una comerciante de joyería asesinando a su propia fuente de ingresos? Eso destruiría su negocio. No tiene lógica.»\n\nLos Carabinieri no se mueven. Quizá deberías reconsiderar."
-              },
-              "grants": []
+              "grants": [
+                { "flag": "pellizzari_choice_vaubourzeix" }
+              ]
             }
           ],
           "imageUrl": "game-art/murder_church/pellizzari_2_600x400.webp"
@@ -816,6 +889,34 @@
           "imageUrl": "game-art/murder_church/terzano_1_600x400.webp"
         },
         {
+          "when": "terzano_choice_client",
+          "content": {
+            "es": "Aprieta los labios. Luego parece decidir que cooperar le conviene más que resistir.\n\n«Mire, no quiero problemas. Mi tren sale esta noche. El encargo viene de Pforzheim — una firma alemana que estudia las técnicas de Valenza. Espionaje industrial, si prefiere un término cortés. Y cuando una inversión de ese calibre se retrasa... digamos que mi cliente no es gente que espera con paciencia.»\n\nDeja la frase suspendida.\n\nSe levanta. «Y ahora, si me disculpa, tengo una carreta que tomar. Sale del mirador del Po, en la salida norte del pueblo, camino a Alessandria.»"
+          },
+          "grants": [
+            { "flag": "spoke_to_vaubourzeix" },
+            { "flag": "knows_enzo_description" }
+          ],
+          "revokes": [
+            { "flag": "terzano_choice_client" }
+          ],
+          "imageUrl": "game-art/murder_church/terzano_1_600x400.webp"
+        },
+        {
+          "when": "terzano_choice_death",
+          "content": {
+            "es": "Sonríe por primera vez — una sonrisa fría.\n\n«La muerte de Repossi me perjudica. Sin él, no hay broche. Sin broche, mi cliente pierde la inversión. Y mi cliente es una firma de Pforzheim — alemanes que estudian las técnicas de Valenza. Espionaje industrial. Cuando una inversión así se pierde... digamos que no les va a gustar.»\n\n«Yo no maté a nadie. Pero alguien lo hizo, y eso me arruinó el negocio.»\n\nSe levanta. «Y ahora, si me disculpa, tengo una carreta que tomar. Sale del mirador del Po, en la salida norte del pueblo, camino a Alessandria.»"
+          },
+          "grants": [
+            { "flag": "spoke_to_vaubourzeix" },
+            { "flag": "knows_enzo_description" }
+          ],
+          "revokes": [
+            { "flag": "terzano_choice_death" }
+          ],
+          "imageUrl": "game-art/murder_church/terzano_1_600x400.webp"
+        },
+        {
           "when": null,
           "content": {
             "es": "Palazzo Terzano — una residencia del siglo XVII en forma de U que abraza tres calles. La dirección de la carta francesa del taller te trajo aquí.\n\nAl preguntar por la remitente, te conducen a una sala en el piso noble. Una mujer de unos cuarenta años te recibe sin levantarse.\n\n«Madame Vaubourzeix. Comerciante de joyería, París.»\n\nDirecta, sin rodeos. «El broche fue un encargo especial. El engaste a mano del rubí birmano que hacía Repossi no tenía par. La pieza valía más que todo lo que su taller producía en un año.»\n\n«También me reuní con un joven que trabajaba para Repossi. Ambicioso, bien vestido — siempre con un abrigo que le quedaba demasiado bien para su sueldo. Quería venderme directamente, saltándose al maestro. Repossi lo descubrió.»\n\nUn encargo así, para un taller con deudas. ¿Quién paga tanto?"
@@ -826,16 +927,8 @@
               "label": {
                 "es": "Insistir en quién es la clienta"
               },
-              "outcome": {
-                "es": "Aprieta los labios. Luego parece decidir que cooperar le conviene más que resistir.\n\n«Mire, no quiero problemas. Mi tren sale esta noche. El encargo viene de Pforzheim — una firma alemana que estudia las técnicas de Valenza. Espionaje industrial, si prefiere un término cortés. Y cuando una inversión de ese calibre se retrasa... digamos que mi cliente no es gente que espera con paciencia.»\n\nDeja la frase suspendida.\n\nSe levanta. «Y ahora, si me disculpa, tengo una carreta que tomar. Sale del mirador del Po, en la salida norte del pueblo, camino a Alessandria.»"
-              },
               "grants": [
-                {
-                  "flag": "spoke_to_vaubourzeix"
-                },
-                {
-                  "flag": "knows_enzo_description"
-                }
+                { "flag": "terzano_choice_client" }
               ]
             },
             {
@@ -843,16 +936,8 @@
               "label": {
                 "es": "Preguntarle si la muerte de Repossi le conviene"
               },
-              "outcome": {
-                "es": "Sonríe por primera vez — una sonrisa fría.\n\n«La muerte de Repossi me perjudica. Sin él, no hay broche. Sin broche, mi cliente pierde la inversión. Y mi cliente es una firma de Pforzheim — alemanes que estudian las técnicas de Valenza. Espionaje industrial. Cuando una inversión así se pierde... digamos que no les va a gustar.»\n\n«Yo no maté a nadie. Pero alguien lo hizo, y eso me arruinó el negocio.»\n\nSe levanta. «Y ahora, si me disculpa, tengo una carreta que tomar. Sale del mirador del Po, en la salida norte del pueblo, camino a Alessandria.»"
-              },
               "grants": [
-                {
-                  "flag": "spoke_to_vaubourzeix"
-                },
-                {
-                  "flag": "knows_enzo_description"
-                }
+                { "flag": "terzano_choice_death" }
               ]
             }
           ],

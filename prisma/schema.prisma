@@ -233,6 +233,7 @@ model LocationVisit {
   id         String   @id @default(cuid())
   sessionId  String   @map("session_id")
   locationId String   @map("location_id")
+  status     String   @default("open")
   visitedAt  DateTime @default(now()) @map("visited_at")
 
   session  GameSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)

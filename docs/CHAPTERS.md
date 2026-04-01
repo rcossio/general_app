@@ -239,6 +239,62 @@ When a value entry has `choices`, the player sees decision buttons instead of a 
 
 A location with choices **must not** also have a `password` on the same value entry.
 
+### How choices work — callback flags
+
+Choices use a **callback flag** pattern. Instead of showing an `outcome` inline, each choice grants a temporary callback flag. A separate `value` entry — placed **above** the choices value — matches the callback flag and displays the outcome text.
+
+**Step-by-step flow:**
+
+1. Player enters location → visit status is set to `open` → sheet shows the value with `choices`.
+2. Player picks a choice → POST /visit with `choiceId` → grants the callback flag (e.g. `shed_choice_grab`).
+3. Client refreshes → now the callback value (e.g. `when: "shed_choice_grab"`) matches → sheet shows the outcome text.
+4. Player presses "Done" → POST /close → revokes the callback flag, sets status to `closed`.
+5. On next visit → status reopens to `open` → permanent flags determine which value matches.
+
+**JSON structure:**
+
+```json
+{
+  "when": "loc_choice_a",
+  "content": { "en": "Result of choosing A..." },
+  "grants": [{ "flag": "real_flag" }],
+  "revokes": [{ "flag": "loc_choice_a" }]
+},
+{
+  "when": null,
+  "content": { "en": "Narrative with choices..." },
+  "choices": [
+    {
+      "id": "choice_a",
+      "label": { "en": "Do A" },
+      "grants": [{ "flag": "loc_choice_a" }]
+    }
+  ]
+}
+```
+
+**Rules:**
+- Callback values go **above** the choices value (more specific first).
+- Callback values go **below** any values with more specific permanent-flag conditions (e.g. `has_escort`).
+- Each callback value includes `revokes` for its own callback flag — the close endpoint applies these.
+- The `grants` on the callback value carry the real, permanent flags.
+- Choices no longer have an `outcome` field — the outcome text lives in the callback value's `content`.
+
+### Location visit status
+
+Each location visit has a `status` field: `open` or `closed`.
+
+| State | DB | Meaning |
+|---|---|---|
+| unvisited | No `LocationVisit` row | Never been here. Dark orange marker. |
+| open | Row exists, `status='open'` | Player is interacting. Shows narrative/choices. |
+| closed | Row exists, `status='closed'` | Interaction finished. Light orange marker. |
+
+- First visit creates the row with `status='open'`.
+- "Done" button calls POST /close → sets `status='closed'` and applies value-level revokes.
+- Re-visiting a closed location sets it back to `open`.
+- `visited` (row exists) is permanent and drives marker colour. `status` drives interaction state.
+
 ---
 
 ## Passwords

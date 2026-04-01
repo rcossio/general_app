@@ -116,6 +116,26 @@
           }
         },
         {
+          "when": "shed_choice_grab",
+          "content": {
+            "en": "You manage to grab the rusty key before the stranger can react. It feels old and heavy.",
+            "it": "Riesci ad afferrare la chiave arrugginita prima che lo straniero reagisca. Sembra vecchia e pesante.",
+            "es": "Logras tomar la llave oxidada antes de que el extraño pueda reaccionar. Se siente vieja y pesada."
+          },
+          "grants": [{ "flag": "has_key" }],
+          "revokes": [{ "flag": "shed_choice_grab" }]
+        },
+        {
+          "when": "shed_choice_talk",
+          "content": {
+            "en": "An interesting conversation — but when you turn back, the key is gone. You will need another way to open the gate.",
+            "it": "Una conversazione interessante — ma quando ti giri, la chiave è sparita. Dovrai trovare un altro modo per aprire il cancello.",
+            "es": "Una conversación interesante — pero cuando te das vuelta, la llave ha desaparecido. Necesitarás otra forma de abrir la reja."
+          },
+          "grants": [{ "flag": "talked_to_stranger" }],
+          "revokes": [{ "flag": "shed_choice_talk" }]
+        },
+        {
           "when": null,
           "content": {
             "en": "A rusty key hangs on the wall. Before you can grab it, a stranger steps in from the doorway and starts talking.",
@@ -130,12 +150,7 @@
                 "it": "Aggirali e prendi la chiave",
                 "es": "Escabúllete y toma la llave"
               },
-              "outcome": {
-                "en": "You manage to grab the rusty key before the stranger can react. It feels old and heavy.",
-                "it": "Riesci ad afferrare la chiave arrugginita prima che lo straniero reagisca. Sembra vecchia e pesante.",
-                "es": "Logras tomar la llave oxidada antes de que el extraño pueda reaccionar. Se siente vieja y pesada."
-              },
-              "grants": [{ "flag": "has_key" }]
+              "grants": [{ "flag": "shed_choice_grab" }]
             },
             {
               "id": "talk",
@@ -144,12 +159,7 @@
                 "it": "Fermati e ascolta cosa hanno da dire",
                 "es": "Detente y escucha lo que tienen que decir"
               },
-              "outcome": {
-                "en": "An interesting conversation — but when you turn back, the key is gone. You will need another way to open the gate.",
-                "it": "Una conversazione interessante — ma quando ti giri, la chiave è sparita. Dovrai trovare un altro modo per aprire il cancello.",
-                "es": "Una conversación interesante — pero cuando te das vuelta, la llave ha desaparecido. Necesitarás otra forma de abrir la reja."
-              },
-              "grants": [{ "flag": "talked_to_stranger" }]
+              "grants": [{ "flag": "shed_choice_talk" }]
             }
           ]
         }
