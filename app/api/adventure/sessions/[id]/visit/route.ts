@@ -18,7 +18,6 @@ type Choice = {
 
 type PasswordData = {
   value: string
-  successContent: Record<string, string>
   grants: GrantEntry[]
 }
 
@@ -147,8 +146,9 @@ export async function POST(request: NextRequest, { params }: Params) {
       }
     }
 
-    // --- Password mechanic ---
-    if (activeValue.password) {
+    // --- Password mechanic (only when player actually submits a password) ---
+    let passwordGrants: string[] = []
+    if (activeValue.password && password !== undefined) {
       const pwData = activeValue.password
       const correct = password === pwData.value
 
@@ -177,45 +177,17 @@ export async function POST(request: NextRequest, { params }: Params) {
         })
       }
 
-      // Correct password — apply grants (works on first visit and retries)
-      const pwGrants = pwData.grants ?? []
-      const newFlags = pwGrants.map((g) => g.flag).filter((f) => !flagSet.has(f))
-      await prisma.$transaction(async (tx) => {
-        if (!alreadyVisited) {
-          await tx.locationVisit.create({ data: { sessionId, locationId, status: 'open' } })
-        } else if (currentStatus === 'closed') {
-          await tx.locationVisit.update({
-            where: { id: existingVisit!.id },
-            data: { status: 'open' },
-          })
-        }
-        for (const flag of newFlags) {
-          await tx.sessionFlag.upsert({
-            where: { sessionId_flag: { sessionId, flag } },
-            update: {},
-            create: { sessionId, flag },
-          })
-        }
-      })
-      return NextResponse.json({
-        data: {
-          narrative: pwData.successContent,
-          imageUrl: activeValue.imageUrl ?? location.imageUrl ?? null,
-          newFlags,
-          revokedFlags: [],
-          completesChapter: false,
-          alreadyVisited,
-          nextGameId: null,
-          passwordWrong: false,
-          shouldRefresh: true,
-        },
-      })
+      // Correct password — collect callback flags, then fall through to normal visit
+      passwordGrants = (pwData.grants ?? []).map((g) => g.flag).filter((f) => !flagSet.has(f))
     }
     // --- End password mechanic ---
 
-    // Only grant the choice's callback flag during visit — all other grants happen at close time
+    // Grant callback flags from choices or password — all other grants happen at close time
     const choiceGrants = chosenOption?.grants ?? []
-    const newFlags = choiceGrants.map((g) => g.flag).filter((f) => !flagSet.has(f))
+    const newFlags = [
+      ...choiceGrants.map((g) => g.flag).filter((f) => !flagSet.has(f)),
+      ...passwordGrants,
+    ]
 
     await prisma.$transaction(async (tx) => {
       // Visit record: first visit creates with status 'open', re-visit from 'closed' reopens

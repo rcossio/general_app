@@ -37,7 +37,6 @@ interface Choice {
 
 interface Password {
   value: string
-  successContent: I18n
   grants: Grant[]
 }
 
@@ -177,7 +176,7 @@ function dfs(
     newFlags = applyRevokes(newFlags, value.revokes)
 
     const gained = [
-      ...loc.grants.map(g => g.flag),
+      ...(loc.grants ?? []).map(g => g.flag),
       ...(value.grants ?? []).map(g => g.flag),
     ]
     const lost = [
@@ -214,7 +213,7 @@ function dfs(
         continueOrEnd(choiceFlags, [...steps, step])
       }
     } else if (value.password) {
-      // Branch 1: correct password
+      // Branch 1: correct password — grants callback flag, then DFS continues
       const pwdFlags = applyGrants(newFlags, value.password.grants)
       const stepSolved: Step = {
         chapter: t(chapter.title),
@@ -222,7 +221,6 @@ function dfs(
         type: loc.type ?? 'location',
         narrative: t(value.content),
         password: value.password.value,
-        outcome: t(value.password.successContent),
         gained: [...gained, ...value.password.grants.map(g => g.flag)],
         lost,
       }

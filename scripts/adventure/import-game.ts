@@ -17,7 +17,7 @@
  *     {
  *       "id": "loc_1_start",           // unique within game, used as externalId
  *       "name": "Notice Board",
- *       "coordinates": { "lat": 45.01, "lng": 8.62 },
+ *       "coordinates": [45.01, 8.62],
  *       "visibleWhen": null | "flag" | { "and": [...] } | { "or": [...] },
  *       "values": [
  *         {
@@ -108,7 +108,7 @@ async function main() {
       type?: string
       imageUrl?: string
       name: Record<string, string>
-      coordinates: { lat: number; lng: number }
+      coordinates: [number, number] | { lat: number; lng: number }
       radiusM?: number
       visibleWhen: unknown
       values: unknown
@@ -183,18 +183,21 @@ async function main() {
   // Upsert locations
   for (let i = 0; i < data.locations.length; i++) {
     const loc = data.locations[i]
+    const [lat, lng] = Array.isArray(loc.coordinates)
+      ? loc.coordinates
+      : [loc.coordinates.lat, loc.coordinates.lng]
     await prisma.gameLocation.upsert({
       where: { gameId_externalId: { gameId: game.id, externalId: loc.id } },
       update: {
         type: loc.type ?? 'location',
         imageUrl: (resolveR2(loc.imageUrl) as string | null) ?? null,
         name: loc.name,
-        lat: loc.coordinates.lat,
-        lng: loc.coordinates.lng,
+        lat,
+        lng,
         ...(loc.radiusM !== undefined ? { radiusM: loc.radiusM } : {}),
         visibleWhen: loc.visibleWhen ?? null,
         values: resolveValuesR2(loc.values) as never,
-        grants: loc.grants as never,
+        grants: (loc.grants ?? []) as never,
         revokes: (loc.revokes ?? []) as never,
         order: i,
         initialLocation: loc.initialLocation ?? false,
@@ -205,12 +208,12 @@ async function main() {
         gameId: game.id,
         externalId: loc.id,
         name: loc.name,
-        lat: loc.coordinates.lat,
-        lng: loc.coordinates.lng,
+        lat,
+        lng,
         ...(loc.radiusM !== undefined ? { radiusM: loc.radiusM } : {}),
         visibleWhen: loc.visibleWhen ?? null,
         values: resolveValuesR2(loc.values) as never,
-        grants: loc.grants as never,
+        grants: (loc.grants ?? []) as never,
         revokes: (loc.revokes ?? []) as never,
         order: i,
         initialLocation: loc.initialLocation ?? false,

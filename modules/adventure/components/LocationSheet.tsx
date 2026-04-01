@@ -156,6 +156,12 @@ export function LocationSheet({
                     >
                       {t('adventure.passwordConfirm')}
                     </button>
+                    <button
+                      onClick={onDismiss}
+                      className="w-full py-3 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold text-sm"
+                    >
+                      {t('adventure.keepExploring')}
+                    </button>
                   </div>
                 ) : hasChoices ? (
                   <>

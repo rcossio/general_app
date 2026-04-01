@@ -53,9 +53,10 @@ npx prisma db seed                      # Seed roles, permissions, admin user, 1
 npx prisma studio                       # Visual DB browser
 
 # Game content import — run after every change to chapter JSON files
-# Import next chapter first, then current one referencing it via --next-chapter-slug
+# Import next chapter first, then the one referencing it via --next-chapter-slug
 npx tsx scripts/adventure/import-game.ts --file=scripts/adventure/1_chuch_murder.json --slug=chapter-1 --chapter=1 --activate
 npx tsx scripts/adventure/import-game.ts --file=scripts/adventure/0_tutorial.json --slug=tutorial --chapter=0 --activate --next-chapter-slug=chapter-1
+# Chapter JSON files live in scripts/adventure/ (e.g. 0_tutorial.json, 1_chuch_murder.json)
 
 # Trace all story paths (outputs scripts/adventure/paths.md, gitignored):
 npx tsx scripts/adventure/trace-paths.ts
@@ -82,6 +83,7 @@ Features are pluggable. Each module has a manifest (`modules/<name>/manifest.ts`
 
 - **Life Tracker** and **Adventure** are active.
 - **Workout** is disabled: import commented in `config/modules.ts`, routes return 403, DB tables intact.
+- **Events** is disabled: import commented in `config/modules.ts`.
 
 To disable a module: comment out its import in `config/modules.ts` and prefix its folders with `_` in `app/`, `app/api/`, and `__tests__/`. Its nav item disappears and RBAC blocks its routes automatically. Tables stay intact. To re-enable: reverse both steps and run `npx prisma migrate dev`.
 
@@ -145,13 +147,19 @@ GPS-based location game. Key patterns:
 
 #### Game engine features (chapter JSON)
 
-- `grants` / `revokes` — unconditional flag changes on first visit (location root, use `[]` if none).
-- `values[].grants` / `values[].revokes` — conditional flag changes that only apply when that specific value entry fires. Use this instead of location-level when the effect depends on which narrative matched (e.g. an event that only revokes a flag when the player has a companion).
+- `coordinates` — accepts `[lat, lng]` array (preferred — paste directly from Google Maps) or `{ "lat": N, "lng": N }` object.
+- `radiusM` — optional, defaults to 35m. Only specify for non-standard radii.
+- `grants` / `revokes` — flag changes. Can be defined at **two levels**: location-level (unconditional, applied on close) or value-level (conditional, only when that value fires). Both are optional — omit when empty.
 - `values[].completesChapter` — set to `true` on the value that ends the chapter; triggers the completion banner and links to the next chapter if one is set.
-- `values[].choices` — decision buttons; player must pick one; each choice has `id`, `label`, `outcome`, `grants`. A value with `choices` cannot also have `password`.
-- `values[].password` — locks location behind a code; has `value`, `successContent`, `grants`. Wrong password marks visited but allows retry; correct code grants flags and removes input.
-- `imageUrl` on location — relative R2 key (e.g. `"game-art/foo.webp"`); resolved to full URL at import time via `NEXT_PUBLIC_R2_PUBLIC_URL`. Omit for default image.
+- `values[].choices` — decision buttons; player must pick one; each choice has `id`, `label`, `grants`. Uses a **callback flag pattern**: each choice grants a temporary callback flag, a separate value entry above matches it to show the outcome text, and the close endpoint revokes the callback flag. A value with `choices` cannot also have `password`.
+- `values[].password` — locks location behind a code; has `value`, `grants`. Uses the same **callback flag pattern** as choices: correct password grants a callback flag, a separate value entry above shows the success content. Wrong password allows retry.
+- `initialLocation` on location — marks the chapter starting point; in Fake GPS mode, a Start button teleports the player near this location. Only one per chapter.
+- `imageUrl` — can appear at location-level (default image) or value-level (overrides per state). Relative R2 key (e.g. `"game-art/foo.webp"`); resolved to full URL at import time via `NEXT_PUBLIC_R2_PUBLIC_URL`. Omit for default image.
 - `items` (chapter root) — array of inventory items; each has `id`, `flag`, `name` (multilingual), `imageUrl`, `itemImageUrl` (multilingual — can be locale-specific image path). An item appears in the player's inventory when they hold the matching flag. Stored as JSONB on the `games` table.
+
+#### Location visit status
+
+Each visit has a `status` field: `open` (player is interacting) or `closed` (interaction finished). First visit creates the row as `open`. The "Done" button calls POST `/close` → sets `status='closed'`, applies location-level grants, value-level grants/revokes. Re-visiting a closed location sets it back to `open`. The `visited` state (row exists) is permanent and drives marker colour; `status` drives interaction state.
 
 #### Testing game content
 
@@ -179,3 +187,4 @@ To add a new language: (1) create `locales/<code>.ts` implementing `Translations
 - Global setup: `__tests__/setup/global.ts` (seed test DB).
 - Per-test isolation: `__tests__/setup/each.ts`.
 - Helpers in `__tests__/helpers.ts`: `registerAndLogin`, `authHeaders`, `uniqueEmail`.
+- Current test files: `auth.test.ts`, `rbac.test.ts` (tracker and workout tests were removed; extend these or add new files in `__tests__/` as needed).

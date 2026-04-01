@@ -82,10 +82,7 @@
       "name": {
         "es": "Piazza XXXI Martiri"
       },
-      "coordinates": {
-        "lat": 45.01485,
-        "lng": 8.6458
-      },
+      "coordinates": [45.01485, 8.6458],
       "radiusM": 30,
       "visibleWhen": null,
       "values": [
@@ -130,10 +127,7 @@
       "name": {
         "es": "Duomo di Santa Maria Maggiore"
       },
-      "coordinates": {
-        "lat": 45.01466,
-        "lng": 8.646262
-      },
+      "coordinates": [45.01466, 8.646262],
       "radiusM": 25,
       "visibleWhen": "visited_piazza",
       "values": [
@@ -220,10 +214,7 @@
       "name": {
         "es": "Consultorio Médico"
       },
-      "coordinates": {
-        "lat": 45.0154,
-        "lng": 8.6468
-      },
+      "coordinates": [45.0154, 8.6468],
       "radiusM": 25,
       "visibleWhen": "visited_duomo",
       "values": [
@@ -268,10 +259,7 @@
       "name": {
         "es": "Taller de Repossi — San Domenico"
       },
-      "coordinates": {
-        "lat": 45.014968,
-        "lng": 8.645642
-      },
+      "coordinates": [45.014968, 8.645642],
       "radiusM": 25,
       "visibleWhen": "visited_duomo",
       "values": [
@@ -360,10 +348,7 @@
       "name": {
         "es": "Teatro Sociale"
       },
-      "coordinates": {
-        "lat": 45.013147,
-        "lng": 8.644555
-      },
+      "coordinates": [45.013147, 8.644555],
       "radiusM": 30,
       "visibleWhen": "visited_piazza",
       "values": [
@@ -451,10 +436,7 @@
       "name": {
         "es": "Oratorio de San Bartolomeo"
       },
-      "coordinates": {
-        "lat": 45.01273,
-        "lng": 8.647065
-      },
+      "coordinates": [45.01273, 8.647065],
       "radiusM": 30,
       "visibleWhen": "visited_piazza",
       "values": [
@@ -542,10 +524,7 @@
       "name": {
         "es": "Iglesia de la SS. Annunziata"
       },
-      "coordinates": {
-        "lat": 45.015961,
-        "lng": 8.647322
-      },
+      "coordinates": [45.015961, 8.647322],
       "radiusM": 30,
       "visibleWhen": {
         "or": [
@@ -640,10 +619,7 @@
       "name": {
         "es": "Palazzo Ceriana"
       },
-      "coordinates": {
-        "lat": 45.013965,
-        "lng": 8.643424
-      },
+      "coordinates": [45.013965, 8.643424],
       "radiusM": 30,
       "visibleWhen": "examined_workshop",
       "values": [
@@ -683,10 +659,7 @@
       "name": {
         "es": "Palazzo Pellizzari — Municipio"
       },
-      "coordinates": {
-        "lat": 45.01441,
-        "lng": 8.646108
-      },
+      "coordinates": [45.01441, 8.646108],
       "radiusM": 20,
       "visibleWhen": "visited_piazza",
       "values": [
@@ -867,10 +840,7 @@
       "name": {
         "es": "Palazzo Terzano"
       },
-      "coordinates": {
-        "lat": 45.014938,
-        "lng": 8.642863
-      },
+      "coordinates": [45.014938, 8.642863],
       "radiusM": 30,
       "visibleWhen": "found_parisian_link",
       "values": [
@@ -958,10 +928,7 @@
       "name": {
         "es": "Osteria del Moro"
       },
-      "coordinates": {
-        "lat": 45.015874,
-        "lng": 8.645283
-      },
+      "coordinates": [45.015874, 8.645283],
       "radiusM": 30,
       "visibleWhen": "spoke_to_cunioli",
       "values": [
@@ -1030,10 +997,7 @@
       "name": {
         "es": "Mirador del Po"
       },
-      "coordinates": {
-        "lat": 45.0175,
-        "lng": 8.6455
-      },
+      "coordinates": [45.0175, 8.6455],
       "radiusM": 35,
       "visibleWhen": {
         "or": [

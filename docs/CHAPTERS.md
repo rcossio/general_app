@@ -32,7 +32,14 @@ The engine is entirely flag-driven. There are no hit points, timers, or inventor
 
 ### Image URLs
 
-`imageUrl` fields (on locations and items) accept either a full URL (`https://...`) or a relative R2 key (`game-art/foo.webp`). The import script resolves relative keys to full public URLs using `NEXT_PUBLIC_R2_PUBLIC_URL`. Store assets in R2 and reference them by key.
+`imageUrl` fields accept either a full URL (`https://...`) or a relative R2 key (`game-art/foo.webp`). The import script resolves relative keys to full public URLs using `NEXT_PUBLIC_R2_PUBLIC_URL`. Store assets in R2 and reference them by key.
+
+`imageUrl` can appear at **two levels**:
+
+- **Location-level** — default image for the location, shown regardless of state.
+- **Value-level** — overrides the location image when that specific value fires. Useful for showing a different image depending on the player's flags (e.g. a door open vs closed).
+
+Resolution order: value-level `imageUrl` → location-level `imageUrl` → default image.
 
 ---
 
@@ -84,13 +91,12 @@ Every entry in `locations` is either a **location** or an **event** (see `type` 
   "id": "loc_1_start",
   "type": "location",
   "name": { "en": "Notice Board", "it": "Bacheca degli Avvisi", "es": "Tablón de Anuncios" },
-  "coordinates": { "lat": 45.01582, "lng": 8.62813 },
-  "radiusM": 35,
-  "imageUrl": null,
+  "coordinates": [45.01582, 8.62813],
+  "radiusM": 50,
+  "imageUrl": "game-art/notice_board.webp",
   "visibleWhen": null,
   "values": [ ... ],
-  "grants": [],
-  "revokes": []
+  "grants": [{ "flag": "visited_start" }]
 }
 ```
 
@@ -99,25 +105,25 @@ Every entry in `locations` is either a **location** or an **event** (see `type` 
 | `id` | yes | — | Unique string within the chapter. Used internally to reference this location. |
 | `type` | no | `"location"` | `"location"` or `"event"`. Controls app behaviour (see below). |
 | `name` | yes | — | Name shown in the sheet and on the map. Multilingual object. |
-| `coordinates` | yes | — | Real-world GPS coordinates of the centre of the interaction zone. |
-| `radiusM` | no | 30 | Radius in metres. Player must be within this distance to interact. |
-| `imageUrl` | no | `null` | Full URL or relative R2 key (e.g. `"game-art/foo.webp"`) of an image shown at the top of the sheet. Resolved at import time. Uses a default image if omitted. |
+| `coordinates` | yes | — | GPS position. Accepts `[lat, lng]` array (preferred — paste directly from Google Maps) or `{ "lat": N, "lng": N }` object. |
+| `radiusM` | no | 35 | Radius in metres. Player must be within this distance to interact. Omit for the default 35m, which works well for typical GPS accuracy outdoors. Use smaller values (20–25m) for tightly-spaced locations or larger values (50–100m+) for wide areas like parks or plazas. |
+| `imageUrl` | no | `null` | Image shown at the top of the sheet. Full URL or relative R2 key. Uses a default image if omitted. Can be overridden per-value (see Image URLs above). |
 | `visibleWhen` | yes | — | Condition controlling when this location appears on the map (see Conditions). Use `null` for always visible. |
 | `values` | yes | — | Array of narrative entries evaluated top-to-bottom (see Values). |
-| `grants` | yes | — | Flags given to the player unconditionally when they visit. Use `[]` if none. |
-| `revokes` | no | `[]` | Flags removed from the player when they visit (see Revokes). |
+| `grants` | no | `[]` | Flags given to the player unconditionally when they close the location. Omit if none. |
+| `revokes` | no | `[]` | Flags removed from the player unconditionally when they close the location. Omit if none. |
 | `initialLocation` | no | `false` | Marks the intended starting point of the chapter. Only one location per chapter should have this. When Fake GPS mode is active, a **Start** button appears on the D-pad that teleports the player to 100 m south of this location — just outside the radius, ready to walk in. |
 
 ### type: "location" vs "event"
 
 **location** (default)
-- Shown on the map as an orange circle (unvisited) or grey (visited).
+- Shown on the map as an orange circle (unvisited) or light orange (visited).
 - When the player enters the radius, a green hint bar appears at the bottom of the screen.
 - The player taps the hint bar (or the map marker) to open the information sheet.
 - The player must act before they can dismiss the sheet (sheet is locked until they interact).
 
 **event**
-- Shown on the map as a red circle.
+- Shown on the map identically to locations (orange circle).
 - When the player enters the radius the information sheet opens **automatically** — no tap needed.
 - Used for triggered story beats that the player cannot choose to ignore.
 - The sheet is locked until the player interacts.
@@ -160,8 +166,9 @@ Every `values` array should end with a `"when": null` entry as the default fallb
 | `completesChapter` | no | Set to `true` on the value that ends the chapter. Triggers the completion banner. |
 | `choices` | no | Presents the player with decision buttons (see Choices). |
 | `password` | no | Locks the location behind a code the player must enter (see Passwords). |
-| `grants` | no | Flags given only when this specific value fires (conditional grants). Same format as location-level `grants`. |
-| `revokes` | no | Flags removed only when this specific value fires (conditional revokes). Same format as location-level `revokes`. |
+| `imageUrl` | no | Overrides the location-level image when this value fires. |
+| `grants` | no | Flags given only when this specific value fires (conditional grants). |
+| `revokes` | no | Flags removed only when this specific value fires (conditional revokes). |
 
 ---
 
@@ -187,19 +194,36 @@ Conditions can be nested:
 
 ## Grants and revokes
 
-**grants** (on the location root) are applied unconditionally the first time the player visits.
+Grants and revokes can be defined at **two levels**. Both are optional — omit them entirely when there are no flags to change.
+
+### Location-level (unconditional)
+
+Applied by the close endpoint regardless of which value matched. Use for flags that should always be set when the player finishes interacting (e.g. `visited_start`).
 
 ```json
 "grants": [{ "flag": "visited_start" }]
 ```
 
-**revokes** removes flags from the player on visit. Both `grants` and `revokes` on the location root are unconditional — they fire regardless of which `values` entry matched.
+### Value-level (conditional)
 
-For conditional grants/revokes that only apply when a specific value entry fires, define them inside the value object (see Value fields above). This is the right pattern for events where the effect depends on the player's state at the time of the visit.
+Applied only when that specific value entry fires. Use when the effect depends on the player's state — e.g. a value that revokes a callback flag, or an event that only removes a companion flag when the player has one.
 
-Both are arrays. Use `[]` when nothing should be granted or revoked.
+```json
+{
+  "when": "has_friend",
+  "content": { "en": "The dog chases your friend away." },
+  "grants": [{ "flag": "dog_chased" }],
+  "revokes": [{ "flag": "has_friend" }]
+}
+```
 
-> Flags granted via `choices` or `password` are defined inside those objects, not here.
+### Which level to use?
+
+- **Always fires** → location-level (e.g. `visited_x` tracking flags).
+- **Depends on state** → value-level (e.g. granting an item only on first visit, callback flags from choices/passwords).
+- Both can coexist on the same location. Location-level grants fire first, then value-level.
+
+> Flags granted via `choices` or `password` are defined inside those objects, not at either level above.
 
 ---
 
@@ -207,24 +231,44 @@ Both are arrays. Use `[]` when nothing should be granted or revoked.
 
 When a value entry has `choices`, the player sees decision buttons instead of a simple Done button. They must pick one. The choice is final — they cannot go back.
 
+Choices use a **callback flag** pattern. Each choice grants a temporary callback flag. A separate `value` entry — placed **above** the choices value — matches the callback flag and displays the outcome text.
+
+### Step-by-step flow
+
+1. Player enters location → visit status is set to `open` → sheet shows the value with `choices`.
+2. Player picks a choice → POST /visit with `choiceId` → grants the callback flag (e.g. `shed_choice_grab`).
+3. Client refreshes → now the callback value (e.g. `when: "shed_choice_grab"`) matches → sheet shows the outcome text.
+4. Player presses "Done" → POST /close → applies callback value's grants (permanent flags) and revokes (removes callback flag), sets status to `closed`.
+5. On next visit → status reopens to `open` → permanent flags determine which value matches.
+
+### JSON structure
+
 ```json
 {
+  "when": "shed_choice_grab",
+  "content": { "en": "You grab the key before the stranger reacts." },
+  "grants": [{ "flag": "has_key" }],
+  "revokes": [{ "flag": "shed_choice_grab" }]
+},
+{
+  "when": "shed_choice_talk",
+  "content": { "en": "An interesting conversation — but the key is gone." },
+  "grants": [{ "flag": "talked_to_stranger" }],
+  "revokes": [{ "flag": "shed_choice_talk" }]
+},
+{
   "when": null,
-  "content": {
-    "en": "A rusty key hangs on the wall. A stranger enters before you can grab it."
-  },
+  "content": { "en": "A rusty key hangs on the wall. A stranger steps in." },
   "choices": [
     {
       "id": "grab_key",
       "label": { "en": "Slip past them and take the key" },
-      "outcome": { "en": "You manage to grab the key before the stranger reacts." },
-      "grants": [{ "flag": "has_key" }]
+      "grants": [{ "flag": "shed_choice_grab" }]
     },
     {
       "id": "talk",
       "label": { "en": "Stop and hear what they have to say" },
-      "outcome": { "en": "When you turn back, the key is gone." },
-      "grants": [{ "flag": "talked_to_stranger" }]
+      "grants": [{ "flag": "shed_choice_talk" }]
     }
   ]
 }
@@ -234,87 +278,53 @@ When a value entry has `choices`, the player sees decision buttons instead of a 
 |---|---|---|
 | `id` | yes | Unique string within the choices array. |
 | `label` | yes | Button text shown to the player. Multilingual. |
-| `outcome` | yes | Narrative shown after the player picks this option. Multilingual. |
-| `grants` | yes | Flags given when this choice is selected. Use `[]` if none. |
+| `grants` | yes | Callback flags given when this choice is selected. Use `[]` if none. |
 
-A location with choices **must not** also have a `password` on the same value entry.
+### Rules
 
-### How choices work — callback flags
-
-Choices use a **callback flag** pattern. Instead of showing an `outcome` inline, each choice grants a temporary callback flag. A separate `value` entry — placed **above** the choices value — matches the callback flag and displays the outcome text.
-
-**Step-by-step flow:**
-
-1. Player enters location → visit status is set to `open` → sheet shows the value with `choices`.
-2. Player picks a choice → POST /visit with `choiceId` → grants the callback flag (e.g. `shed_choice_grab`).
-3. Client refreshes → now the callback value (e.g. `when: "shed_choice_grab"`) matches → sheet shows the outcome text.
-4. Player presses "Done" → POST /close → revokes the callback flag, sets status to `closed`.
-5. On next visit → status reopens to `open` → permanent flags determine which value matches.
-
-**JSON structure:**
-
-```json
-{
-  "when": "loc_choice_a",
-  "content": { "en": "Result of choosing A..." },
-  "grants": [{ "flag": "real_flag" }],
-  "revokes": [{ "flag": "loc_choice_a" }]
-},
-{
-  "when": null,
-  "content": { "en": "Narrative with choices..." },
-  "choices": [
-    {
-      "id": "choice_a",
-      "label": { "en": "Do A" },
-      "grants": [{ "flag": "loc_choice_a" }]
-    }
-  ]
-}
-```
-
-**Rules:**
 - Callback values go **above** the choices value (more specific first).
-- Callback values go **below** any values with more specific permanent-flag conditions (e.g. `has_escort`).
+- Callback values go **below** any values with more specific permanent-flag conditions (e.g. `has_key`).
 - Each callback value includes `revokes` for its own callback flag — the close endpoint applies these.
 - The `grants` on the callback value carry the real, permanent flags.
-- Choices no longer have an `outcome` field — the outcome text lives in the callback value's `content`.
-
-### Location visit status
-
-Each location visit has a `status` field: `open` or `closed`.
-
-| State | DB | Meaning |
-|---|---|---|
-| unvisited | No `LocationVisit` row | Never been here. Dark orange marker. |
-| open | Row exists, `status='open'` | Player is interacting. Shows narrative/choices. |
-| closed | Row exists, `status='closed'` | Interaction finished. Light orange marker. |
-
-- First visit creates the row with `status='open'`.
-- "Done" button calls POST /close → sets `status='closed'` and applies value-level revokes.
-- Re-visiting a closed location sets it back to `open`.
-- `visited` (row exists) is permanent and drives marker colour. `status` drives interaction state.
+- A value with `choices` cannot also have a `password`.
 
 ---
 
 ## Passwords
 
-A `password` field on a value entry locks the location behind a code. The player sees a text input and a Confirm button. The correct code grants the associated flags.
+Passwords use the same **callback flag** pattern as choices. A `password` field on a value entry shows a text input and a Confirm button. The correct code grants a callback flag, and a separate value entry above shows the success content.
+
+### Step-by-step flow
+
+1. Player enters location → auto-visit creates record with `status='open'` → sheet shows narrative + password input.
+2. Player enters wrong code → "Wrong password. Keep exploring." message. Player can dismiss and retry later.
+3. Player enters correct code → POST /visit with `password` → grants the callback flag.
+4. Client refreshes → callback value matches → sheet shows success text.
+5. Player presses "Done" → POST /close → applies callback value's grants (permanent flags) and revokes (removes callback flag), sets status to `closed`.
+
+### JSON structure
 
 ```json
 {
+  "when": "toolbox_pw_correct",
+  "content": {
+    "en": "The lock clicks open. Inside you find a heavy hammer.",
+    "it": "Il lucchetto scatta. Dentro trovi un pesante martello.",
+    "es": "El candado se abre. Dentro encuentras un pesado martillo."
+  },
+  "grants": [{ "flag": "has_hammer" }],
+  "revokes": [{ "flag": "toolbox_pw_correct" }]
+},
+{
   "when": null,
   "content": {
-    "en": "A heavy toolbox sits here, locked with a combination."
+    "en": "A heavy toolbox sits here, locked with a combination.",
+    "it": "Una pesante cassetta degli attrezzi è qui, chiusa con una combinazione.",
+    "es": "Una pesada caja de herramientas está aquí, cerrada con combinación."
   },
   "password": {
     "value": "4729",
-    "successContent": {
-      "en": "The lock clicks open. Inside you find a heavy hammer.",
-      "it": "Il lucchetto scatta. Dentro trovi un pesante martello.",
-      "es": "El candado se abre. Dentro encuentras un pesado martillo."
-    },
-    "grants": [{ "flag": "has_hammer" }]
+    "grants": [{ "flag": "toolbox_pw_correct" }]
   }
 }
 ```
@@ -322,12 +332,37 @@ A `password` field on a value entry locks the location behind a code. The player
 | Password field | Required | Description |
 |---|---|---|
 | `value` | yes | The correct answer. A string — can be digits, a word, anything. |
-| `successContent` | yes | Narrative shown on correct entry. Multilingual. |
-| `grants` | yes | Flags given on correct entry. |
+| `grants` | yes | Callback flags given on correct entry. |
 
-**Wrong password behaviour:** the sheet shows "Wrong password. Keep exploring." and a Done button. The location is marked visited but the player can tap the map marker to try again as many times as needed. Once the correct code is entered and the flag is granted, the location switches to its "already collected" narrative and the password input disappears.
+### Rules
+
+- Callback value goes **above** the password value (same ordering as choices).
+- Callback value includes `revokes` for its own callback flag.
+- The `grants` on the callback value carry the real, permanent flags.
+- A value with `password` cannot also have `choices`.
+
+### Chaining interactions
+
+Because both passwords and choices use the callback flag pattern, they can be chained within the same location. For example: password → callback value with choices → choice callback values. Each step transitions through the value system while the location stays `open`.
 
 > Put the code somewhere in the game world — on a notice board, in a clue at another location — so the player has to find it.
+
+---
+
+## Location visit status
+
+Each location visit has a `status` field: `open` or `closed`.
+
+| State | DB | Meaning |
+|---|---|---|
+| unvisited | No `LocationVisit` row | Never been here. Dark orange marker. |
+| open | Row exists, `status='open'` | Player is interacting. Shows narrative/choices/password. |
+| closed | Row exists, `status='closed'` | Interaction finished. Light orange marker. |
+
+- First visit creates the row with `status='open'`.
+- "Done" button calls POST /close → sets `status='closed'`, applies location-level grants, value-level grants/revokes.
+- Re-visiting a closed location sets it back to `open`.
+- `visited` (row exists) is permanent and drives marker colour. `status` drives interaction state.
 
 ---
 
@@ -382,19 +417,20 @@ Import the next chapter first, then import the current one referencing it via `-
 - **The order of `values` matters.** The engine picks the first match. Put the most specific conditions first, `null` last.
 - **Every location needs a fallback.** Always end `values` with `"when": null`.
 - **Flag names are free-form strings.** Use a consistent convention: `visited_x`, `has_x`, `talked_to_x`.
+- **Omit what you don't need.** `grants`, `revokes`, `radiusM`, `imageUrl`, `type` are all optional. Only specify them when you need a non-default value.
 - **Test with fake GPS.** The app has a built-in D-pad (enable via Settings → Fake GPS) for walking through a chapter on a desktop or indoors.
 - **Re-import after every JSON change.** The database is not updated automatically. Run the import command and the app will reflect the changes immediately.
 
 ```bash
 npx tsx scripts/adventure/import-game.ts \
-  --file=scripts/adventure/chapter1.json \
-  --slug=chapter-1 \
-  --chapter=1 \
+  --file=scripts/adventure/0_tutorial.json \
+  --slug=tutorial \
+  --chapter=0 \
   --activate
 ```
 
 ---
 
-## Full example — chapter1.json
+## Full example
 
-See `scripts/adventure/chapter1.json` for a complete working example covering all engine features: items, flag grants, flag revokes, choices, password, events, and chapter completion.
+See `scripts/adventure/0_tutorial.json` for a complete working example covering all engine features: items, flag grants, flag revokes, choices with callback flags, password with callback flags, events, and chapter completion.

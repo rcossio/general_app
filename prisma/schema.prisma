@@ -175,7 +175,7 @@ model GameLocation {
   name        Json
   lat         Float
   lng         Float
-  radiusM     Int    @default(30) @map("radius_m")
+  radiusM     Int    @default(35) @map("radius_m")
   // null | "flag_string" | { and: Condition[] } | { or: Condition[] }
   visibleWhen Json?  @map("visible_when")
   // Array of { when: Condition | null, content: { en, it, es }, completesChapter?: true }

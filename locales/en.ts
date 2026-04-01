@@ -138,6 +138,7 @@ const en = {
     fakeGpsActive: 'Fake GPS active — use WASD or arrows',
     passwordPrompt: 'Enter password',
     passwordConfirm: 'Confirm',
+    keepExploring: 'Keep exploring',
     wrongPassword: 'Wrong password. Keep exploring.',
     inventory: 'Inventory',
     inventoryEmpty: 'Your inventory is empty.',

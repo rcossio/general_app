@@ -14,7 +14,6 @@ type Choice = {
 
 type PasswordData = {
   value: string
-  successContent: Record<string, string>
   grants: { flag: string }[]
 }
 
