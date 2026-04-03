@@ -22,11 +22,12 @@ model User {
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
-  userRoles       UserRole[]
-  refreshTokens   RefreshToken[]
-  workoutRoutines WorkoutRoutine[]
-  trackerEntries  TrackerEntry[]
-  gameSessions    GameSession[]
+  userRoles             UserRole[]
+  refreshTokens         RefreshToken[]
+  workoutRoutines       WorkoutRoutine[]
+  trackerEntries        TrackerEntry[]
+  gameSessions          GameSession[]
+  sessionParticipations SessionParticipant[]
 
   @@map("users")
 }
@@ -203,17 +204,34 @@ model GameSession {
   id          String    @id @default(cuid())
   gameId      String    @map("game_id")
   userId      String    @map("user_id")
+  joinCode    String?   @unique @map("join_code")
   startedAt   DateTime  @default(now()) @map("started_at")
   completedAt DateTime? @map("completed_at")
 
-  game   Game            @relation(fields: [gameId], references: [id], onDelete: Cascade)
-  user   User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  flags  SessionFlag[]
-  visits LocationVisit[]
+  game         Game                 @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  user         User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  flags        SessionFlag[]
+  visits       LocationVisit[]
+  participants SessionParticipant[]
 
   @@unique([gameId, userId])
   @@index([userId])
   @@map("game_sessions")
+}
+
+model SessionParticipant {
+  id        String   @id @default(cuid())
+  sessionId String   @map("session_id")
+  userId    String   @map("user_id")
+  joinedAt  DateTime @default(now()) @map("joined_at")
+
+  session GameSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, userId])
+  @@index([sessionId])
+  @@index([userId])
+  @@map("session_participants")
 }
 
 model SessionFlag {

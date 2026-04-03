@@ -142,6 +142,18 @@ const en = {
     wrongPassword: 'Wrong password. Keep exploring.',
     inventory: 'Inventory',
     inventoryEmpty: 'Your inventory is empty.',
+    shareSession: 'Share session',
+    joinSession: 'Join session',
+    joinCode: 'Join code',
+    joinCodePlaceholder: 'Enter code',
+    generateCode: 'Generate code',
+    revokeCode: 'Revoke code',
+    revokeCodeConfirm: 'Revoke code? Current spectators will lose access.',
+    codeCopied: 'Copied!',
+    spectatorMode: 'Spectator mode',
+    spectatorBanner: 'Spectator — read only',
+    spectatorRefreshHint: 'Updates every 10s or tap refresh',
+    joinFailed: 'Invalid join code',
   },
 }
 

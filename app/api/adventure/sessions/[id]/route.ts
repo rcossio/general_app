@@ -50,8 +50,15 @@ export async function GET(request: NextRequest, { params }: Params) {
 
   const { id } = await params
 
+  // Allow access if user is owner or spectator participant
   const session = await prisma.gameSession.findFirst({
-    where: { id, userId: result.user.sub },
+    where: {
+      id,
+      OR: [
+        { userId: result.user.sub },
+        { participants: { some: { userId: result.user.sub } } },
+      ],
+    },
     include: {
       game: {
         select: {
@@ -76,6 +83,8 @@ export async function GET(request: NextRequest, { params }: Params) {
       { status: 404 }
     )
   }
+
+  const isSpectator = session.userId !== result.user.sub
 
   const flagSet = new Set(session.flags.map((f) => f.flag))
   const visitedIds = new Set(session.visits.map((v) => v.locationId))
@@ -129,6 +138,7 @@ export async function GET(request: NextRequest, { params }: Params) {
         items: session.game.items,
       },
       locations,
+      isSpectator,
     },
   })
 }

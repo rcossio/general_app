@@ -162,6 +162,15 @@ GPS-based location game. Key patterns:
 
 Each visit has a `status` field: `open` (player is interacting) or `closed` (interaction finished). First visit creates the row as `open`. The "Done" button calls POST `/close` → sets `status='closed'`, applies location-level grants, value-level grants/revokes. Re-visiting a closed location sets it back to `open`. The `visited` state (row exists) is permanent and drives marker colour; `status` drives interaction state.
 
+#### Spectator multiplayer
+
+Session owners can generate a 6-character join code (settings → Share session). Other players enter the code on `/adventure` to join as read-only spectators. Spectators see the map, visited locations, and narratives but cannot visit, close, choose, or enter passwords.
+
+- Schema: `GameSession.joinCode` (unique, nullable) + `SessionParticipant` junction table.
+- API: POST/DELETE `/api/adventure/sessions/[id]/share` (owner), POST `/api/adventure/sessions/join` (spectator).
+- GET `/api/adventure/sessions/[id]` allows access to participants and returns `isSpectator: true`.
+- **Sync is currently polling-based (10s interval) — a compromise.** This is adequate for the current scale (<50 concurrent spectators) but adds ~6 requests/min per spectator. When the app grows or real-time feedback becomes important, replace with WebSockets or Server-Sent Events (SSE). Note: Next.js App Router doesn't support WebSockets natively — this would require a separate WS server and Redis pub/sub for PM2 cluster mode.
+
 #### Testing game content
 
 Settings → Fake GPS enables a D-pad for simulating player movement on desktop/indoors.

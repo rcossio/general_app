@@ -144,6 +144,18 @@ const es: Translations = {
     wrongPassword: 'Contraseña incorrecta. Sigue explorando.',
     inventory: 'Inventario',
     inventoryEmpty: 'Tu inventario está vacío.',
+    shareSession: 'Compartir sesión',
+    joinSession: 'Unirse a sesión',
+    joinCode: 'Código de acceso',
+    joinCodePlaceholder: 'Introducir código',
+    generateCode: 'Generar código',
+    revokeCode: 'Revocar código',
+    revokeCodeConfirm: 'Revocar código? Los espectadores perderán el acceso.',
+    codeCopied: '¡Copiado!',
+    spectatorMode: 'Modo espectador',
+    spectatorBanner: 'Espectador — solo lectura',
+    spectatorRefreshHint: 'Actualiza cada 10s o toca recargar',
+    joinFailed: 'Código no válido',
   },
 }
 

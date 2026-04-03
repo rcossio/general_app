@@ -12,7 +12,7 @@ import { InventorySheet, type GameItem } from '@/modules/adventure/components/In
 import { FakeGpsDpad } from '@/modules/adventure/components/FakeGpsDpad'
 import { usePlayerPosition } from '@/modules/adventure/lib/usePlayerPosition'
 import { distanceMeters } from '@/modules/adventure/lib/haversine'
-import { ArrowLeft, MapPin, Trophy, RefreshCw, Settings, RotateCcw, Crosshair, X, Backpack } from 'lucide-react'
+import { ArrowLeft, MapPin, Trophy, RefreshCw, Settings, RotateCcw, Crosshair, X, Backpack, Share2, Copy, Check, Trash2 } from 'lucide-react'
 import type { MapLocation } from '@/modules/adventure/components/AdventureMap'
 
 type ResolvedLocation = MapLocation & {
@@ -84,6 +84,7 @@ interface SessionState {
     items: GameItem[]
   }
   locations: ApiLocation[]
+  isSpectator: boolean
 }
 
 interface VisitResult {
@@ -127,6 +128,9 @@ function GameMap({ sessionId }: { sessionId: string }) {
   const [confirmRestart, setConfirmRestart] = useState(false)
   const [inventoryOpen, setInventoryOpen] = useState(false)
   const [completeBannerDismissed, setCompleteBannerDismissed] = useState(false)
+  const [shareCode, setShareCode] = useState<string | null>(null)
+  const [codeCopied, setCodeCopied] = useState(false)
+  const [confirmRevoke, setConfirmRevoke] = useState(false)
 
   const loadState = useCallback(
     async (sid: string) => {
@@ -146,6 +150,15 @@ function GameMap({ sessionId }: { sessionId: string }) {
   useEffect(() => {
     loadState(sessionId)
   }, [sessionId, loadState])
+
+  const isSpectator = state?.isSpectator ?? false
+
+  // Spectators poll every 5s to stay in sync with the owner
+  useEffect(() => {
+    if (!isSpectator) return
+    const interval = setInterval(() => loadState(sessionId), 10000)
+    return () => clearInterval(interval)
+  }, [isSpectator, sessionId, loadState])
 
   // Resolve multilingual fields for the current locale
   const resolvedLocations: ResolvedLocation[] = useMemo(
@@ -178,6 +191,7 @@ function GameMap({ sessionId }: { sessionId: string }) {
   })()
 
   const doVisit = async (locationId: string, lat: number, lng: number, choiceId?: string, password?: string) => {
+    if (isSpectator) return
     setVisiting(true)
     try {
       const res = await fetchWithAuth(`/api/adventure/sessions/${sessionId}/visit`, {
@@ -217,7 +231,7 @@ function GameMap({ sessionId }: { sessionId: string }) {
   }
 
   const handleClose = async () => {
-    if (!selectedLocation) return
+    if (!selectedLocation || isSpectator) return
     setVisiting(true)
     try {
       await fetchWithAuth(`/api/adventure/sessions/${sessionId}/close`, {
@@ -327,6 +341,25 @@ function GameMap({ sessionId }: { sessionId: string }) {
     )
   }
 
+  const handleGenerateCode = async () => {
+    const res = await fetchWithAuth(`/api/adventure/sessions/${sessionId}/share`, { method: 'POST' })
+    const body = await res.json()
+    if (body.data?.joinCode) setShareCode(body.data.joinCode)
+  }
+
+  const handleRevokeCode = async () => {
+    await fetchWithAuth(`/api/adventure/sessions/${sessionId}/share`, { method: 'DELETE' })
+    setShareCode(null)
+    setConfirmRevoke(false)
+  }
+
+  const handleCopyCode = () => {
+    if (!shareCode) return
+    navigator.clipboard.writeText(shareCode)
+    setCodeCopied(true)
+    setTimeout(() => setCodeCopied(false), 2000)
+  }
+
   const visibleCount = resolvedLocations.filter((l) => l.visible).length
   const visitedCount = state.session.visitedLocationIds.length
   // Hint bar only for locations (events auto-open the sheet, no hint needed)
@@ -341,6 +374,13 @@ function GameMap({ sessionId }: { sessionId: string }) {
       {fakeMode && (
         <div className="px-4 py-2 bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 text-xs border-b border-amber-200 dark:border-amber-800 shrink-0 flex items-center justify-between gap-4">
           <span>{t('adventure.fakeGpsActive')}</span>
+        </div>
+      )}
+
+      {/* Spectator banner */}
+      {isSpectator && (
+        <div className="px-4 py-2 bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 text-xs border-b border-blue-200 dark:border-blue-800 shrink-0 text-center">
+          {t('adventure.spectatorBanner')} · {t('adventure.spectatorRefreshHint')}
         </div>
       )}
 
@@ -388,29 +428,10 @@ function GameMap({ sessionId }: { sessionId: string }) {
 
       {/* Settings sheet */}
       {menuOpen && (
-        <div className="absolute inset-0 z-[2000] flex items-end" onClick={() => { setMenuOpen(false); setConfirmRestart(false) }}>
+        <div className="absolute inset-0 z-[2000] flex items-end" onClick={() => { setMenuOpen(false); setConfirmRestart(false); setConfirmRevoke(false) }}>
           <div className="w-full bg-white dark:bg-gray-900 rounded-t-2xl shadow-2xl border-t border-gray-200 dark:border-gray-700 p-5 pb-8" onClick={(e) => e.stopPropagation()}>
             <div className="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mb-4" />
-            {!confirmRestart ? (
-              <>
-                <p className="text-xs text-gray-400 uppercase tracking-wide mb-3">{t('adventure.chapterSettings')}</p>
-                <button
-                  onClick={() => { setFakeMode((v) => !v); setMenuOpen(false) }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium mb-1 ${fakeMode ? 'bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300' : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'}`}
-                >
-                  <Crosshair className="h-4 w-4" />
-                  {t('adventure.fakeGps')}
-                  {fakeMode && <span className="ml-auto text-xs font-normal">ON</span>}
-                </button>
-                <button
-                  onClick={() => setConfirmRestart(true)}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 dark:hover:bg-red-950 text-sm font-medium"
-                >
-                  <RotateCcw className="h-4 w-4" />
-                  {t('adventure.restartChapter')}
-                </button>
-              </>
-            ) : (
+            {confirmRestart ? (
               <>
                 <p className="font-bold text-base mb-2">{t('adventure.restartChapterConfirm')}</p>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
@@ -435,6 +456,90 @@ function GameMap({ sessionId }: { sessionId: string }) {
                     {t('adventure.restart')}
                   </button>
                 </div>
+              </>
+            ) : confirmRevoke ? (
+              <>
+                <p className="font-bold text-base mb-2">{t('adventure.revokeCode')}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                  {t('adventure.revokeCodeConfirm')}
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setConfirmRevoke(false)}
+                    className="flex-1 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-sm"
+                  >
+                    {t('common.cancel')}
+                  </button>
+                  <button
+                    onClick={handleRevokeCode}
+                    className="flex-1 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold"
+                  >
+                    {t('adventure.revokeCode')}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="text-xs text-gray-400 uppercase tracking-wide mb-3">{t('adventure.chapterSettings')}</p>
+
+                {/* Share session — owner only */}
+                {!isSpectator && (
+                  <>
+                    {shareCode ? (
+                      <div className="mb-1 px-4 py-3 rounded-xl bg-blue-50 dark:bg-blue-950">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">{t('adventure.joinCode')}</span>
+                          <button
+                            onClick={() => setConfirmRevoke(true)}
+                            className="p-1 text-red-500 hover:text-red-600"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl font-mono font-bold tracking-[0.3em] text-blue-700 dark:text-blue-300">{shareCode}</span>
+                          <button
+                            onClick={handleCopyCode}
+                            className="p-1.5 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900 text-blue-600 dark:text-blue-400"
+                          >
+                            {codeCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={handleGenerateCode}
+                        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium mb-1 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300"
+                      >
+                        <Share2 className="h-4 w-4" />
+                        {t('adventure.shareSession')}
+                      </button>
+                    )}
+                  </>
+                )}
+
+                {/* Fake GPS — owner only */}
+                {!isSpectator && (
+                  <button
+                    onClick={() => { setFakeMode((v) => !v); setMenuOpen(false) }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium mb-1 ${fakeMode ? 'bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300' : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'}`}
+                  >
+                    <Crosshair className="h-4 w-4" />
+                    {t('adventure.fakeGps')}
+                    {fakeMode && <span className="ml-auto text-xs font-normal">ON</span>}
+                  </button>
+                )}
+
+                {/* Restart — owner only */}
+                {!isSpectator && (
+                  <button
+                    onClick={() => setConfirmRestart(true)}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 dark:hover:bg-red-950 text-sm font-medium"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                    {t('adventure.restartChapter')}
+                  </button>
+                )}
               </>
             )}
           </div>
@@ -524,8 +629,8 @@ function GameMap({ sessionId }: { sessionId: string }) {
           imageUrl={selectedLocation.imageUrl}
           narrative={selectedLocation.narrative}
           status={selectedLocation.status}
-          withinRange={withinRange}
-          distance={distanceToSelected}
+          withinRange={isSpectator ? (selectedLocation.status !== null) : withinRange}
+          distance={isSpectator ? null : distanceToSelected}
           choices={selectedLocation.choices}
           hasPassword={selectedLocation.hasPassword}
           passwordWrong={passwordWrong}
@@ -535,6 +640,7 @@ function GameMap({ sessionId }: { sessionId: string }) {
           onDismiss={() => { setSelectedLocation(null); setPasswordWrong(false) }}
           onFinish={handleClose}
           visiting={visiting}
+          spectator={isSpectator}
         />
       )}
     </div>

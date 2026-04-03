@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useLocale } from '@/contexts/LocaleContext'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
-import { Map, CheckCircle, ChevronRight, BookOpen } from 'lucide-react'
+import { Map, CheckCircle, ChevronRight, BookOpen, Users } from 'lucide-react'
 
 interface GameSession {
   id: string
@@ -41,6 +41,10 @@ function AdventureList() {
   const [games, setGames] = useState<Game[]>([])
   const [loading, setLoading] = useState(true)
   const [starting, setStarting] = useState<string | null>(null)
+  const [joinOpen, setJoinOpen] = useState(false)
+  const [joinCode, setJoinCode] = useState('')
+  const [joinError, setJoinError] = useState(false)
+  const [joining, setJoining] = useState(false)
 
   useEffect(() => {
     fetchWithAuth('/api/adventure/games')
@@ -48,6 +52,29 @@ function AdventureList() {
       .then((b) => setGames(b.data ?? []))
       .finally(() => setLoading(false))
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleJoin = async () => {
+    if (!joinCode.trim()) return
+    setJoining(true)
+    setJoinError(false)
+    try {
+      const res = await fetchWithAuth('/api/adventure/sessions/join', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ joinCode: joinCode.trim().toUpperCase() }),
+      })
+      const body = await res.json()
+      if (body.data?.sessionId) {
+        router.push(`/adventure/${body.data.sessionId}`)
+      } else {
+        setJoinError(true)
+      }
+    } catch {
+      setJoinError(true)
+    } finally {
+      setJoining(false)
+    }
+  }
 
   const handlePlay = async (game: Game) => {
     setStarting(game.id)
@@ -72,10 +99,45 @@ function AdventureList() {
 
   return (
     <div className="max-w-2xl mx-auto p-4 md:p-6">
-      <div className="flex items-center gap-3 mb-6">
-        <Map className="h-6 w-6 text-blue-600" />
-        <h1 className="text-2xl font-bold">{t('adventure.title')}</h1>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <Map className="h-6 w-6 text-blue-600" />
+          <h1 className="text-2xl font-bold">{t('adventure.title')}</h1>
+        </div>
+        <button
+          onClick={() => setJoinOpen((v) => !v)}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors"
+        >
+          <Users className="h-4 w-4" />
+          {t('adventure.joinSession')}
+        </button>
       </div>
+
+      {joinOpen && (
+        <div className="mb-6 p-4 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950">
+          <p className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-2">{t('adventure.joinCode')}</p>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={joinCode}
+              onChange={(e) => { setJoinCode(e.target.value.toUpperCase()); setJoinError(false) }}
+              placeholder={t('adventure.joinCodePlaceholder')}
+              maxLength={6}
+              className="flex-1 px-3 py-2 rounded-lg border border-blue-300 dark:border-blue-700 bg-white dark:bg-gray-900 text-sm font-mono tracking-widest uppercase focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button
+              onClick={handleJoin}
+              disabled={joining || !joinCode.trim()}
+              className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-medium"
+            >
+              {joining ? '...' : t('adventure.joinSession')}
+            </button>
+          </div>
+          {joinError && (
+            <p className="text-sm text-red-500 mt-2">{t('adventure.joinFailed')}</p>
+          )}
+        </div>
+      )}
 
       {loading ? (
         <div className="space-y-4">
