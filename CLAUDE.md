@@ -28,6 +28,12 @@ Scan the project structure first. Check what already exists before creating anyt
 
 Tests live in `__tests__/`. Always check there first. Run `npm test` before writing anything new. Extend existing tests — never create parallel scripts or separate test files outside `__tests__/`.
 
+**Important:** Tests must bypass Nginx to avoid rate limiting. Always run with:
+```bash
+NEXT_PUBLIC_APP_URL=http://localhost:3000 npm test
+```
+Without this override, `.env` sets `NEXT_PUBLIC_APP_URL` to the production domain, which routes test requests through Nginx's auth rate limiter and causes 503s.
+
 ## Bash Commands
 
 You are allowed to freely use `cat`, `grep`, `ls`, `sed -n`, `find`, and `awk` without asking for permission.
@@ -70,6 +76,13 @@ pm2 reload ecosystem.config.js --update-env        # picks up any .env changes
 pm2 save
 # After reloading: re-run game content import if any chapter YAML/JSON changed
 ```
+
+### Deployment pitfalls
+
+- **Stale chunks after rebuild:** Browsers cache JS chunks by hash. After a rebuild, old chunk URLs return 400/404 and Next.js returns "Failed to find Server Action" errors (503 to the user). Always hard-refresh (Ctrl+Shift+R) after deploying. If errors persist, do a clean build: `rm -rf .next && npm run build`.
+- **PM2 must be stopped before building.** A running instance can read a half-written `.next/` directory, causing crashes and high restart counts.
+- **Nginx auth rate limiting:** `/api/auth/` is rate-limited at 30 req/min per IP with burst 20 (`/etc/nginx/sites-available/app`). This protects against brute force but can block legitimate flows if set too low. Google OAuth does callback → refresh → /me in rapid succession — if the limit is too tight, the user gets 503 and appears logged out. The Nginx config is the live file — do not overwrite it from the repo template after SSL is configured.
+- **`sameSite` on cookies:** All refresh token cookies must use `sameSite: 'lax'`, not `'strict'`. Google OAuth redirects from `accounts.google.com` — `strict` cookies are not sent on cross-origin navigations, breaking the post-login refresh flow.
 
 ---
 
