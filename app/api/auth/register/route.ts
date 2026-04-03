@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
+import { audit } from '@/lib/audit'
 import {
   hashPassword,
   signAccessToken,
@@ -46,6 +47,8 @@ export async function POST(request: NextRequest) {
     if (userRole) {
       await prisma.userRole.create({ data: { userId: user.id, roleId: userRole.id } })
     }
+
+    audit('user_registered', { userId: user.id, email })
 
     const payload = { sub: user.id, email: user.email, roles: ['user'] }
     const accessToken = signAccessToken(payload)

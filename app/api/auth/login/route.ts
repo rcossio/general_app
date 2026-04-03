@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
+import { audit } from '@/lib/audit'
 import {
   comparePassword,
   signAccessToken,
@@ -38,7 +39,10 @@ export async function POST(request: NextRequest) {
       },
     })
 
+    const ip = request.headers.get('x-real-ip') ?? 'unknown'
+
     if (!user) {
+      audit('login_failed', { email, ip, reason: 'unknown_email' })
       return NextResponse.json(
         { error: 'Invalid credentials', code: 'INVALID_CREDENTIALS' },
         { status: 401 }
@@ -47,6 +51,7 @@ export async function POST(request: NextRequest) {
 
     const valid = await comparePassword(password, user.passwordHash)
     if (!valid) {
+      audit('login_failed', { email, ip, reason: 'wrong_password' })
       return NextResponse.json(
         { error: 'Invalid credentials', code: 'INVALID_CREDENTIALS' },
         { status: 401 }

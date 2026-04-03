@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth, isNextResponse } from '@/lib/permissions'
 import { prisma } from '@/lib/prisma'
+import { audit } from '@/lib/audit'
 import { z } from 'zod'
 
 const assignSchema = z.object({
@@ -38,6 +39,8 @@ export async function POST(request: NextRequest) {
       update: {},
       create: { userId, roleId: roleRecord.id },
     })
+
+    audit('role_assigned', { adminId: result.user.sub, targetUserId: userId, role })
 
     return NextResponse.json({ data: { success: true } })
   } catch {

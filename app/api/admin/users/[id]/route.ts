@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth, isNextResponse } from '@/lib/permissions'
 import { prisma } from '@/lib/prisma'
+import { audit } from '@/lib/audit'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -36,6 +37,8 @@ export async function DELETE(request: NextRequest, { params }: Params) {
   }
 
   await prisma.user.delete({ where: { id } })
+
+  audit('user_deleted', { adminId: result.user.sub, deletedUserId: id })
 
   return NextResponse.json({ data: { deleted: true } })
 }

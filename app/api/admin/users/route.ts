@@ -11,57 +11,64 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Forbidden', code: 'PERMISSION_DENIED' }, { status: 403 })
   }
 
-  const { searchParams } = new URL(request.url)
-  const search = searchParams.get('search')?.trim() ?? ''
-  const role = searchParams.get('role')?.trim() ?? ''
-  const page = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10))
-  const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') ?? '20', 10)))
-  const skip = (page - 1) * limit
+  try {
+    const { searchParams } = new URL(request.url)
+    const search = (searchParams.get('search')?.trim() ?? '').slice(0, 200)
+    const role = searchParams.get('role')?.trim() ?? ''
+    const page = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10))
+    const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') ?? '20', 10)))
+    const skip = (page - 1) * limit
 
-  const where: Record<string, unknown> = {}
+    const where: Record<string, unknown> = {}
 
-  if (search) {
-    where.OR = [
-      { name: { contains: search, mode: 'insensitive' } },
-      { email: { contains: search, mode: 'insensitive' } },
-    ]
-  }
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
+      ]
+    }
 
-  if (role) {
-    where.userRoles = { some: { role: { slug: role } } }
-  }
+    if (role) {
+      where.userRoles = { some: { role: { slug: role } } }
+    }
 
-  const [users, total] = await Promise.all([
-    prisma.user.findMany({
-      where,
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        createdAt: true,
-        userRoles: { select: { role: { select: { slug: true } } } },
-        userPermissions: { select: { permission: { select: { resource: true, action: true } } } },
+    const [users, total] = await Promise.all([
+      prisma.user.findMany({
+        where,
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          createdAt: true,
+          userRoles: { select: { role: { select: { slug: true } } } },
+          userPermissions: { select: { permission: { select: { resource: true, action: true } } } },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.user.count({ where }),
+    ])
+
+    return NextResponse.json({
+      data: {
+        users: users.map((u) => ({
+          id: u.id,
+          email: u.email,
+          name: u.name,
+          createdAt: u.createdAt,
+          roles: u.userRoles.map((ur) => ur.role.slug),
+          directPermissions: u.userPermissions.map((up) => `${up.permission.resource}:${up.permission.action}`),
+        })),
+        total,
+        page,
+        limit,
       },
-      orderBy: { createdAt: 'desc' },
-      skip,
-      take: limit,
-    }),
-    prisma.user.count({ where }),
-  ])
-
-  return NextResponse.json({
-    data: {
-      users: users.map((u) => ({
-        id: u.id,
-        email: u.email,
-        name: u.name,
-        createdAt: u.createdAt,
-        roles: u.userRoles.map((ur) => ur.role.slug),
-        directPermissions: u.userPermissions.map((up) => `${up.permission.resource}:${up.permission.action}`),
-      })),
-      total,
-      page,
-      limit,
-    },
-  })
+    })
+  } catch {
+    return NextResponse.json(
+      { error: 'Internal server error', code: 'INTERNAL_ERROR' },
+      { status: 500 }
+    )
+  }
 }

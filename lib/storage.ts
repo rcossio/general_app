@@ -13,8 +13,12 @@ const s3 = new S3Client({
 const BUCKET = process.env.R2_BUCKET_NAME!
 const PUBLIC_URL = process.env.NEXT_PUBLIC_R2_PUBLIC_URL!
 
-export async function getUploadUrl(key: string): Promise<string> {
-  const command = new PutObjectCommand({ Bucket: BUCKET, Key: key })
+export async function getUploadUrl(key: string, contentType = 'image/webp'): Promise<string> {
+  const command = new PutObjectCommand({
+    Bucket: BUCKET,
+    Key: key,
+    ContentType: contentType,
+  })
   return getSignedUrl(s3, command, { expiresIn: 300 })
 }
 

@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth, isNextResponse } from '@/lib/permissions'
 import { prisma } from '@/lib/prisma'
+import { audit } from '@/lib/audit'
 import { z } from 'zod'
 
 const schema = z.object({
-  userId: z.string().min(1),
+  userId: z.string().cuid(),
   permission: z.string().regex(/^[a-z_]+:[a-z_]+$/, 'Must be resource:action format'),
 })
 
@@ -43,6 +44,8 @@ export async function POST(request: NextRequest) {
       update: {},
       create: { userId, permissionId: perm.id },
     })
+
+    audit('permission_granted', { adminId: result.user.sub, targetUserId: userId, permission: permStr })
 
     return NextResponse.json({ data: { granted: true } })
   } catch {
@@ -83,6 +86,8 @@ export async function DELETE(request: NextRequest) {
     await prisma.userPermission.deleteMany({
       where: { userId, permissionId: perm.id },
     })
+
+    audit('permission_revoked', { adminId: result.user.sub, targetUserId: userId, permission: permStr })
 
     return NextResponse.json({ data: { revoked: true } })
   } catch {

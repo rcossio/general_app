@@ -1,14 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { signAccessToken, signRefreshToken, storeRefreshToken } from '@/lib/auth'
+import { audit } from '@/lib/audit'
+import { randomBytes } from 'crypto'
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const code = searchParams.get('code')
+  const state = searchParams.get('state')
   const appUrl = process.env.NEXT_PUBLIC_APP_URL!
 
   if (!code) {
     return NextResponse.redirect(`${appUrl}/login?error=google_cancelled`)
+  }
+
+  // Verify OAuth state parameter to prevent CSRF
+  const storedState = request.cookies.get('oauth_state')?.value
+  if (!state || !storedState || state !== storedState) {
+    return NextResponse.redirect(`${appUrl}/login?error=google_failed`)
   }
 
   try {
@@ -44,18 +53,22 @@ export async function GET(request: NextRequest) {
     const { email, name, picture } = googleUser
 
     // Find or create user
+    // OAuth users get a random password hash that can never be matched by bcrypt
+    const oauthPlaceholderHash = `oauth:${randomBytes(32).toString('hex')}`
+
     let user = await prisma.user.findUnique({
       where: { email },
       select: { id: true, email: true, name: true, userRoles: { select: { role: { select: { slug: true } } } } },
     })
 
     if (!user) {
+      audit('oauth_signup', { email, provider: 'google' })
       const userRole = await prisma.role.findUnique({ where: { slug: 'user' } })
       user = await prisma.user.create({
         data: {
           email,
           name: name ?? email.split('@')[0],
-          passwordHash: '',
+          passwordHash: oauthPlaceholderHash,
           avatarUrl: picture ?? null,
           ...(userRole ? { userRoles: { create: { roleId: userRole.id } } } : {}),
         },
@@ -77,6 +90,8 @@ export async function GET(request: NextRequest) {
       maxAge: 30 * 24 * 60 * 60,
       path: '/',
     })
+    // Clear the oauth state cookie
+    response.cookies.delete('oauth_state')
     return response
   } catch {
     return NextResponse.redirect(`${appUrl}/login?error=google_failed`)
