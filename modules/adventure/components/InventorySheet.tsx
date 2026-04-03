@@ -16,7 +16,8 @@ export interface GameItem {
   id: string
   flag: string
   name: I18nString
-  itemImageUrl: I18nString | null
+  description?: I18nString | null
+  itemImageUrl?: I18nString | null
 }
 
 interface InventorySheetProps {
@@ -33,6 +34,7 @@ export function InventorySheet({ items, playerFlags, onClose }: InventorySheetPr
 
   if (viewedItem) {
     const src = resolveI18n(viewedItem.itemImageUrl, locale)
+    const desc = resolveI18n(viewedItem.description, locale)
     const itemName = resolveI18n(viewedItem.name, locale)
     return (
       <div className="absolute inset-0 z-[2000] flex items-end">
@@ -50,14 +52,18 @@ export function InventorySheet({ items, playerFlags, onClose }: InventorySheetPr
             <h2 className="text-base font-bold">{itemName}</h2>
           </div>
           <div className="px-4 pb-8">
-            <div className="w-full aspect-[3/2] md:aspect-auto md:h-64 rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-              <img
-                src={src}
-                alt={itemName}
-                onError={(e) => { e.currentTarget.src = '/images/adventure/default_item.webp' }}
-                className="w-full h-full object-contain"
-              />
-            </div>
+            {src ? (
+              <div className="w-full aspect-[3/2] md:aspect-auto md:h-64 rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                <img
+                  src={src}
+                  alt={itemName}
+                  onError={(e) => { e.currentTarget.src = '/images/adventure/default_item.webp' }}
+                  className="w-full h-full object-contain"
+                />
+              </div>
+            ) : desc ? (
+              <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-sm">{desc}</p>
+            ) : null}
           </div>
         </div>
       </div>
@@ -82,7 +88,7 @@ export function InventorySheet({ items, playerFlags, onClose }: InventorySheetPr
           ) : (
             <ul className="flex flex-col gap-2">
               {carried.map((item) => {
-                const tappable = !!item.itemImageUrl
+                const tappable = !!item.itemImageUrl || !!item.description
                 return (
                   <li
                     key={item.id}

@@ -5,10 +5,14 @@ items:
     flag: has_letter
     name:
       es: Carta anónima
+    description:
+      es: "«El orfebre no murió del corazón. Pregunten quién le recetaba la medicina. Pregunten qué pasó con el broche que vale un rescate de rey. La última noche que lo vi con vida, salió del taller solo, tarde, en dirección al Duomo.»"
   - id: referto
     flag: has_report
     name:
       es: Referto del forense
+    description:
+      es: "«A. Repossi, varón, 52 años. Hallado sin vida en la nave izquierda del Duomo di S.M. Maggiore. Causa: paro cardíaco. Sin signos de violencia. El difunto era conocido por su devoción religiosa y visitaba el Duomo con frecuencia, incluso a horas tardías. Nota: un broche de valor significativo, en proceso en el taller del difunto, no ha sido localizado.»"
   - id: registro
     flag: found_ledger
     name:
@@ -60,13 +64,7 @@ locations:
 
             Entras en la Piazza XXXI Martiri. La catedral domina la plaza. Desde las calles laterales llega el repiqueteo de los orfebres en sus bancos — estás en Valenza, donde el oro lo es todo.
 
-            El secretario del Prefecto te entrega dos documentos.
-
-            —— CARTA ANÓNIMA ——
-            «El orfebre no murió del corazón. Pregunten quién le recetaba la medicina. Pregunten qué pasó con el broche que vale un rescate de rey. La última noche que lo vi con vida, salió del taller solo, tarde, en dirección al Duomo.»
-
-            —— REFERTO DEL FORENSE (extracto) ——
-            «A. Repossi, varón, 52 años. Hallado sin vida en la nave izquierda del Duomo di S.M. Maggiore. Causa: paro cardíaco. Sin signos de violencia. El difunto era conocido por su devoción religiosa y visitaba el Duomo con frecuencia, incluso a horas tardías. Nota: un broche de valor significativo, en proceso en el taller del difunto, no ha sido localizado.»
+            El secretario del Prefecto te entrega dos documentos: una carta anónima y un extracto del referto del forense. Revísalos en tu inventario.
 
             El Duomo está justo aquí, al otro lado de la plaza.
         imageUrl: game-art/murder_church/piazza_1_600x400.webp
