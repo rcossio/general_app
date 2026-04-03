@@ -11,17 +11,42 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Forbidden', code: 'PERMISSION_DENIED' }, { status: 403 })
   }
 
-  const users = await prisma.user.findMany({
-    select: {
-      id: true,
-      email: true,
-      name: true,
-      createdAt: true,
-      userRoles: { select: { role: { select: { slug: true } } } },
-    },
-    orderBy: { createdAt: 'desc' },
-    take: 100,
-  })
+  const { searchParams } = new URL(request.url)
+  const search = searchParams.get('search')?.trim() ?? ''
+  const role = searchParams.get('role')?.trim() ?? ''
+  const page = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10))
+  const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') ?? '20', 10)))
+  const skip = (page - 1) * limit
+
+  const where: Record<string, unknown> = {}
+
+  if (search) {
+    where.OR = [
+      { name: { contains: search, mode: 'insensitive' } },
+      { email: { contains: search, mode: 'insensitive' } },
+    ]
+  }
+
+  if (role) {
+    where.userRoles = { some: { role: { slug: role } } }
+  }
+
+  const [users, total] = await Promise.all([
+    prisma.user.findMany({
+      where,
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        createdAt: true,
+        userRoles: { select: { role: { select: { slug: true } } } },
+      },
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: limit,
+    }),
+    prisma.user.count({ where }),
+  ])
 
   return NextResponse.json({
     data: {
@@ -32,6 +57,9 @@ export async function GET(request: NextRequest) {
         createdAt: u.createdAt,
         roles: u.userRoles.map((ur) => ur.role.slug),
       })),
+      total,
+      page,
+      limit,
     },
   })
 }

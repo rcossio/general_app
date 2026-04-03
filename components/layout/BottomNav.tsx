@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { activeModules } from '@/config/modules'
 import * as Icons from 'lucide-react'
+import { useAuth } from '@/contexts/AuthContext'
 import { useLocale } from '@/contexts/LocaleContext'
 import { useChrome } from '@/contexts/ChromeContext'
 
@@ -15,14 +16,18 @@ const MODULE_NAV_KEYS: Record<string, string> = {
 
 export function BottomNav() {
   const pathname = usePathname()
+  const { user } = useAuth()
   const { t } = useLocale()
   const { hideChrome } = useChrome()
   if (hideChrome) return null
+
+  const isAdmin = user?.roles?.some((r) => ['master_admin', 'admin'].includes(r))
 
   const navItems = [
     { label: t('nav.home'), href: '/', icon: 'Home' },
     ...activeModules.map((m) => ({ ...m.navItem, label: t(MODULE_NAV_KEYS[m.id] ?? 'nav.home') })),
     { label: t('nav.profile'), href: '/profile', icon: 'User' },
+    ...(isAdmin ? [{ label: t('nav.admin'), href: '/admin', icon: 'Shield' }] : []),
   ]
 
   return (
