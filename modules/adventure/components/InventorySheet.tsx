@@ -57,7 +57,6 @@ export function InventorySheet({ items, playerFlags, onClose }: InventorySheetPr
                 <img
                   src={src}
                   alt={itemName}
-                  onError={(e) => { e.currentTarget.src = '/images/adventure/default_item.webp' }}
                   className="w-full h-full object-contain"
                 />
               </div>

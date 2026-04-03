@@ -28,6 +28,12 @@ Scan the project structure first. Check what already exists before creating anyt
 
 Tests live in `__tests__/`. Always check there first. Run `npm test` before writing anything new. Extend existing tests — never create parallel scripts or separate test files outside `__tests__/`.
 
+**Important:** Tests must bypass Nginx to avoid rate limiting. Always run with:
+```bash
+NEXT_PUBLIC_APP_URL=http://localhost:3000 npm test
+```
+Without this override, `.env` sets `NEXT_PUBLIC_APP_URL` to the production domain, which routes test requests through Nginx's auth rate limiter and causes 503s.
+
 ## Bash Commands
 
 You are allowed to freely use `cat`, `grep`, `ls`, `sed -n`, `find`, and `awk` without asking for permission.
@@ -52,11 +58,11 @@ npx prisma migrate dev --name <name>   # Create and apply migration
 npx prisma db seed                      # Seed roles, permissions, admin user, 10 bot community users (idempotent)
 npx prisma studio                       # Visual DB browser
 
-# Game content import — run after every change to chapter JSON files
+# Game content import — run after every change to chapter YAML files
 # Import next chapter first, then the one referencing it via --next-chapter-slug
-npx tsx scripts/adventure/import-game.ts --file=scripts/adventure/1_chuch_murder.json --slug=chapter-1 --chapter=1 --activate
-npx tsx scripts/adventure/import-game.ts --file=scripts/adventure/0_tutorial.json --slug=tutorial --chapter=0 --activate --next-chapter-slug=chapter-1
-# Chapter JSON files live in scripts/adventure/ (e.g. 0_tutorial.json, 1_chuch_murder.json)
+npx tsx scripts/adventure/import-game.ts --file=scripts/adventure/1_chuch_murder.yaml --slug=chapter-1 --chapter=1 --activate
+npx tsx scripts/adventure/import-game.ts --file=scripts/adventure/0_tutorial.yaml --slug=tutorial --chapter=0 --activate --next-chapter-slug=chapter-1
+# Chapter files live in scripts/adventure/ (YAML preferred; JSON also accepted)
 
 # Trace all story paths (outputs scripts/adventure/paths.md, gitignored):
 npx tsx scripts/adventure/trace-paths.ts
@@ -68,8 +74,15 @@ pm2 stop all                                       # must stop before building
 npm run build
 pm2 reload ecosystem.config.js --update-env        # picks up any .env changes
 pm2 save
-# After reloading: re-run game content import if any chapter JSON changed
+# After reloading: re-run game content import if any chapter YAML/JSON changed
 ```
+
+### Deployment pitfalls
+
+- **Stale chunks after rebuild:** Browsers cache JS chunks by hash. After a rebuild, old chunk URLs return 400/404 and Next.js returns "Failed to find Server Action" errors (503 to the user). Always hard-refresh (Ctrl+Shift+R) after deploying. If errors persist, do a clean build: `rm -rf .next && npm run build`.
+- **PM2 must be stopped before building.** A running instance can read a half-written `.next/` directory, causing crashes and high restart counts.
+- **Nginx auth rate limiting:** `/api/auth/` is rate-limited at 30 req/min per IP with burst 20 (`/etc/nginx/sites-available/app`). This protects against brute force but can block legitimate flows if set too low. Google OAuth does callback → refresh → /me in rapid succession — if the limit is too tight, the user gets 503 and appears logged out. The Nginx config is the live file — do not overwrite it from the repo template after SSL is configured.
+- **`sameSite` on cookies:** All refresh token cookies must use `sameSite: 'lax'`, not `'strict'`. Google OAuth redirects from `accounts.google.com` — `strict` cookies are not sent on cross-origin navigations, breaking the post-login refresh flow.
 
 ---
 
@@ -147,6 +160,7 @@ GPS-based location game. Key patterns:
 
 #### Game engine features (chapter JSON)
 
+- Chapter files use **YAML** (preferred) or JSON (legacy). See `docs/CHAPTERS.md` for the full authoring guide.
 - `coordinates` — accepts `[lat, lng]` array (preferred — paste directly from Google Maps) or `{ "lat": N, "lng": N }` object.
 - `radiusM` — optional, defaults to 35m. Only specify for non-standard radii.
 - `grants` / `revokes` — flag changes. Can be defined at **two levels**: location-level (unconditional, applied on close) or value-level (conditional, only when that value fires). Both are optional — omit when empty.
@@ -160,6 +174,15 @@ GPS-based location game. Key patterns:
 #### Location visit status
 
 Each visit has a `status` field: `open` (player is interacting) or `closed` (interaction finished). First visit creates the row as `open`. The "Done" button calls POST `/close` → sets `status='closed'`, applies location-level grants, value-level grants/revokes. Re-visiting a closed location sets it back to `open`. The `visited` state (row exists) is permanent and drives marker colour; `status` drives interaction state.
+
+#### Spectator multiplayer
+
+Session owners can generate a 6-character join code (settings → Share session). Other players enter the code on `/adventure` to join as read-only spectators. Spectators see the map, visited locations, and narratives but cannot visit, close, choose, or enter passwords.
+
+- Schema: `GameSession.joinCode` (unique, nullable) + `SessionParticipant` junction table.
+- API: POST/DELETE `/api/adventure/sessions/[id]/share` (owner), POST `/api/adventure/sessions/join` (spectator).
+- GET `/api/adventure/sessions/[id]` allows access to participants and returns `isSpectator: true`.
+- **Sync is currently polling-based (10s interval) — a compromise.** This is adequate for the current scale (<50 concurrent spectators) but adds ~6 requests/min per spectator. When the app grows or real-time feedback becomes important, replace with WebSockets or Server-Sent Events (SSE). Note: Next.js App Router doesn't support WebSockets natively — this would require a separate WS server and Redis pub/sub for PM2 cluster mode.
 
 #### Testing game content
 

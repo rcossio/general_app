@@ -29,6 +29,7 @@ interface LocationSheetProps {
   onDismiss: () => void
   onFinish: () => void
   visiting: boolean
+  spectator?: boolean
 }
 
 export function LocationSheet({
@@ -48,17 +49,19 @@ export function LocationSheet({
   onDismiss,
   onFinish,
   visiting,
+  spectator = false,
 }: LocationSheetProps) {
   const { t } = useLocale()
   const [passwordInput, setPasswordInput] = useState('')
+  const effectiveLocked = locked && !spectator
 
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
-      if (e.key === 'Escape' && !locked) onDismiss()
+      if (e.key === 'Escape' && !effectiveLocked) onDismiss()
     }
     window.addEventListener('keydown', handleKey)
     return () => window.removeEventListener('keydown', handleKey)
-  }, [onDismiss, locked])
+  }, [onDismiss, effectiveLocked])
 
   function renderNarrative(text: string) {
     const parts = text.split(/\*\*(.+?)\*\*/g)
@@ -68,13 +71,13 @@ export function LocationSheet({
   }
 
   const visited = status !== null
-  const hasChoices = withinRange && status === 'open' && choices && choices.length > 0
-  const showPassword = hasPassword && withinRange && status === 'open'
-  const showFinish = withinRange && status === 'open' && !hasChoices && !showPassword && !visiting && visited
+  const hasChoices = !spectator && withinRange && status === 'open' && choices && choices.length > 0
+  const showPassword = !spectator && hasPassword && withinRange && status === 'open'
+  const showFinish = !spectator && withinRange && status === 'open' && !hasChoices && !showPassword && !visiting && visited
   const src = imageUrl ?? (type === 'event' ? DEFAULT_EVENT_IMAGE : DEFAULT_LOCATION_IMAGE)
 
   return (
-    <div className="absolute inset-0 z-[2000] flex items-end" onClick={locked ? undefined : onDismiss}>
+    <div className="absolute inset-0 z-[2000] flex items-end" onClick={effectiveLocked ? undefined : onDismiss}>
       <div
         className="w-full bg-white dark:bg-gray-900 rounded-t-2xl shadow-2xl border-t border-gray-200 dark:border-gray-700 max-h-[80vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
@@ -109,7 +112,7 @@ export function LocationSheet({
                 </p>
               )}
             </div>
-            {!locked && (
+            {!effectiveLocked && (
               <button
                 onClick={onDismiss}
                 className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400"

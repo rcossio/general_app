@@ -16,6 +16,10 @@ export const closeLocationSchema = z.object({
   locationId: z.string().min(1),
 })
 
+export const joinSessionSchema = z.object({
+  joinCode: z.string().min(1).max(6),
+})
+
 export const createGameSchema = z.object({
   slug: z.string().min(1).max(80).regex(/^[a-z0-9-]+$/, 'slug must be lowercase letters, numbers and hyphens'),
   title: z.record(z.string(), z.string().min(1).max(200)),
