@@ -16,11 +16,12 @@ function exclamationIcon(color: string) {
 
 // [id, dark, light]
 const GRADIENTS: [string, string, string][] = [
-  ['loc-grad-orange', '#f97316', '#ffedd5'],
-  ['loc-grad-red',    '#ef4444', '#fee2e2'],
-  ['loc-grad-gray',   '#9ca3af', '#f3f4f6'],
-  ['loc-grad-green',  '#22c55e', '#dcfce7'],
-  ['loc-grad-blue',   '#3b82f6', '#dbeafe'],
+  ['loc-grad-orange',       '#f97316', '#fed7aa'],  // unvisited location — bright orange
+  ['loc-grad-orange-light', '#fdba74', '#fff7ed'],  // visited — light orange
+  ['loc-grad-red',          '#b91c1c', '#fecaca'],  // unvisited event — dark red-orange
+  ['loc-grad-gray',         '#9ca3af', '#f3f4f6'],
+  ['loc-grad-green',        '#22c55e', '#dcfce7'],
+  ['loc-grad-blue',         '#3b82f6', '#dbeafe'],
 ]
 
 const STROKE: Record<string, string> = Object.fromEntries(
@@ -32,7 +33,7 @@ function GradientDefs() {
   useEffect(() => {
     const raf = requestAnimationFrame(() => {
       const svgEl = map.getPanes().overlayPane?.querySelector('svg')
-      if (!svgEl || svgEl.querySelector('#loc-grad-orange')) return
+      if (!svgEl || svgEl.querySelector('#loc-grad-orange-light')) return
       let defs = svgEl.querySelector('defs')
       if (!defs) {
         defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs')
@@ -82,9 +83,10 @@ interface AdventureMapProps {
   playerPosition: PlayerPosition | null
   onLocationClick: (loc: MapLocation) => void
   nearbyLocationIds: Set<string>
+  recenterKey?: number
 }
 
-function PlayerTracker({ position }: { position: PlayerPosition | null }) {
+function PlayerTracker({ position, recenterKey }: { position: PlayerPosition | null; recenterKey?: number }) {
   const map = useMap()
   const centered = useRef(false)
 
@@ -95,6 +97,12 @@ function PlayerTracker({ position }: { position: PlayerPosition | null }) {
     }
   }, [position, map])
 
+  useEffect(() => {
+    if (recenterKey && position) {
+      map.setView([position.lat, position.lng], 17)
+    }
+  }, [recenterKey]) // eslint-disable-line react-hooks/exhaustive-deps
+
   return null
 }
 
@@ -103,6 +111,7 @@ export default function AdventureMap({
   playerPosition,
   onLocationClick,
   nearbyLocationIds,
+  recenterKey,
 }: AdventureMapProps) {
   const visibleLocations = locations.filter((l) => l.visible)
 
@@ -127,7 +136,7 @@ export default function AdventureMap({
       />
 
       <GradientDefs />
-      <PlayerTracker position={playerPosition} />
+      <PlayerTracker position={playerPosition} recenterKey={recenterKey} />
 
       {playerPosition && (
         <>
@@ -149,9 +158,9 @@ export default function AdventureMap({
         const gradId = isNearby
           ? 'loc-grad-green'
           : loc.visited
-          ? 'loc-grad-gray'
+          ? 'loc-grad-orange-light'
           : loc.type === 'event'
-          ? 'loc-grad-red'
+          ? 'loc-grad-orange'
           : 'loc-grad-orange'
 
         return (

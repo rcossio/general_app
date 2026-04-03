@@ -175,7 +175,7 @@ model GameLocation {
   name        Json
   lat         Float
   lng         Float
-  radiusM     Int    @default(30) @map("radius_m")
+  radiusM     Int    @default(35) @map("radius_m")
   // null | "flag_string" | { and: Condition[] } | { or: Condition[] }
   visibleWhen Json?  @map("visible_when")
   // Array of { when: Condition | null, content: { en, it, es }, completesChapter?: true }
@@ -187,7 +187,9 @@ model GameLocation {
   grants      Json
   // Array of { flag: string } — flags removed from session on visit
   revokes     Json   @default("[]")
-  order       Int    @default(0)
+  order           Int     @default(0)
+  // True on the one location where the player should start (used by fake GPS to teleport)
+  initialLocation Boolean @default(false) @map("initial_location")
 
   game   Game            @relation(fields: [gameId], references: [id], onDelete: Cascade)
   visits LocationVisit[]
@@ -231,6 +233,7 @@ model LocationVisit {
   id         String   @id @default(cuid())
   sessionId  String   @map("session_id")
   locationId String   @map("location_id")
+  status     String   @default("open")
   visitedAt  DateTime @default(now()) @map("visited_at")
 
   session  GameSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)

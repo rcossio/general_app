@@ -18,6 +18,7 @@ import type { MapLocation } from '@/modules/adventure/components/AdventureMap'
 type ResolvedLocation = MapLocation & {
   imageUrl: string | null
   narrative: string | null
+  status: 'open' | 'closed' | null
   choices: { id: string; label: string }[] | null
   hasPassword: boolean
 }
@@ -41,7 +42,7 @@ type I18nString = string | Record<string, string>
 function resolveI18n(value: I18nString | null | undefined, locale: string): string {
   if (!value) return ''
   if (typeof value === 'string') return value
-  return value[locale] ?? value['en'] ?? ''
+  return value[locale] ?? Object.values(value)[0] ?? ''
 }
 
 interface ApiLocationChoice {
@@ -59,9 +60,11 @@ interface ApiLocation {
   imageUrl: string | null
   visible: boolean
   visited: boolean
+  status: string | null
   narrative: I18nString | null
   choices: ApiLocationChoice[] | null
   hasPassword: boolean
+  initialLocation: boolean
 }
 
 interface SessionState {
@@ -85,12 +88,14 @@ interface SessionState {
 
 interface VisitResult {
   narrative: I18nString
+  imageUrl: string | null
   newFlags: string[]
   revokedFlags: string[]
   completesChapter: boolean
   alreadyVisited: boolean
   nextGameId: string | null
   passwordWrong?: boolean
+  shouldRefresh?: boolean
 }
 
 export default function SessionPage({
@@ -113,10 +118,9 @@ function GameMap({ sessionId }: { sessionId: string }) {
 
   const [state, setState] = useState<SessionState | null>(null)
   const [fakeMode, setFakeMode] = useState(false)
-  const { playerPos, gpsError, move } = usePlayerPosition(fakeMode)
+  const { playerPos, gpsError, move, teleport, recenterKey } = usePlayerPosition(fakeMode)
   const [selectedLocation, setSelectedLocation] = useState<ResolvedLocation | null>(null)
   const [visiting, setVisiting] = useState(false)
-  const [visitResult, setVisitResult] = useState<VisitResult | null>(null)
   const [passwordWrong, setPasswordWrong] = useState(false)
   const [loading, setLoading] = useState(true)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -151,6 +155,7 @@ function GameMap({ sessionId }: { sessionId: string }) {
         name: resolveI18n(loc.name, locale),
         imageUrl: loc.imageUrl,
         narrative: loc.narrative ? resolveI18n(loc.narrative, locale) : null,
+        status: loc.status as 'open' | 'closed' | null,
         choices: loc.choices
           ? loc.choices.map((c) => ({ id: c.id, label: resolveI18n(c.label, locale) }))
           : null,
@@ -188,13 +193,11 @@ function GameMap({ sessionId }: { sessionId: string }) {
       if (body.data) {
         if (body.data.passwordWrong) {
           setPasswordWrong(true)
-          // Mark location as visited locally so sheet unlocks for retry
-          setSelectedLocation((prev) => prev ? { ...prev, visited: true } : null)
+          setSelectedLocation((prev) => prev ? { ...prev, status: 'open' as const } : null)
           await loadState(sessionId)
         } else {
           setPasswordWrong(false)
-          setVisitResult(body.data)
-          setSelectedLocation(null)
+          // Refresh state to pick up new flags and re-resolved narratives
           await loadState(sessionId)
         }
       }
@@ -203,18 +206,30 @@ function GameMap({ sessionId }: { sessionId: string }) {
     }
   }
 
-  const handleVisit = () => {
-    if (!selectedLocation || !playerPos) return
-    doVisit(selectedLocation.id, playerPos.lat, playerPos.lng)
-  }
   const handleChoose = (choiceId: string) => {
-    if (!selectedLocation || !playerPos || selectedLocation.visited) return
+    if (!selectedLocation || !playerPos || selectedLocation.status === 'closed') return
     doVisit(selectedLocation.id, playerPos.lat, playerPos.lng, choiceId)
   }
   const handlePassword = (password: string) => {
     if (!selectedLocation || !playerPos) return
     setPasswordWrong(false)
     doVisit(selectedLocation.id, playerPos.lat, playerPos.lng, undefined, password)
+  }
+
+  const handleClose = async () => {
+    if (!selectedLocation) return
+    setVisiting(true)
+    try {
+      await fetchWithAuth(`/api/adventure/sessions/${sessionId}/close`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ locationId: selectedLocation.id }),
+      })
+      await loadState(sessionId)
+      setSelectedLocation(null)
+    } finally {
+      setVisiting(false)
+    }
   }
 
   const distanceToSelected =
@@ -228,7 +243,29 @@ function GameMap({ sessionId }: { sessionId: string }) {
       : false
 
   // Sheet is locked when the location is unvisited and in range — must act, can't dismiss
-  const sheetLocked = withinRange && selectedLocation !== null && !selectedLocation.visited
+  const sheetLocked = withinRange && selectedLocation !== null && selectedLocation.status === null
+
+  // Auto-visit: when sheet opens in range and status isn't already open, fire visit immediately
+  const autoVisitedRef = useRef<Set<string>>(new Set())
+  useEffect(() => {
+    if (!selectedLocation || !playerPos || !withinRange) return
+    if (selectedLocation.status === 'open') return
+    const key = `${selectedLocation.id}:${selectedLocation.status}`
+    if (autoVisitedRef.current.has(key)) return
+    autoVisitedRef.current.add(key)
+    doVisit(selectedLocation.id, playerPos.lat, playerPos.lng)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedLocation?.id, selectedLocation?.status, withinRange])
+
+  // Keep selectedLocation in sync with resolved state after loadState
+  useEffect(() => {
+    if (!selectedLocation || !state) return
+    const updated = resolvedLocations.find((l) => l.id === selectedLocation.id)
+    if (updated) {
+      setSelectedLocation(updated)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state])
 
   // Auto-open sheet for event locations when the player enters their radius
   const autoOpenedEventIds = useRef<Set<string>>(new Set())
@@ -250,7 +287,7 @@ function GameMap({ sessionId }: { sessionId: string }) {
   // Persist pending location to localStorage so the sheet re-opens after app restart
   const pendingKey = `adventure_pending_${sessionId}`
   useEffect(() => {
-    if (selectedLocation && !selectedLocation.visited && withinRange) {
+    if (selectedLocation && selectedLocation.status === null && withinRange) {
       localStorage.setItem(pendingKey, selectedLocation.id)
     } else if (!selectedLocation) {
       localStorage.removeItem(pendingKey)
@@ -262,7 +299,7 @@ function GameMap({ sessionId }: { sessionId: string }) {
     if (!state) return
     const pendingId = localStorage.getItem(pendingKey)
     if (!pendingId) return
-    const loc = resolvedLocations.find((l) => l.id === pendingId && !l.visited)
+    const loc = resolvedLocations.find((l) => l.id === pendingId && l.status === null)
     if (loc) {
       setSelectedLocation(loc)
     } else {
@@ -294,7 +331,7 @@ function GameMap({ sessionId }: { sessionId: string }) {
   const visitedCount = state.session.visitedLocationIds.length
   // Hint bar only for locations (events auto-open the sheet, no hint needed)
   const nearbyLocation = resolvedLocations.find(
-    (l) => nearbyLocationIds.has(l.id) && !l.visited && l.type === 'location'
+    (l) => nearbyLocationIds.has(l.id) && l.status === null && l.type === 'location'
   ) ?? null
 
   return (
@@ -321,26 +358,9 @@ function GameMap({ sessionId }: { sessionId: string }) {
           playerPosition={playerPos}
           onLocationClick={(loc) => setSelectedLocation(loc as ResolvedLocation)}
           nearbyLocationIds={nearbyLocationIds}
+          recenterKey={recenterKey}
         />
       </div>
-
-      {/* Visit result toast — all visits */}
-      {visitResult && (
-        <div
-          className="absolute bottom-14 left-4 right-4 z-[2000] p-4 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-xl"
-          onClick={() => setVisitResult(null)}
-        >
-          <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-            {resolveI18n(visitResult.narrative, locale)}
-          </p>
-          {visitResult.newFlags.length > 0 && (
-            <p className="text-xs text-blue-600 mt-2">
-              {t('adventure.flagsEarned')}: {visitResult.newFlags.join(', ')}
-            </p>
-          )}
-          <p className="text-xs text-gray-400 mt-2 text-right">{t('adventure.tapToDismiss')}</p>
-        </div>
-      )}
 
       {/* Bottom bar */}
       <div className="relative flex items-center justify-between px-6 py-2 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shrink-0 z-10 text-xs text-gray-500">
@@ -458,7 +478,7 @@ function GameMap({ sessionId }: { sessionId: string }) {
       )}
 
       {/* Nearby hint bar — shown when in range but sheet is closed */}
-      {nearbyLocation && !nearbyLocation.visited && !selectedLocation && !visitResult && (
+      {nearbyLocation && nearbyLocation.status === null && !selectedLocation && (
         <div className="absolute bottom-10 left-0 right-0 z-[1500] px-4 pb-2 pt-2">
           <button
             onClick={() => setSelectedLocation(nearbyLocation)}
@@ -479,7 +499,11 @@ function GameMap({ sessionId }: { sessionId: string }) {
       {/* Fake GPS D-pad — outside map container to avoid Leaflet clipping */}
       {fakeMode && (
         <div className="absolute bottom-32 right-4 z-[1500] bg-black/20 rounded-2xl p-1">
-          <FakeGpsDpad move={move} />
+          <FakeGpsDpad
+            move={move}
+            teleport={teleport}
+            startLocation={state?.locations.find((l) => l.initialLocation) ?? null}
+          />
         </div>
       )}
 
@@ -499,17 +523,17 @@ function GameMap({ sessionId }: { sessionId: string }) {
           type={selectedLocation.type}
           imageUrl={selectedLocation.imageUrl}
           narrative={selectedLocation.narrative}
-          visited={selectedLocation.visited}
+          status={selectedLocation.status}
           withinRange={withinRange}
           distance={distanceToSelected}
           choices={selectedLocation.choices}
           hasPassword={selectedLocation.hasPassword}
           passwordWrong={passwordWrong}
           locked={sheetLocked}
-          onVisit={handleVisit}
           onChoose={handleChoose}
           onPassword={handlePassword}
-          onClose={() => { setSelectedLocation(null); setPasswordWrong(false) }}
+          onDismiss={() => { setSelectedLocation(null); setPasswordWrong(false) }}
+          onFinish={handleClose}
           visiting={visiting}
         />
       )}

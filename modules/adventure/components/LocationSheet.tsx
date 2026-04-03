@@ -17,17 +17,17 @@ interface LocationSheetProps {
   type: string
   imageUrl: string | null
   narrative: string | null
-  visited: boolean
+  status: 'open' | 'closed' | null
   withinRange: boolean
   distance: number | null
   choices: LocationChoice[] | null
   hasPassword: boolean
   passwordWrong: boolean
   locked: boolean
-  onVisit: () => void
   onChoose: (choiceId: string) => void
   onPassword: (password: string) => void
-  onClose: () => void
+  onDismiss: () => void
+  onFinish: () => void
   visiting: boolean
 }
 
@@ -36,17 +36,17 @@ export function LocationSheet({
   type,
   imageUrl,
   narrative,
-  visited,
+  status,
   withinRange,
   distance,
   choices,
   hasPassword,
   passwordWrong,
   locked,
-  onVisit,
   onChoose,
   onPassword,
-  onClose,
+  onDismiss,
+  onFinish,
   visiting,
 }: LocationSheetProps) {
   const { t } = useLocale()
@@ -54,18 +54,27 @@ export function LocationSheet({
 
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
-      if (e.key === 'Escape' && !locked) onClose()
+      if (e.key === 'Escape' && !locked) onDismiss()
     }
     window.addEventListener('keydown', handleKey)
     return () => window.removeEventListener('keydown', handleKey)
-  }, [onClose, locked])
+  }, [onDismiss, locked])
 
-  const hasChoices = withinRange && !visited && choices && choices.length > 0
-  const showPassword = hasPassword && withinRange
+  function renderNarrative(text: string) {
+    const parts = text.split(/\*\*(.+?)\*\*/g)
+    return parts.map((part, i) =>
+      i % 2 === 1 ? <strong key={i}>{part}</strong> : part
+    )
+  }
+
+  const visited = status !== null
+  const hasChoices = withinRange && status === 'open' && choices && choices.length > 0
+  const showPassword = hasPassword && withinRange && status === 'open'
+  const showFinish = withinRange && status === 'open' && !hasChoices && !showPassword && !visiting && visited
   const src = imageUrl ?? (type === 'event' ? DEFAULT_EVENT_IMAGE : DEFAULT_LOCATION_IMAGE)
 
   return (
-    <div className="absolute inset-0 z-[2000] flex items-end" onClick={locked ? undefined : onClose}>
+    <div className="absolute inset-0 z-[2000] flex items-end" onClick={locked ? undefined : onDismiss}>
       <div
         className="w-full bg-white dark:bg-gray-900 rounded-t-2xl shadow-2xl border-t border-gray-200 dark:border-gray-700 max-h-[80vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
@@ -102,7 +111,7 @@ export function LocationSheet({
             </div>
             {!locked && (
               <button
-                onClick={onClose}
+                onClick={onDismiss}
                 className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400"
               >
                 <X className="h-4 w-4" />
@@ -117,13 +126,13 @@ export function LocationSheet({
             ) : (
               <>
                 <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-sm mb-4">
-                  {narrative}
+                  {narrative ? renderNarrative(narrative) : null}
                 </p>
                 {passwordWrong ? (
                   <div className="flex flex-col gap-3">
                     <p className="text-red-500 text-sm font-medium">{t('adventure.wrongPassword')}</p>
                     <button
-                      onClick={onClose}
+                      onClick={onDismiss}
                       className="w-full py-3 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold text-sm"
                     >
                       {t('adventure.visitLocation')}
@@ -147,6 +156,12 @@ export function LocationSheet({
                     >
                       {t('adventure.passwordConfirm')}
                     </button>
+                    <button
+                      onClick={onDismiss}
+                      className="w-full py-3 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold text-sm"
+                    >
+                      {t('adventure.keepExploring')}
+                    </button>
                   </div>
                 ) : hasChoices ? (
                   <>
@@ -165,9 +180,9 @@ export function LocationSheet({
                       ))}
                     </div>
                   </>
-                ) : withinRange ? (
+                ) : showFinish ? (
                   <button
-                    onClick={onVisit}
+                    onClick={onFinish}
                     className="w-full py-3 rounded-xl bg-green-600 hover:bg-green-700 text-white font-semibold text-sm"
                   >
                     {t('adventure.visitLocation')}

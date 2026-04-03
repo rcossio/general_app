@@ -1,40 +1,22 @@
 /**
- * Import a game from a JSON file into the database.
+ * Import a game from a YAML or JSON file into the database.
  *
  * Usage:
- *   npx tsx scripts/import-game.ts \
- *     --file=scripts/chapter1.json \
- *     --slug=chapter-1 \
- *     --title="Chapter 1: The Garden" \
- *     --chapter=1 \
+ *   npx tsx scripts/adventure/import-game.ts \
+ *     --file=scripts/adventure/0_tutorial.yaml \
+ *     --slug=tutorial \
+ *     --chapter=0 \
  *     [--description="..."] \
- *     [--next-chapter-slug=chapter-2] \
+ *     [--next-chapter-slug=chapter-1] \
  *     [--activate]
  *
- * The JSON format expected:
- * {
- *   "locations": [
- *     {
- *       "id": "loc_1_start",           // unique within game, used as externalId
- *       "name": "Notice Board",
- *       "coordinates": { "lat": 45.01, "lng": 8.62 },
- *       "visibleWhen": null | "flag" | { "and": [...] } | { "or": [...] },
- *       "values": [
- *         {
- *           "when": null | "flag" | { "and": [...] } | { "or": [...] },
- *           "content": "Narrative text shown to player",
- *           "completesChapter": true   // optional — marks this as the win condition
- *         }
- *       ],
- *       "grants": [{ "flag": "flag_name" }]
- *     }
- *   ]
- * }
+ * Accepts .yaml, .yml, and .json files.
  */
 
 import { PrismaClient } from '@prisma/client'
 import * as fs from 'fs'
 import * as path from 'path'
+import { parse as parseYaml } from 'yaml'
 
 const prisma = new PrismaClient()
 
@@ -52,6 +34,13 @@ function resolveR2(value: MaybeI18n): MaybeI18n {
     resolved[k] = v.startsWith('http') ? v : `${base}/${v}`
   }
   return resolved
+}
+
+function resolveValuesR2(values: unknown): unknown {
+  if (!Array.isArray(values)) return values
+  return values.map((v: Record<string, unknown>) =>
+    v.imageUrl !== undefined ? { ...v, imageUrl: resolveR2(v.imageUrl as MaybeI18n) } : v
+  )
 }
 
 function parseArgs(argv: string[]) {
@@ -87,13 +76,13 @@ async function main() {
   }
 
   const raw = fs.readFileSync(filePath, 'utf-8')
-  const data = JSON.parse(raw) as {
+  const ext = path.extname(filePath).toLowerCase()
+  const data = (ext === '.yaml' || ext === '.yml' ? parseYaml(raw) : JSON.parse(raw)) as {
     title?: Record<string, string>
     items?: Array<{
       id: string
       flag: string
       name: Record<string, string>
-      imageUrl?: string | null
       itemImageUrl?: string | Record<string, string> | null
     }>
     locations: Array<{
@@ -101,12 +90,13 @@ async function main() {
       type?: string
       imageUrl?: string
       name: Record<string, string>
-      coordinates: { lat: number; lng: number }
+      coordinates: [number, number] | { lat: number; lng: number }
       radiusM?: number
       visibleWhen: unknown
       values: unknown
       grants: unknown
       revokes?: unknown
+      initialLocation?: boolean
     }>
   }
 
@@ -116,8 +106,8 @@ async function main() {
   }
 
   const title = data.title
-  if (!title || typeof title !== 'object' || !title['en']) {
-    console.error('JSON must have a "title" object with at least an "en" key')
+  if (!title || typeof title !== 'object' || Object.keys(title).length === 0) {
+    console.error('JSON must have a "title" object with at least one language key')
     process.exit(1)
   }
 
@@ -160,26 +150,39 @@ async function main() {
     },
   })
 
-  const titleEn = (game.title as Record<string, string>)['en'] ?? JSON.stringify(game.title)
+  const titleEn = Object.values(game.title as Record<string, string>)[0] ?? JSON.stringify(game.title)
   console.log(`Game "${titleEn}" (${game.slug}) — id: ${game.id}`)
+
+  // Remove locations that are no longer in the JSON
+  const incomingIds = data.locations.map((l) => l.id)
+  const deleted = await prisma.gameLocation.deleteMany({
+    where: { gameId: game.id, externalId: { notIn: incomingIds } },
+  })
+  if (deleted.count > 0) {
+    console.log(`  Removed ${deleted.count} stale location(s)`)
+  }
 
   // Upsert locations
   for (let i = 0; i < data.locations.length; i++) {
     const loc = data.locations[i]
+    const [lat, lng] = Array.isArray(loc.coordinates)
+      ? loc.coordinates
+      : [loc.coordinates.lat, loc.coordinates.lng]
     await prisma.gameLocation.upsert({
       where: { gameId_externalId: { gameId: game.id, externalId: loc.id } },
       update: {
         type: loc.type ?? 'location',
         imageUrl: (resolveR2(loc.imageUrl) as string | null) ?? null,
         name: loc.name,
-        lat: loc.coordinates.lat,
-        lng: loc.coordinates.lng,
+        lat,
+        lng,
         ...(loc.radiusM !== undefined ? { radiusM: loc.radiusM } : {}),
         visibleWhen: loc.visibleWhen ?? null,
-        values: loc.values as never,
-        grants: loc.grants as never,
+        values: resolveValuesR2(loc.values) as never,
+        grants: (loc.grants ?? []) as never,
         revokes: (loc.revokes ?? []) as never,
         order: i,
+        initialLocation: loc.initialLocation ?? false,
       },
       create: {
         type: loc.type ?? 'location',
@@ -187,17 +190,18 @@ async function main() {
         gameId: game.id,
         externalId: loc.id,
         name: loc.name,
-        lat: loc.coordinates.lat,
-        lng: loc.coordinates.lng,
+        lat,
+        lng,
         ...(loc.radiusM !== undefined ? { radiusM: loc.radiusM } : {}),
         visibleWhen: loc.visibleWhen ?? null,
-        values: loc.values as never,
-        grants: loc.grants as never,
+        values: resolveValuesR2(loc.values) as never,
+        grants: (loc.grants ?? []) as never,
         revokes: (loc.revokes ?? []) as never,
         order: i,
+        initialLocation: loc.initialLocation ?? false,
       },
     })
-    console.log(`  [${i + 1}/${data.locations.length}] ${loc.name.en ?? JSON.stringify(loc.name)} (${loc.id})`)
+    console.log(`  [${i + 1}/${data.locations.length}] ${Object.values(loc.name)[0] ?? loc.id} (${loc.id})`)
   }
 
   if (!game.isActive) {

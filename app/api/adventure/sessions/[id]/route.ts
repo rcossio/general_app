@@ -14,7 +14,6 @@ type Choice = {
 
 type PasswordData = {
   value: string
-  successContent: Record<string, string>
   grants: { flag: string }[]
 }
 
@@ -24,12 +23,13 @@ type LocationValue = {
   completesChapter?: boolean
   choices?: Choice[]
   password?: PasswordData
+  imageUrl?: string | null
 }
 
 function resolveNarrative(
   values: LocationValue[],
   flags: Set<string>
-): { content: Record<string, string>; completesChapter: boolean; choices: { id: string; label: Record<string, string> }[] | null; hasPassword: boolean } {
+): { content: Record<string, string>; completesChapter: boolean; choices: { id: string; label: Record<string, string> }[] | null; hasPassword: boolean; imageUrl: string | null } {
   for (const v of values) {
     if (evaluate(v.when as Condition, flags)) {
       return {
@@ -37,10 +37,11 @@ function resolveNarrative(
         completesChapter: v.completesChapter ?? false,
         choices: v.choices?.map((c) => ({ id: c.id, label: c.label })) ?? null,
         hasPassword: !!v.password,
+        imageUrl: v.imageUrl ?? null,
       }
     }
   }
-  return { content: {}, completesChapter: false, choices: null, hasPassword: false }
+  return { content: {}, completesChapter: false, choices: null, hasPassword: false, imageUrl: null }
 }
 
 export async function GET(request: NextRequest, { params }: Params) {
@@ -65,7 +66,7 @@ export async function GET(request: NextRequest, { params }: Params) {
         },
       },
       flags: { select: { flag: true } },
-      visits: { select: { locationId: true } },
+      visits: { select: { locationId: true, status: true } },
     },
   })
 
@@ -78,15 +79,17 @@ export async function GET(request: NextRequest, { params }: Params) {
 
   const flagSet = new Set(session.flags.map((f) => f.flag))
   const visitedIds = new Set(session.visits.map((v) => v.locationId))
+  const visitStatusMap = new Map(session.visits.map((v) => [v.locationId, v.status]))
 
   const locations = session.game.locations.map((loc) => {
     const visible =
       evaluate(loc.visibleWhen as Condition, flagSet)
     const visited = visitedIds.has(loc.id)
+    const status = visitStatusMap.get(loc.id) ?? null
     const values = loc.values as LocationValue[]
-    const { content: narrative, choices, hasPassword } = visible
+    const { content: narrative, choices, hasPassword, imageUrl: valueImageUrl } = visible
       ? resolveNarrative(values, flagSet)
-      : { content: null, choices: null, hasPassword: false }
+      : { content: null, choices: null, hasPassword: false, imageUrl: null }
 
     return {
       id: loc.id,
@@ -96,13 +99,15 @@ export async function GET(request: NextRequest, { params }: Params) {
       lng: loc.lng,
       radiusM: loc.radiusM,
       type: loc.type,
-      imageUrl: loc.imageUrl ?? null,
+      imageUrl: valueImageUrl ?? loc.imageUrl ?? null,
       visible,
       visited,
+      status,
       narrative: narrative ?? null,
-      // Only show choices for locations not yet visited — once visited the choice is final
-      choices: visited ? null : (choices ?? null),
+      // Show choices when status is not 'closed' (interaction still open)
+      choices: status === 'closed' ? null : (choices ?? null),
       hasPassword,
+      initialLocation: loc.initialLocation,
     }
   })
 

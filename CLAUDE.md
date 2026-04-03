@@ -49,16 +49,20 @@ npx vitest run __tests__/auth.test.ts   # Run a single test file
 
 # Database
 npx prisma migrate dev --name <name>   # Create and apply migration
-npx prisma db seed                      # Seed roles, permissions, admin user
+npx prisma db seed                      # Seed roles, permissions, admin user, 10 bot community users (idempotent)
 npx prisma studio                       # Visual DB browser
 
 # Game content import — run after every change to chapter JSON files
-npx tsx scripts/adventure/import-game.ts --file=scripts/adventure/chapter1.json --slug=chapter-1 --chapter=1 --activate
-# When linking chapters (import next chapter first, then current referencing it):
-npx tsx scripts/adventure/import-game.ts --file=scripts/adventure/chapter2.json --slug=chapter-2 --chapter=2 --activate --next-chapter-slug=chapter-3
+# Import next chapter first, then the one referencing it via --next-chapter-slug
+npx tsx scripts/adventure/import-game.ts --file=scripts/adventure/1_chuch_murder.json --slug=chapter-1 --chapter=1 --activate
+npx tsx scripts/adventure/import-game.ts --file=scripts/adventure/0_tutorial.json --slug=tutorial --chapter=0 --activate --next-chapter-slug=chapter-1
+# Chapter JSON files live in scripts/adventure/ (e.g. 0_tutorial.json, 1_chuch_murder.json)
+
+# Trace all story paths (outputs scripts/adventure/paths.md, gitignored):
+npx tsx scripts/adventure/trace-paths.ts
 
 # Production — no deploy script. Run in order on the server:
-npm install                                        # if dependencies changed
+npm install                                        # if dependencies changed — never use npm ci (causes SIGBUS on low-memory VPS)
 npx prisma migrate deploy                          # if schema changed
 pm2 stop all                                       # must stop before building
 npm run build
@@ -79,8 +83,17 @@ Features are pluggable. Each module has a manifest (`modules/<name>/manifest.ts`
 
 - **Life Tracker** and **Adventure** are active.
 - **Workout** is disabled: import commented in `config/modules.ts`, routes return 403, DB tables intact.
+- **Events** is disabled: import commented in `config/modules.ts`.
 
 To disable a module: comment out its import in `config/modules.ts` and prefix its folders with `_` in `app/`, `app/api/`, and `__tests__/`. Its nav item disappears and RBAC blocks its routes automatically. Tables stay intact. To re-enable: reverse both steps and run `npx prisma migrate dev`.
+
+To add a new module:
+1. Create `modules/<name>/manifest.ts` and `modules/<name>/lib/schemas.ts`
+2. Write the manifest (`id`, `name`, `isActive`, `navItem: { label, href, icon }`, `permissions: string[]`, `apiPrefix: string`)
+3. Add Prisma models to `prisma/schema.prisma`
+4. Register in `config/modules.ts`
+5. Add pages under `app/<name>/` and API routes under `app/api/<name>/`
+6. Run `npx prisma migrate dev --name add_<name>_module`
 
 ### Auth
 
@@ -89,6 +102,7 @@ To disable a module: comment out its import in `config/modules.ts` and prefix it
 - Fetch wrapper auto-refreshes on 401 and retries once.
 - `lib/auth.ts` — token signing/verification, password hashing.
 - `lib/permissions.ts` — `requirePermission(request, resource, action)` RBAC middleware. `master_admin` and `admin` bypass all checks.
+- Permissions follow `resource:action` format — e.g. `tracker:create`, `adventure:play`. Seeded automatically from `activeModules[].permissions`.
 
 ### API Design
 
@@ -98,6 +112,17 @@ To disable a module: comment out its import in `config/modules.ts` and prefix it
 - List endpoints support `?page=1&limit=20`.
 - Never query without `WHERE` on an indexed column in list endpoints.
 - Use Prisma `select` — never return full rows when only a subset is displayed.
+
+### Life Tracker Module
+
+Endpoints:
+- `GET /api/tracker/entries` — list my entries (paginated, `?type=EMOTION`)
+- `POST /api/tracker/entries` — create entry
+- `GET /api/tracker/entries/public` — public community feed (no auth required, `isPublic=true` only, limit capped at 100)
+- `GET /api/tracker/entries/[id]` — get single entry
+- `PUT /api/tracker/entries/[id]` — update entry
+- `DELETE /api/tracker/entries/[id]` — delete entry
+- `GET /api/tracker/stats` — score averages by type, cached 60s per user
 
 ### Adventure Module
 
@@ -109,21 +134,32 @@ GPS-based location game. Key patterns:
 - `LocationSheet` auto-calls the visit endpoint on mount (no separate "Visit" button) — grants and narrative apply as soon as the player reaches the location.
 - **iOS Safari critical:** All overlays on the map page use `absolute` positioning inside a `relative` parent. Never use `position: fixed` or React portals — they get clipped by the Leaflet map container.
 - **Leaflet mobile taps:** Do not add `Tooltip` to markers — Leaflet's internal tap plugin intercepts touch events and makes markers unclickable on iOS. Use `eventHandlers={{ click: () => handler() }}` on `CircleMarker` only.
-- CircleMarker colors: orange = unvisited location, red = unvisited event, gray = visited, green = in range.
-- Multilingual game content (`title`, `name`, `values[].content`) is returned as raw `{ en, it, es }` objects from the API. Resolve to a string on the client with `resolveI18n(value, locale)` (falls back to `en`). Use `useMemo([state, locale])` so it re-resolves on language change without a refetch.
+- CircleMarker colors: dark orange = unvisited location or event, light orange = visited, green = in range.
+- Multilingual game content (`title`, `name`, `values[].content`) is returned as raw `{ locale: string }` objects from the API. No language is required — define only the languages you have. Resolve to a string on the client with `resolveI18n(value, locale)` (falls back to first available key). Use `useMemo([state, locale])` so it re-resolves on language change without a refetch.
+- **Platform chrome hiding:** the session page calls `setHideChrome(true)` via `ChromeContext` on mount (and cleans up on unmount). Nav components read `hideChrome` from `ChromeContext` to render null — not a pathname check.
+- **Pending location persistence:** if a player closes the app while standing in an unvisited location's radius, the location id is saved to `localStorage` under `adventure_pending_<sessionId>` and the sheet re-opens on next load.
+- Bottom bar: back arrow, visited/visible count, refresh, **inventory (backpack)**, settings gear.
 
 #### Location types
 
 - `type: "location"` (default) — shown as orange circle; player taps hint bar or marker to open sheet.
-- `type: "event"` — shown as red circle; sheet opens **automatically** when player enters radius; cannot be skipped.
+- `type: "event"` — shown as orange circle (same as location); sheet opens **automatically** when player enters radius; cannot be skipped.
 
 #### Game engine features (chapter JSON)
 
-- `grants` / `revokes` — unconditional flag changes on first visit (location root, use `[]` if none).
-- `values[].grants` / `values[].revokes` — conditional flag changes that only apply when that specific value entry fires. Use this instead of location-level when the effect depends on which narrative matched (e.g. an event that only revokes a flag when the player has a companion).
-- `values[].choices` — decision buttons; player must pick one; each choice has `id`, `label`, `outcome`, `grants`. A value with `choices` cannot also have `password`.
-- `values[].password` — locks location behind a code; has `value`, `successContent`, `grants`. Wrong password marks visited but allows retry; correct code grants flags and removes input.
-- `imageUrl` on location — URL shown at top of sheet; omit for default image.
+- `coordinates` — accepts `[lat, lng]` array (preferred — paste directly from Google Maps) or `{ "lat": N, "lng": N }` object.
+- `radiusM` — optional, defaults to 35m. Only specify for non-standard radii.
+- `grants` / `revokes` — flag changes. Can be defined at **two levels**: location-level (unconditional, applied on close) or value-level (conditional, only when that value fires). Both are optional — omit when empty.
+- `values[].completesChapter` — set to `true` on the value that ends the chapter; triggers the completion banner and links to the next chapter if one is set.
+- `values[].choices` — decision buttons; player must pick one; each choice has `id`, `label`, `grants`. Uses a **callback flag pattern**: each choice grants a temporary callback flag, a separate value entry above matches it to show the outcome text, and the close endpoint revokes the callback flag. A value with `choices` cannot also have `password`.
+- `values[].password` — locks location behind a code; has `value`, `grants`. Uses the same **callback flag pattern** as choices: correct password grants a callback flag, a separate value entry above shows the success content. Wrong password allows retry.
+- `initialLocation` on location — marks the chapter starting point; in Fake GPS mode, a Start button teleports the player near this location. Only one per chapter.
+- `imageUrl` — can appear at location-level (default image) or value-level (overrides per state). Relative R2 key (e.g. `"game-art/foo.webp"`); resolved to full URL at import time via `NEXT_PUBLIC_R2_PUBLIC_URL`. Omit for default image.
+- `items` (chapter root) — array of inventory items; each has `id`, `flag`, `name` (multilingual), `imageUrl`, `itemImageUrl` (multilingual — can be locale-specific image path). An item appears in the player's inventory when they hold the matching flag. Stored as JSONB on the `games` table.
+
+#### Location visit status
+
+Each visit has a `status` field: `open` (player is interacting) or `closed` (interaction finished). First visit creates the row as `open`. The "Done" button calls POST `/close` → sets `status='closed'`, applies location-level grants, value-level grants/revokes. Re-visiting a closed location sets it back to `open`. The `visited` state (row exists) is permanent and drives marker colour; `status` drives interaction state.
 
 #### Testing game content
 
@@ -132,6 +168,8 @@ Settings → Fake GPS enables a D-pad for simulating player movement on desktop/
 ### i18n
 
 Custom `LocaleContext` (no library). Locales: `en`, `it`, `es`. `locales/en.ts` exports the authoritative `Translations` type — all other locales must implement it exactly (missing keys = TypeScript error). Hook: `useLocale()` → `{ t, locale, setLocale }`.
+
+To add a new language: (1) create `locales/<code>.ts` implementing `Translations`; (2) add the code to the `Locale` union type in `locales/index.ts`; (3) add an entry to the `LOCALES` array there; (4) add the import and entry to the `translations` map in `locales/index.ts`.
 
 ### Prisma Schema Conventions
 
@@ -149,3 +187,4 @@ Custom `LocaleContext` (no library). Locales: `en`, `it`, `es`. `locales/en.ts` 
 - Global setup: `__tests__/setup/global.ts` (seed test DB).
 - Per-test isolation: `__tests__/setup/each.ts`.
 - Helpers in `__tests__/helpers.ts`: `registerAndLogin`, `authHeaders`, `uniqueEmail`.
+- Current test files: `auth.test.ts`, `rbac.test.ts` (tracker and workout tests were removed; extend these or add new files in `__tests__/` as needed).

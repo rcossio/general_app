@@ -23,7 +23,7 @@ interface Game {
 }
 
 function resolveI18n(value: Record<string, string>, locale: string): string {
-  return value[locale] ?? value['en'] ?? ''
+  return value[locale] ?? Object.values(value)[0] ?? ''
 }
 
 export default function AdventurePage() {

@@ -140,6 +140,7 @@ const es: Translations = {
     fakeGpsActive: 'GPS falso activo — usa WASD o flechas',
     passwordPrompt: 'Introduce la contraseña',
     passwordConfirm: 'Confirmar',
+    keepExploring: 'Seguir explorando',
     wrongPassword: 'Contraseña incorrecta. Sigue explorando.',
     inventory: 'Inventario',
     inventoryEmpty: 'Tu inventario está vacío.',
