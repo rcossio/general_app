@@ -153,6 +153,7 @@ function GameMap({ sessionId }: { sessionId: string }) {
 
   const isSpectator = state?.isSpectator ?? false
   const isAdmin = user?.roles?.some((r: string) => ['master_admin', 'admin'].includes(r)) ?? false
+  const canUseFakeGps = isAdmin || (user?.permissions?.includes('adventure:tester') ?? false)
 
   // Spectators poll every 5s to stay in sync with the owner
   useEffect(() => {
@@ -372,7 +373,7 @@ function GameMap({ sessionId }: { sessionId: string }) {
     <div className="relative flex flex-col" style={{ height: '100dvh' }}>
 
       {/* Fake GPS active banner */}
-      {fakeMode && isAdmin && (
+      {fakeMode && canUseFakeGps && (
         <div className="px-4 py-2 bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 text-xs border-b border-amber-200 dark:border-amber-800 shrink-0 flex items-center justify-between gap-4">
           <span>{t('adventure.fakeGpsActive')}</span>
         </div>
@@ -520,7 +521,7 @@ function GameMap({ sessionId }: { sessionId: string }) {
                 )}
 
                 {/* Fake GPS — admin/master_admin only */}
-                {!isSpectator && isAdmin && (
+                {!isSpectator && canUseFakeGps && (
                   <button
                     onClick={() => { setFakeMode((v) => !v); setMenuOpen(false) }}
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium mb-1 ${fakeMode ? 'bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300' : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'}`}
@@ -603,7 +604,7 @@ function GameMap({ sessionId }: { sessionId: string }) {
       )}
 
       {/* Fake GPS D-pad — outside map container to avoid Leaflet clipping */}
-      {fakeMode && isAdmin && (
+      {fakeMode && canUseFakeGps && (
         <div className="absolute bottom-32 right-4 z-[1500] bg-black/20 rounded-2xl p-1">
           <FakeGpsDpad
             move={move}

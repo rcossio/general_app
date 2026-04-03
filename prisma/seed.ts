@@ -39,16 +39,14 @@ async function main() {
     })
   }
 
-  // Assign all permissions to master_admin and admin
+  // Assign permissions to roles
   const masterAdmin = await prisma.role.findUniqueOrThrow({ where: { slug: 'master_admin' } })
   const admin = await prisma.role.findUniqueOrThrow({ where: { slug: 'admin' } })
   const user = await prisma.role.findUniqueOrThrow({ where: { slug: 'user' } })
   const botUser = await prisma.role.findUniqueOrThrow({ where: { slug: 'bot_user' } })
   const allPermissions = await prisma.permission.findMany()
 
-  // Actions restricted to admins only
-  const adminOnlyActions = ['manage', 'delete_any']
-
+  // master_admin and admin get all permissions
   for (const permission of allPermissions) {
     for (const role of [masterAdmin, admin]) {
       await prisma.rolePermission.upsert({
@@ -57,14 +55,30 @@ async function main() {
         create: { roleId: role.id, permissionId: permission.id },
       })
     }
-    if (!adminOnlyActions.includes(permission.action)) {
-      for (const r of [user, botUser]) {
-        await prisma.rolePermission.upsert({
-          where: { roleId_permissionId: { roleId: r.id, permissionId: permission.id } },
-          update: {},
-          create: { roleId: r.id, permissionId: permission.id },
-        })
-      }
+  }
+
+  // Explicit allowlist for user and bot_user — new permissions default to admin-only
+  const userAllowlist = [
+    'adventure:play',
+    'tracker:read',
+    'tracker:create',
+    'tracker:update',
+    'tracker:delete',
+  ]
+
+  // Clear old user/bot_user role_permissions and re-assign from allowlist
+  await prisma.rolePermission.deleteMany({
+    where: { roleId: { in: [user.id, botUser.id] } },
+  })
+
+  for (const permStr of userAllowlist) {
+    const [resource, action] = permStr.split(':')
+    const perm = allPermissions.find((p) => p.resource === resource && p.action === action)
+    if (!perm) continue
+    for (const r of [user, botUser]) {
+      await prisma.rolePermission.create({
+        data: { roleId: r.id, permissionId: perm.id },
+      })
     }
   }
 

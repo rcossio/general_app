@@ -23,6 +23,7 @@ model User {
   updatedAt    DateTime @updatedAt @map("updated_at")
 
   userRoles             UserRole[]
+  userPermissions       UserPermission[]
   refreshTokens         RefreshToken[]
   workoutRoutines       WorkoutRoutine[]
   trackerEntries        TrackerEntry[]
@@ -50,6 +51,7 @@ model Permission {
   action   String
 
   rolePermissions RolePermission[]
+  userPermissions UserPermission[]
 
   @@unique([resource, action])
   @@map("permissions")
@@ -79,6 +81,19 @@ model RolePermission {
   @@index([roleId])
   @@index([permissionId])
   @@map("role_permissions")
+}
+
+model UserPermission {
+  userId       String @map("user_id")
+  permissionId String @map("permission_id")
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([userId, permissionId])
+  @@index([userId])
+  @@index([permissionId])
+  @@map("user_permissions")
 }
 
 model RefreshToken {

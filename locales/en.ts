@@ -108,6 +108,9 @@ const en = {
     deleteUserConfirm: 'Type "{name}" to confirm deletion',
     deleteUserWarning: 'This will permanently delete the user and all their data.',
     cannotDeleteSelf: 'You cannot delete your own account.',
+    directPermissions: 'Direct permissions',
+    grantPermission: 'Grant permission...',
+    noDirectPermissions: 'None',
   },
   adventure: {
     title: 'Adventure',

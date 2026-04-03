@@ -116,6 +116,22 @@ To add a new module:
 - `lib/auth.ts` — token signing/verification, password hashing.
 - `lib/permissions.ts` — `requirePermission(request, resource, action)` RBAC middleware. `master_admin` and `admin` bypass all checks.
 - Permissions follow `resource:action` format — e.g. `tracker:create`, `adventure:play`. Seeded automatically from `activeModules[].permissions`.
+- **Two permission paths:** role-based (`role_permissions` — assigned to a role, inherited by all users with that role) and direct (`user_permissions` — granted to a specific user by an admin). `requirePermission` checks both. The `/me` endpoint returns the merged flat list.
+- **Role → permission mapping** (seeded by `prisma/seed.ts`). Uses an **explicit allowlist** — new permissions added to a module manifest default to admin-only until explicitly added to the `userAllowlist` array in the seed:
+
+  | Role | Permissions |
+  |---|---|
+  | `master_admin` | All (bypasses checks entirely) |
+  | `admin` | All (bypasses checks entirely) |
+  | `user` | `adventure:play`, `tracker:read`, `tracker:create`, `tracker:update`, `tracker:delete` |
+  | `bot_user` | Same as `user` |
+  | `moderator` | None assigned |
+
+  To grant a new permission to regular users: add it to `userAllowlist` in `prisma/seed.ts` and re-seed.
+
+- **Direct permissions** (`user_permissions` table) are for granting specific capabilities to individual users without changing their role — e.g. `adventure:tester` enables fake GPS for a non-admin user. Managed via the admin panel. These are checked by `requirePermission()` alongside role-based permissions.
+- **Data ownership:** All user-facing endpoints filter by `userId` from the JWT (`result.user.sub`). The permission controls feature access; the `userId` filter ensures users can only read/modify their own data. This is the security boundary — never remove the `userId` filter from a query.
+- **Privacy principle (future — tiered access):** Private data (e.g. tracker entries with `isPublic: false`) must never be visible to admins. Only the owner can see their private entries. If an admin moderation tool is built later, it should use tiered access: admins see metadata and public entries only, master_admin can access private content only through an audit-logged interface where every access is recorded and visible to the user.
 
 ### API Design
 

@@ -5,16 +5,21 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useLocale } from '@/contexts/LocaleContext'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
 import { useRouter } from 'next/navigation'
-import { Search, ChevronLeft, ChevronRight, ChevronDown, Trash2 } from 'lucide-react'
+import { Search, ChevronLeft, ChevronRight, ChevronDown, Trash2, X } from 'lucide-react'
+import { activeModules } from '@/config/modules'
 
 interface AdminUser {
   id: string
   email: string
   name: string
   roles: string[]
+  directPermissions: string[]
 }
 
 const ROLES = ['user', 'moderator', 'admin', 'master_admin', 'bot_user']
+
+// All grantable permissions from active modules (e.g. "adventure:tester")
+const ALL_PERMISSIONS = activeModules.flatMap((m) => m.permissions)
 
 function roleBadgeClass(role: string): string {
   switch (role) {
@@ -87,6 +92,32 @@ function AdminPanel() {
     setUsers((prev) =>
       prev.map((u) =>
         u.id === userId ? { ...u, roles: Array.from(new Set([...u.roles, role])) } : u
+      )
+    )
+  }
+
+  const grantPermission = async (userId: string, permission: string) => {
+    await fetchWithAuth('/api/admin/users/permissions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, permission }),
+    })
+    setUsers((prev) =>
+      prev.map((u) =>
+        u.id === userId ? { ...u, directPermissions: Array.from(new Set([...u.directPermissions, permission])) } : u
+      )
+    )
+  }
+
+  const revokePermission = async (userId: string, permission: string) => {
+    await fetchWithAuth('/api/admin/users/permissions', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, permission }),
+    })
+    setUsers((prev) =>
+      prev.map((u) =>
+        u.id === userId ? { ...u, directPermissions: u.directPermissions.filter((p) => p !== permission) } : u
       )
     )
   }
@@ -185,6 +216,35 @@ function AdminPanel() {
                           <option value="">{t('admin.addRole')}</option>
                           {ROLES.filter((r) => !u.roles.includes(r)).map((r) => (
                             <option key={r} value={r}>{r}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Direct permissions */}
+                      <div>
+                        <span className="text-xs text-gray-500">{t('admin.directPermissions')}:</span>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {u.directPermissions.length === 0 ? (
+                            <span className="text-xs text-gray-400 italic">{t('admin.noDirectPermissions')}</span>
+                          ) : (
+                            u.directPermissions.map((p) => (
+                              <span key={p} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-green-100 dark:bg-green-950 text-green-700 dark:text-green-300">
+                                {p}
+                                <button onClick={() => revokePermission(u.id, p)} className="hover:text-red-500">
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </span>
+                            ))
+                          )}
+                        </div>
+                        <select
+                          defaultValue=""
+                          onChange={(e) => { if (e.target.value) grantPermission(u.id, e.target.value) }}
+                          className="mt-2 text-sm px-2 py-1 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800"
+                        >
+                          <option value="">{t('admin.grantPermission')}</option>
+                          {ALL_PERMISSIONS.filter((p) => !u.directPermissions.includes(p)).map((p) => (
+                            <option key={p} value={p}>{p}</option>
                           ))}
                         </select>
                       </div>

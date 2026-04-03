@@ -36,6 +36,11 @@ export async function GET(request: NextRequest) {
             },
           },
         },
+        userPermissions: {
+          select: {
+            permission: { select: { resource: true, action: true } },
+          },
+        },
       },
     })
 
@@ -47,11 +52,15 @@ export async function GET(request: NextRequest) {
     }
 
     const roles = user.userRoles.map((ur) => ur.role.slug)
-    const permissions = user.userRoles.flatMap((ur) =>
+    const rolePermissions = user.userRoles.flatMap((ur) =>
       ur.role.rolePermissions.map(
         (rp) => `${rp.permission.resource}:${rp.permission.action}`
       )
     )
+    const directPermissions = user.userPermissions.map(
+      (up) => `${up.permission.resource}:${up.permission.action}`
+    )
+    const permissions = [...rolePermissions, ...directPermissions]
 
     return NextResponse.json({
       data: {

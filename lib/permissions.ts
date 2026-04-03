@@ -22,8 +22,8 @@ export async function requirePermission(
     return { user }
   }
 
-  // Check DB for specific permission
-  const userWithRoles = await prisma.user.findUnique({
+  // Check DB for specific permission (role-based OR direct user-permission)
+  const userWithPerms = await prisma.user.findUnique({
     where: { id: user.sub },
     select: {
       userRoles: {
@@ -40,16 +40,25 @@ export async function requirePermission(
           },
         },
       },
+      userPermissions: {
+        select: {
+          permission: { select: { resource: true, action: true } },
+        },
+      },
     },
   })
 
-  const hasPermission = userWithRoles?.userRoles.some((ur) =>
+  const hasRolePerm = userWithPerms?.userRoles.some((ur) =>
     ur.role.rolePermissions.some(
       (rp) => rp.permission.resource === resource && rp.permission.action === action
     )
   )
 
-  if (!hasPermission) {
+  const hasDirectPerm = userWithPerms?.userPermissions.some(
+    (up) => up.permission.resource === resource && up.permission.action === action
+  )
+
+  if (!hasRolePerm && !hasDirectPerm) {
     return NextResponse.json(
       { error: 'Forbidden', code: 'PERMISSION_DENIED' },
       { status: 403 }

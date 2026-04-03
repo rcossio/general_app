@@ -12,6 +12,7 @@ const adventureManifest: ModuleManifest = {
   permissions: [
     'adventure:play',
     'adventure:manage',
+    'adventure:tester',
   ],
   apiPrefix: '/api/adventure',
   testEndpoint: '/api/adventure/games',

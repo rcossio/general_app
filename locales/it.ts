@@ -110,6 +110,9 @@ const it: Translations = {
     deleteUserConfirm: 'Scrivi "{name}" per confermare l\'eliminazione',
     deleteUserWarning: 'Questo eliminerà permanentemente l\'utente e tutti i suoi dati.',
     cannotDeleteSelf: 'Non puoi eliminare il tuo account.',
+    directPermissions: 'Permessi diretti',
+    grantPermission: 'Concedi permesso...',
+    noDirectPermissions: 'Nessuno',
   },
   adventure: {
     title: 'Avventura',
