@@ -52,11 +52,11 @@ npx prisma migrate dev --name <name>   # Create and apply migration
 npx prisma db seed                      # Seed roles, permissions, admin user, 10 bot community users (idempotent)
 npx prisma studio                       # Visual DB browser
 
-# Game content import — run after every change to chapter JSON files
+# Game content import — run after every change to chapter YAML files
 # Import next chapter first, then the one referencing it via --next-chapter-slug
-npx tsx scripts/adventure/import-game.ts --file=scripts/adventure/1_chuch_murder.json --slug=chapter-1 --chapter=1 --activate
-npx tsx scripts/adventure/import-game.ts --file=scripts/adventure/0_tutorial.json --slug=tutorial --chapter=0 --activate --next-chapter-slug=chapter-1
-# Chapter JSON files live in scripts/adventure/ (e.g. 0_tutorial.json, 1_chuch_murder.json)
+npx tsx scripts/adventure/import-game.ts --file=scripts/adventure/1_chuch_murder.yaml --slug=chapter-1 --chapter=1 --activate
+npx tsx scripts/adventure/import-game.ts --file=scripts/adventure/0_tutorial.yaml --slug=tutorial --chapter=0 --activate --next-chapter-slug=chapter-1
+# Chapter files live in scripts/adventure/ (YAML preferred; JSON also accepted)
 
 # Trace all story paths (outputs scripts/adventure/paths.md, gitignored):
 npx tsx scripts/adventure/trace-paths.ts
@@ -68,7 +68,7 @@ pm2 stop all                                       # must stop before building
 npm run build
 pm2 reload ecosystem.config.js --update-env        # picks up any .env changes
 pm2 save
-# After reloading: re-run game content import if any chapter JSON changed
+# After reloading: re-run game content import if any chapter YAML/JSON changed
 ```
 
 ---
@@ -147,6 +147,7 @@ GPS-based location game. Key patterns:
 
 #### Game engine features (chapter JSON)
 
+- Chapter files use **YAML** (preferred) or JSON (legacy). See `docs/CHAPTERS.md` for the full authoring guide.
 - `coordinates` — accepts `[lat, lng]` array (preferred — paste directly from Google Maps) or `{ "lat": N, "lng": N }` object.
 - `radiusM` — optional, defaults to 35m. Only specify for non-standard radii.
 - `grants` / `revokes` — flag changes. Can be defined at **two levels**: location-level (unconditional, applied on close) or value-level (conditional, only when that value fires). Both are optional — omit when empty.
