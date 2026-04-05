@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server'
 import { randomBytes } from 'crypto'
+import { env } from '@/lib/env'
 
 export async function GET() {
   const state = randomBytes(32).toString('hex')
 
   const params = new URLSearchParams({
-    client_id: process.env.GOOGLE_CLIENT_ID!,
-    redirect_uri: `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/google/callback`,
+    client_id: env.GOOGLE_CLIENT_ID!,
+    redirect_uri: `${env.NEXT_PUBLIC_APP_URL}/api/auth/google/callback`,
     response_type: 'code',
     scope: 'openid email profile',
     access_type: 'offline',

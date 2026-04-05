@@ -160,6 +160,11 @@ function LoginForm() {
             {loading ? t('auth.signingIn') : t('auth.signIn')}
           </button>
         </form>
+        <p className="mt-4 text-center">
+          <Link href="/forgot-password" className="text-sm text-blue-600 hover:underline">
+            {t('auth.forgotPassword')}
+          </Link>
+        </p>
       </div>
     </div>
   )

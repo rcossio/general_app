@@ -129,6 +129,13 @@ See `.env.example` for the full list. Required before first run:
 | `R2_BUCKET_NAME` | R2 bucket name |
 | `NEXT_PUBLIC_R2_PUBLIC_URL` | Public URL for R2 bucket |
 
+Optional (for email — password reset):
+
+| Variable | Description |
+|---|---|
+| `RESEND_API_KEY` | Resend API key (resend.com) |
+| `RESEND_FROM_EMAIL` | Sender address, e.g. `noreply@yourdomain.com` — domain must be verified in Resend |
+
 Optional (for tests):
 
 | Variable | Description |

@@ -3,12 +3,13 @@ import { prisma } from '@/lib/prisma'
 import { signAccessToken, signRefreshToken, storeRefreshToken } from '@/lib/auth'
 import { audit } from '@/lib/audit'
 import { randomBytes } from 'crypto'
+import { env } from '@/lib/env'
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const code = searchParams.get('code')
   const state = searchParams.get('state')
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL!
+  const appUrl = env.NEXT_PUBLIC_APP_URL
 
   if (!code) {
     return NextResponse.redirect(`${appUrl}/login?error=google_cancelled`)
@@ -27,8 +28,8 @@ export async function GET(request: NextRequest) {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
         code,
-        client_id: process.env.GOOGLE_CLIENT_ID!,
-        client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+        client_id: env.GOOGLE_CLIENT_ID!,
+        client_secret: env.GOOGLE_CLIENT_SECRET!,
         redirect_uri: `${appUrl}/api/auth/google/callback`,
         grant_type: 'authorization_code',
       }),
