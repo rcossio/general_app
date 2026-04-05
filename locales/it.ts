@@ -15,6 +15,7 @@ const it: Translations = {
     communityTitle: 'Community',
     ctaTitle: 'Pronto a esplorare?',
     ctaButton: 'Inizia la tua avventura',
+    footer: 'Un gioco di avventura GPS per Valenza.',
   },
   common: {
     loading: 'Caricamento...',
@@ -56,6 +57,9 @@ const it: Translations = {
     completeProfile: 'Completa il tuo profilo',
     whatsYourName: 'Come ti chiami?',
     continueButton: 'Continua',
+    acceptPrivacy: 'Ho letto e accetto la',
+    privacyPolicy: 'Privacy Policy',
+    privacyRequired: 'Devi accettare la privacy policy per continuare',
   },
   nav: {
     home: 'Home',
@@ -76,6 +80,10 @@ const it: Translations = {
     email: 'Email',
     roles: 'Ruoli',
     language: 'Lingua',
+    deleteAccount: 'Elimina account',
+    deleteAccountConfirm: 'Scrivi "{name}" per confermare',
+    deleteAccountWarning: 'Il tuo account verrà disattivato immediatamente e cancellato definitivamente dopo 30 giorni. Questa azione non può essere annullata.',
+    accountDeleted: 'Account disattivato. Verrà eliminato definitivamente tra 30 giorni.',
   },
   dashboard: {
     welcomeBack: 'Bentornato/a, {name}',

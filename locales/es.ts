@@ -15,6 +15,7 @@ const es: Translations = {
     communityTitle: 'Comunidad',
     ctaTitle: '¿Listo para explorar?',
     ctaButton: 'Comienza tu aventura',
+    footer: 'Un juego de aventura GPS para Valenza.',
   },
   common: {
     loading: 'Cargando...',
@@ -56,6 +57,9 @@ const es: Translations = {
     completeProfile: 'Completa tu perfil',
     whatsYourName: 'Como te llamas?',
     continueButton: 'Continuar',
+    acceptPrivacy: 'He leído y acepto la',
+    privacyPolicy: 'Política de Privacidad',
+    privacyRequired: 'Debes aceptar la política de privacidad para continuar',
   },
   nav: {
     home: 'Inicio',
@@ -76,6 +80,10 @@ const es: Translations = {
     email: 'Correo electrónico',
     roles: 'Roles',
     language: 'Idioma',
+    deleteAccount: 'Eliminar cuenta',
+    deleteAccountConfirm: 'Escribe "{name}" para confirmar',
+    deleteAccountWarning: 'Tu cuenta se desactivará inmediatamente y se eliminará permanentemente después de 30 días. Esta acción no se puede deshacer.',
+    accountDeleted: 'Cuenta desactivada. Se eliminará permanentemente en 30 días.',
   },
   dashboard: {
     welcomeBack: 'Bienvenido/a, {name}',

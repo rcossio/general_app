@@ -6,6 +6,7 @@ import { z } from 'zod'
 const patchSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   avatarUrl: z.string().url().optional().or(z.literal('')),
+  acceptPrivacy: z.boolean().optional(),
 })
 
 export async function GET(request: NextRequest) {
@@ -96,6 +97,7 @@ export async function PATCH(request: NextRequest) {
     data: {
       ...(parsed.data.name !== undefined && { name: parsed.data.name }),
       ...(parsed.data.avatarUrl !== undefined && { avatarUrl: parsed.data.avatarUrl || null }),
+      ...(parsed.data.acceptPrivacy && { privacyAcceptedAt: new Date() }),
     },
     select: { id: true, email: true, name: true, avatarUrl: true },
   })

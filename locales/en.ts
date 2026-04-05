@@ -13,6 +13,7 @@ const en = {
     communityTitle: 'Community',
     ctaTitle: 'Ready to explore?',
     ctaButton: 'Start your adventure',
+    footer: 'A GPS adventure game for Valenza.',
   },
   common: {
     loading: 'Loading...',
@@ -54,6 +55,9 @@ const en = {
     completeProfile: 'Complete your profile',
     whatsYourName: 'What should we call you?',
     continueButton: 'Continue',
+    acceptPrivacy: 'I have read and accept the',
+    privacyPolicy: 'Privacy Policy',
+    privacyRequired: 'You must accept the privacy policy to continue',
   },
   nav: {
     home: 'Home',
@@ -74,6 +78,10 @@ const en = {
     email: 'Email',
     roles: 'Roles',
     language: 'Language',
+    deleteAccount: 'Delete account',
+    deleteAccountConfirm: 'Type "{name}" to confirm',
+    deleteAccountWarning: 'Your account will be deactivated immediately and permanently deleted after 30 days. This cannot be undone.',
+    accountDeleted: 'Account deactivated. It will be permanently deleted in 30 days.',
   },
   dashboard: {
     welcomeBack: 'Welcome back, {name}',

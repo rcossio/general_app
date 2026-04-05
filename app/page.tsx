@@ -187,8 +187,13 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="px-4 py-6 text-center text-xs text-gray-400 border-t border-gray-200 dark:border-gray-700">
-        Vysi
+      <footer className="px-4 py-8 text-center text-xs text-gray-400 border-t border-gray-200 dark:border-gray-700 space-y-2">
+        <p className="font-medium">Vysi</p>
+        <p>{t('landing.footer')}</p>
+        <div className="flex justify-center gap-4">
+          <Link href="/privacy" className="hover:text-blue-600 transition-colors">{t('auth.privacyPolicy')}</Link>
+          <a href={`mailto:${process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? ''}`} className="hover:text-blue-600 transition-colors">{process.env.NEXT_PUBLIC_CONTACT_EMAIL}</a>
+        </div>
       </footer>
     </div>
   )
