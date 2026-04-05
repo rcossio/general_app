@@ -15,7 +15,7 @@ interface AuthContextValue {
   user: User | null
   accessToken: string | null
   loading: boolean
-  login: (email: string, password: string) => Promise<void>
+  login: (email: string, password: string) => Promise<{ isNewUser?: boolean }>
   register: (email: string, password: string, name: string) => Promise<void>
   logout: () => Promise<void>
   fetchWithAuth: (url: string, options?: RequestInit) => Promise<Response>
@@ -100,6 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const body = await res.json()
     setAccessToken(body.data.accessToken)
     await fetchMe(body.data.accessToken)
+    return body.data as { isNewUser?: boolean }
   }, [fetchMe])
 
   const register = useCallback(async (email: string, password: string, name: string) => {

@@ -110,6 +110,7 @@ To add a new module:
 
 ### Auth
 
+- **Login is unified.** `/api/auth/login` handles both login and registration. If the email exists, it verifies the password. If not and password >= 8 chars, it auto-registers with the email prefix as the default name and returns `isNewUser: true`. The frontend redirects new users to `/complete-profile` to set their name. Google OAuth follows the same pattern — new OAuth users go to `/complete-profile`, returning users go to `/dashboard`.
 - **Access token:** JWT, 15 min, stored in React context (memory only — never localStorage).
 - **Refresh token:** JWT, 30 days, hashed in DB, sent as httpOnly cookie. Rotated on each refresh.
 - Fetch wrapper auto-refreshes on 401 and retries once.

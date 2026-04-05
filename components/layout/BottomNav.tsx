@@ -24,7 +24,7 @@ export function BottomNav() {
   const isAdmin = user?.roles?.some((r) => ['master_admin', 'admin'].includes(r))
 
   const navItems = [
-    { label: t('nav.home'), href: '/', icon: 'Home' },
+    { label: t('nav.home'), href: '/dashboard', icon: 'Home' },
     ...activeModules.map((m) => ({ ...m.navItem, label: t(MODULE_NAV_KEYS[m.id] ?? 'nav.home') })),
     { label: t('nav.profile'), href: '/profile', icon: 'User' },
     ...(isAdmin ? [{ label: t('nav.admin'), href: '/admin', icon: 'Shield' }] : []),

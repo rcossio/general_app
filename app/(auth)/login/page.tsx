@@ -2,7 +2,6 @@
 
 import { Suspense, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { useLocale } from '@/contexts/LocaleContext'
 import { z } from 'zod'
@@ -46,8 +45,12 @@ function LoginForm() {
     setServerError('')
     setLoading(true)
     try {
-      await login(email, password)
-      router.push('/')
+      const result = await login(email, password)
+      if (result.isNewUser) {
+        router.push('/complete-profile')
+      } else {
+        router.push('/dashboard')
+      }
     } catch (err) {
       setServerError(err instanceof Error ? err.message : t('auth.loginFailed'))
     } finally {
@@ -115,10 +118,6 @@ function LoginForm() {
             {loading ? t('auth.signingIn') : t('auth.signIn')}
           </button>
         </form>
-        <p className="text-center text-sm mt-4 text-gray-500">
-          {t('auth.noAccount')}{' '}
-          <Link href="/register" className="text-blue-600 hover:underline">{t('auth.register')}</Link>
-        </p>
       </div>
     </div>
   )

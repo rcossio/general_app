@@ -61,6 +61,7 @@ export async function GET(request: NextRequest) {
       select: { id: true, email: true, name: true, userRoles: { select: { role: { select: { slug: true } } } } },
     })
 
+    let isNewUser = false
     if (!user) {
       audit('oauth_signup', { email, provider: 'google' })
       const userRole = await prisma.role.findUnique({ where: { slug: 'user' } })
@@ -74,6 +75,7 @@ export async function GET(request: NextRequest) {
         },
         select: { id: true, email: true, name: true, userRoles: { select: { role: { select: { slug: true } } } } },
       })
+      isNewUser = true
     }
 
     const roles = user.userRoles.map((ur) => ur.role.slug)
@@ -82,7 +84,8 @@ export async function GET(request: NextRequest) {
     const refreshToken = signRefreshToken(payload)
     await storeRefreshToken(user.id, refreshToken)
 
-    const response = NextResponse.redirect(`${appUrl}/`)
+    const redirectTo = isNewUser ? `${appUrl}/complete-profile` : `${appUrl}/dashboard`
+    const response = NextResponse.redirect(redirectTo)
     response.cookies.set('refresh_token', refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',

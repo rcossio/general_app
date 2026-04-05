@@ -1,6 +1,21 @@
 import type { Translations } from './en'
 
 const it: Translations = {
+  landing: {
+    tagline: 'Esplora Valenza come non hai mai fatto',
+    subtitle: 'Un gioco di avventura GPS che trasforma la tua città in una storia vivente. Cammina, scopri, risolvi enigmi.',
+    playNow: 'Gioca ora',
+    howItWorks: 'Come funziona',
+    step1Title: 'Cammina',
+    step1Desc: 'Apri la mappa e raggiungi i luoghi segnati in città.',
+    step2Title: 'Scopri',
+    step2Desc: 'Ogni luogo rivela un pezzo della storia. Leggi, esplora, colleziona.',
+    step3Title: 'Risolvi',
+    step3Desc: 'Fai scelte, inserisci codici, sblocca nuovi percorsi. La storia è tua.',
+    communityTitle: 'Community',
+    ctaTitle: 'Pronto a esplorare?',
+    ctaButton: 'Inizia la tua avventura',
+  },
   common: {
     loading: 'Caricamento...',
     save: 'Salva',
@@ -34,10 +49,13 @@ const it: Translations = {
     passwordMinLength: 'La password deve contenere almeno 8 caratteri',
     loginFailed: 'Accesso fallito',
     registrationFailed: 'Registrazione fallita',
-    signInWithGoogle: 'Accedi con Google',
-    orEmail: 'oppure accedi con email',
+    signInWithGoogle: 'Continua con Google',
+    orEmail: 'oppure continua con email',
     googleFailed: 'Accesso con Google fallito, riprova',
     googleCancelled: 'Accesso con Google annullato',
+    completeProfile: 'Completa il tuo profilo',
+    whatsYourName: 'Come ti chiami?',
+    continueButton: 'Continua',
   },
   nav: {
     home: 'Home',

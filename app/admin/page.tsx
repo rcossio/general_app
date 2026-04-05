@@ -45,7 +45,7 @@ function AdminGuard() {
   const isAdmin = user?.roles.some((r) => ['master_admin', 'admin'].includes(r))
 
   useEffect(() => {
-    if (user && !isAdmin) router.replace('/')
+    if (user && !isAdmin) router.replace('/dashboard')
   }, [user, isAdmin, router])
 
   if (!isAdmin) return null

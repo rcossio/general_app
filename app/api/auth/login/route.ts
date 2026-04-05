@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { audit } from '@/lib/audit'
 import {
   comparePassword,
+  hashPassword,
   signAccessToken,
   signRefreshToken,
   storeRefreshToken,
@@ -26,8 +27,9 @@ export async function POST(request: NextRequest) {
     }
 
     const { email, password } = parsed.data
+    const ip = request.headers.get('x-real-ip') ?? 'unknown'
 
-    const user = await prisma.user.findUnique({
+    let user = await prisma.user.findUnique({
       where: { email },
       select: {
         id: true,
@@ -39,23 +41,46 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    const ip = request.headers.get('x-real-ip') ?? 'unknown'
+    let isNewUser = false
 
     if (!user) {
-      audit('login_failed', { email, ip, reason: 'unknown_email' })
-      return NextResponse.json(
-        { error: 'Invalid credentials', code: 'INVALID_CREDENTIALS' },
-        { status: 401 }
-      )
-    }
+      // Auto-register: password must be at least 8 chars for new accounts
+      if (password.length < 8) {
+        audit('login_failed', { email, ip, reason: 'unknown_email' })
+        return NextResponse.json(
+          { error: 'Invalid credentials', code: 'INVALID_CREDENTIALS' },
+          { status: 401 }
+        )
+      }
 
-    const valid = await comparePassword(password, user.passwordHash)
-    if (!valid) {
-      audit('login_failed', { email, ip, reason: 'wrong_password' })
-      return NextResponse.json(
-        { error: 'Invalid credentials', code: 'INVALID_CREDENTIALS' },
-        { status: 401 }
-      )
+      const passwordHash = await hashPassword(password)
+      const defaultName = email.split('@')[0]
+      const newUser = await prisma.user.create({
+        data: { email, passwordHash, name: defaultName },
+        select: { id: true, email: true, name: true, avatarUrl: true, passwordHash: true, userRoles: { select: { role: { select: { slug: true } } } } },
+      })
+
+      const userRole = await prisma.role.findUnique({ where: { slug: 'user' } })
+      if (userRole) {
+        await prisma.userRole.create({ data: { userId: newUser.id, roleId: userRole.id } })
+      }
+
+      audit('user_registered', { userId: newUser.id, email, method: 'auto' })
+      user = {
+        ...newUser,
+        userRoles: userRole ? [{ role: { slug: 'user' } }] : [],
+      }
+      isNewUser = true
+    } else {
+      // Existing user — verify password
+      const valid = await comparePassword(password, user.passwordHash)
+      if (!valid) {
+        audit('login_failed', { email, ip, reason: 'wrong_password' })
+        return NextResponse.json(
+          { error: 'Invalid credentials', code: 'INVALID_CREDENTIALS' },
+          { status: 401 }
+        )
+      }
     }
 
     const roles = user.userRoles.map((ur) => ur.role.slug)
@@ -67,7 +92,7 @@ export async function POST(request: NextRequest) {
     const { passwordHash: _, ...safeUser } = user
 
     const response = NextResponse.json({
-      data: { user: safeUser, accessToken, refreshToken },
+      data: { user: safeUser, accessToken, refreshToken, isNewUser },
     })
     response.cookies.set('refresh_token', refreshToken, {
       httpOnly: true,
