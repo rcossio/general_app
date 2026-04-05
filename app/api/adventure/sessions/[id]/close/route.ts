@@ -8,12 +8,27 @@ type Params = { params: Promise<{ id: string }> }
 
 type GrantEntry = { flag: string }
 
+type Choice = {
+  id: string
+  label: Record<string, string>
+  outcome: Record<string, string>
+  grants: GrantEntry[]
+}
+
+type PasswordData = {
+  value: string
+  grants: GrantEntry[]
+}
+
 type LocationValue = {
   when: Condition
   content: Record<string, string>
   completesChapter?: boolean
+  choices?: Choice[]
+  password?: PasswordData
   grants?: GrantEntry[]
   revokes?: GrantEntry[]
+  imageUrl?: string | null
 }
 
 function resolveActiveValue(
@@ -24,6 +39,24 @@ function resolveActiveValue(
     if (evaluate(v.when as Condition, flags)) return v
   }
   return null
+}
+
+function resolveNarrative(
+  values: LocationValue[],
+  flags: Set<string>
+): { content: Record<string, string>; completesChapter: boolean; choices: { id: string; label: Record<string, string> }[] | null; hasPassword: boolean; imageUrl: string | null } {
+  for (const v of values) {
+    if (evaluate(v.when as Condition, flags)) {
+      return {
+        content: v.content,
+        completesChapter: v.completesChapter ?? false,
+        choices: v.choices?.map((c) => ({ id: c.id, label: c.label })) ?? null,
+        hasPassword: !!v.password,
+        imageUrl: v.imageUrl ?? null,
+      }
+    }
+  }
+  return { content: {}, completesChapter: false, choices: null, hasPassword: false, imageUrl: null }
 }
 
 export async function POST(request: NextRequest, { params }: Params) {
@@ -48,7 +81,15 @@ export async function POST(request: NextRequest, { params }: Params) {
       where: { id: sessionId, userId: result.user.sub },
       include: {
         flags: { select: { flag: true } },
-        game: { select: { nextGameId: true } },
+        game: {
+          select: {
+            nextGameId: true,
+            locations: {
+              select: { id: true, visibleWhen: true, values: true, imageUrl: true },
+              orderBy: { order: 'asc' },
+            },
+          },
+        },
       },
     })
 
@@ -59,11 +100,20 @@ export async function POST(request: NextRequest, { params }: Params) {
       )
     }
 
-    const location = await prisma.gameLocation.findFirst({
+    const location = session.game.locations.find((l) => l.id === locationId)
+
+    if (!location) {
+      return NextResponse.json(
+        { error: 'Location not found', code: 'NOT_FOUND' },
+        { status: 404 }
+      )
+    }
+
+    const fullLocation = await prisma.gameLocation.findFirst({
       where: { id: locationId, gameId: session.gameId },
     })
 
-    if (!location) {
+    if (!fullLocation) {
       return NextResponse.json(
         { error: 'Location not found', code: 'NOT_FOUND' },
         { status: 404 }
@@ -81,19 +131,21 @@ export async function POST(request: NextRequest, { params }: Params) {
       )
     }
 
-    const flagSet = new Set(session.flags.map((f) => f.flag))
-    const values = location.values as LocationValue[]
-    const activeValue = resolveActiveValue(values, flagSet)
+    const oldFlagSet = new Set(session.flags.map((f) => f.flag))
+    const values = fullLocation.values as LocationValue[]
+    const activeValue = resolveActiveValue(values, oldFlagSet)
 
     // Grants: location-level (unconditional) + active value-level (conditional)
-    const locationGrants = (location.grants as GrantEntry[]) ?? []
+    const locationGrants = (fullLocation.grants as GrantEntry[]) ?? []
     const valueGrants = activeValue?.grants ?? []
     const newFlags = [...locationGrants, ...valueGrants]
       .map((g) => g.flag)
-      .filter((f) => !flagSet.has(f))
+      .filter((f) => !oldFlagSet.has(f))
 
-    // Revokes: active value-level only (applied last so they can remove callback flags)
-    const revokedFlags = (activeValue?.revokes ?? []).map((r) => r.flag)
+    // Revokes: location-level (unconditional) + active value-level (applied last so they can remove callback flags)
+    const locationRevokes = (fullLocation.revokes as GrantEntry[]) ?? []
+    const valueRevokes = activeValue?.revokes ?? []
+    const revokedFlags = [...locationRevokes, ...valueRevokes].map((r) => r.flag)
 
     const completesChapter = activeValue?.completesChapter ?? false
 
@@ -125,6 +177,67 @@ export async function POST(request: NextRequest, { params }: Params) {
       })
     })
 
+    // Compute the new flag set after grants/revokes
+    const newFlagSet = new Set(oldFlagSet)
+    for (const f of newFlags) newFlagSet.add(f)
+    for (const f of revokedFlags) newFlagSet.delete(f)
+
+    const flagsChanged = newFlags.length > 0 || revokedFlags.length > 0
+
+    // Compute visibility and narrative diffs for all OTHER locations
+    // (the closed location itself is handled by the client: status→closed, choices→null)
+    const locationUpdates: Array<{
+      id: string
+      visible: boolean
+      narrative: Record<string, string> | null
+      choices: { id: string; label: Record<string, string> }[] | null
+      hasPassword: boolean
+      imageUrl: string | null
+    }> = []
+
+    if (flagsChanged) {
+      for (const loc of session.game.locations) {
+        if (loc.id === locationId) continue
+        const wasBefore = evaluate(loc.visibleWhen as Condition, oldFlagSet)
+        const isNow = evaluate(loc.visibleWhen as Condition, newFlagSet)
+        const locValues = loc.values as LocationValue[]
+
+        if (wasBefore !== isNow) {
+          // Visibility changed — send full resolved state
+          const resolved = isNow
+            ? resolveNarrative(locValues, newFlagSet)
+            : { content: null, choices: null, hasPassword: false, imageUrl: null }
+          locationUpdates.push({
+            id: loc.id,
+            visible: isNow,
+            narrative: resolved.content,
+            choices: resolved.choices,
+            hasPassword: resolved.hasPassword,
+            imageUrl: resolved.imageUrl ?? (loc.imageUrl as string | null),
+          })
+        } else if (wasBefore && isNow) {
+          // Still visible — check if narrative changed due to new flags
+          const oldResolved = resolveNarrative(locValues, oldFlagSet)
+          const newResolved = resolveNarrative(locValues, newFlagSet)
+          const narrativeChanged =
+            JSON.stringify(oldResolved.content) !== JSON.stringify(newResolved.content) ||
+            JSON.stringify(oldResolved.choices) !== JSON.stringify(newResolved.choices) ||
+            oldResolved.hasPassword !== newResolved.hasPassword ||
+            oldResolved.imageUrl !== newResolved.imageUrl
+          if (narrativeChanged) {
+            locationUpdates.push({
+              id: loc.id,
+              visible: true,
+              narrative: newResolved.content,
+              choices: newResolved.choices,
+              hasPassword: newResolved.hasPassword,
+              imageUrl: newResolved.imageUrl ?? (loc.imageUrl as string | null),
+            })
+          }
+        }
+      }
+    }
+
     return NextResponse.json({
       data: {
         closed: true,
@@ -132,6 +245,7 @@ export async function POST(request: NextRequest, { params }: Params) {
         revokedFlags,
         completesChapter,
         nextGameId: completesChapter ? (session.game.nextGameId ?? null) : null,
+        locationUpdates,
       },
     })
   } catch {

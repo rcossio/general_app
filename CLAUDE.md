@@ -70,9 +70,6 @@ npx tsx scripts/adventure/import-game.ts --file=scripts/adventure/1_chuch_murder
 npx tsx scripts/adventure/import-game.ts --file=scripts/adventure/0_tutorial.yaml --slug=tutorial --chapter=0 --activate --next-chapter-slug=chapter-1
 # Chapter files live in scripts/adventure/ (YAML preferred; JSON also accepted)
 
-# Trace all story paths (outputs scripts/adventure/paths.md, gitignored):
-npx tsx scripts/adventure/trace-paths.ts
-
 # Production — no deploy script. Run in order on the server:
 npm install                                        # if dependencies changed — never use npm ci (causes SIGBUS on low-memory VPS)
 npx prisma migrate deploy                          # if schema changed

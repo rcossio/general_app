@@ -236,12 +236,75 @@ function GameMap({ sessionId }: { sessionId: string }) {
     if (!selectedLocation || isSpectator) return
     setVisiting(true)
     try {
-      await fetchWithAuth(`/api/adventure/sessions/${sessionId}/close`, {
+      const res = await fetchWithAuth(`/api/adventure/sessions/${sessionId}/close`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ locationId: selectedLocation.id }),
       })
-      await loadState(sessionId)
+      const body = await res.json()
+      if (body.data) {
+        const { newFlags, revokedFlags, completesChapter, nextGameId, locationUpdates } = body.data as {
+          newFlags: string[]
+          revokedFlags: string[]
+          completesChapter: boolean
+          nextGameId: string | null
+          locationUpdates: Array<{
+            id: string
+            visible: boolean
+            narrative: Record<string, string> | null
+            choices: { id: string; label: Record<string, string> }[] | null
+            hasPassword: boolean
+            imageUrl: string | null
+          }>
+        }
+        setState((prev) => {
+          if (!prev) return prev
+          // Update flags
+          const updatedFlags = prev.session.flags
+            .filter((f) => !revokedFlags.includes(f))
+            .concat(newFlags)
+
+          // Update the closed location + apply server diffs to other locations
+          const updateMap = new Map(locationUpdates.map((u) => [u.id, u]))
+          const updatedLocations = prev.locations.map((loc) => {
+            if (loc.id === selectedLocation.id) {
+              return { ...loc, status: 'closed' as const, choices: null }
+            }
+            const update = updateMap.get(loc.id)
+            if (update) {
+              return {
+                ...loc,
+                visible: update.visible,
+                narrative: update.narrative,
+                choices: update.choices,
+                hasPassword: update.hasPassword,
+                imageUrl: update.imageUrl ?? loc.imageUrl,
+              }
+            }
+            return loc
+          })
+
+          // Track visited location
+          const visitedIds = prev.session.visitedLocationIds.includes(selectedLocation.id)
+            ? prev.session.visitedLocationIds
+            : [...prev.session.visitedLocationIds, selectedLocation.id]
+
+          return {
+            ...prev,
+            session: {
+              ...prev.session,
+              flags: updatedFlags,
+              visitedLocationIds: visitedIds,
+              completedAt: completesChapter ? new Date().toISOString() : prev.session.completedAt,
+            },
+            game: {
+              ...prev.game,
+              nextGameId: nextGameId ?? prev.game.nextGameId,
+            },
+            locations: updatedLocations,
+          }
+        })
+      }
       setSelectedLocation(null)
     } finally {
       setVisiting(false)

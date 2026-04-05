@@ -209,7 +209,17 @@ cannot be distinguished from real users in the UI.
 ## Future Improvements
 
 - **Sentry** — client-side error tracking. Run `npx @sentry/wizard@latest -i nextjs`, add `SENTRY_DSN` to `.env`, rebuild. Free tier: 5,000 errors/month.
-- **`next/image`** — replace plain `<img>` tags for avatars and game art for automatic lazy loading, responsive sizing, and WebP conversion. Requires `remotePatterns` in `next.config.mjs` for R2 URLs.
-- **Toast/notification system** — no user feedback after save/delete/join actions. `sonner` or `react-hot-toast` are lightweight options.
-- **Confirmation dialogs** — tracker delete fires with no confirm. One reusable `<ConfirmDialog>` component.
-- **Dashboard content** — currently just welcome + module cards. Could show quick stats or recent activity.
+
+### Adventure Engine
+
+1. **Inventory use on locations** — Items are currently decorative. Add a `useItem` interaction type so players actively choose which item to apply at a location (e.g. "use key on door"), turning items from passive gates into core puzzle mechanics.
+2. **Counters / numeric variables** — Flags are boolean-only. Add key-value session variables with numeric support to enable "collect 3 of 5 clues" mechanics, reputation scores, and consumable items without combinatorial flag explosions.
+3. **Multi-turn dialogues** — Choices are single-round. Add a `conversation` value type with nested turns that resolve within one location sheet session, enabling NPC interrogation and branching dialogue trees without close/reopen cycles.
+4. **Timed / sequenced events** — No time pressure exists. Add flag expiry timestamps and location visibility windows to enable countdowns, dawn/dusk cycles, and "solve before the guard returns" tension.
+5. **Hint system** — GPS games have high friction when players get stuck. Add a progressive hint array per location value (nudge → stronger hint → spoiler) with cooldown, optionally auto-revealing after prolonged inactivity.
+6. **Examine / secondary interactions** — Each location has one interaction path. Add sub-locations or interaction points within a location so a single place can have multiple interactable objects with independent state.
+7. **Item combination** — Can't combine inventory items. Add chapter-level combination recipes (e.g. rope + hook = grappling hook) with a combine mode in the inventory UI.
+8. **Randomness / replayability** — Everything is deterministic. Add weighted random value selection or shuffle groups so playthroughs can vary (different red herrings, randomized clue placement).
+9. **Narrative templating** — Text is static. Add `{{variable}}` interpolation in narrative content resolved server-side to display dynamic values like clue counts, elapsed time, or player-discovered names.
+10. **Puzzle types beyond password** — Only exact text match exists. Support regex patterns for flexible answers, multi-input combinations (3-digit lock), and sequence puzzles to expand the puzzle design space.
+11. **Chapter lint script** — A validation pass run during `import-game.ts` (or standalone) that catches common authoring bugs before they reach players. Checks: `when: null` not in last position (shadows all values below it), duplicate conditions on the same location, `cb_` flags granted but never revoked (callback stuck forever), flags referenced in `when`/`visibleWhen` that are never granted anywhere in the chapter (typo detection), flags missing the required prefix (`vis_`, `has_`, `st_`, `cb_`), items referencing a flag that no location ever grants (unobtainable item). Prints warnings without blocking the import.
