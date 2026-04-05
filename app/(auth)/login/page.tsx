@@ -13,14 +13,21 @@ export default function LoginPage() {
 }
 
 function LoginForm() {
-  const { login } = useAuth()
+  const { login, register } = useAuth()
   const { t } = useLocale()
   const router = useRouter()
   const searchParams = useSearchParams()
+
+  // Step 1: email + password
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+
+  // Step 2: registration (name + privacy)
+  const [step, setStep] = useState<'login' | 'register'>('login')
+  const [name, setName] = useState('')
   const [privacyAccepted, setPrivacyAccepted] = useState(false)
+
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [serverError, setServerError] = useState(
     searchParams.get('error') === 'google_failed' ? t('auth.googleFailed')
@@ -29,14 +36,12 @@ function LoginForm() {
   )
   const [loading, setLoading] = useState(false)
 
-  const loginSchema = z.object({
-    email: z.string().email(t('auth.invalidEmail')),
-    password: z.string().min(1, t('auth.passwordRequired')),
-  })
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    const parsed = loginSchema.safeParse({ email, password })
+    const parsed = z.object({
+      email: z.string().email(t('auth.invalidEmail')),
+      password: z.string().min(1, t('auth.passwordRequired')),
+    }).safeParse({ email, password })
     if (!parsed.success) {
       const fieldErrors: Record<string, string> = {}
       for (const err of parsed.error.issues) {
@@ -48,15 +53,11 @@ function LoginForm() {
     setErrors({})
     setServerError('')
     setLoading(true)
-    const isRegistration = password.length >= 8
-    if (isRegistration && !privacyAccepted) {
-      setErrors({ privacy: t('auth.privacyRequired') })
-      return
-    }
     try {
-      const result = await login(email, password, isRegistration ? privacyAccepted : undefined)
-      if (result.isNewUser) {
-        router.push('/complete-profile')
+      const result = await login(email, password)
+      if (result.needsRegistration) {
+        setName(email.split('@')[0])
+        setStep('register')
       } else {
         router.push('/dashboard')
       }
@@ -65,6 +66,90 @@ function LoginForm() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!name.trim()) {
+      setErrors({ name: t('auth.nameRequired') })
+      return
+    }
+    if (!privacyAccepted) {
+      setErrors({ privacy: t('auth.privacyRequired') })
+      return
+    }
+    setErrors({})
+    setServerError('')
+    setLoading(true)
+    try {
+      await register(email, password, name.trim(), privacyAccepted)
+      router.push('/dashboard')
+    } catch (err) {
+      setServerError(err instanceof Error ? err.message : t('auth.registrationFailed'))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (step === 'register') {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="w-full max-w-sm">
+          <h1 className="text-2xl font-bold mb-2 text-center">{t('auth.completeProfile')}</h1>
+          <p className="text-sm text-gray-500 text-center mb-6">{t('auth.whatsYourName')}</p>
+          <form onSubmit={handleRegister} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">{t('auth.name')}</label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                maxLength={100}
+                autoFocus
+                className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name}</p>}
+            </div>
+            <label className="flex items-start gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={privacyAccepted}
+                onChange={(e) => { setPrivacyAccepted(e.target.checked); setErrors((prev) => { const { privacy, ...rest } = prev; return rest }) }}
+                className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="text-sm text-gray-600 dark:text-gray-400">
+                {t('auth.acceptPrivacy')}{' '}
+                <Link href="/privacy" target="_blank" className="text-blue-600 hover:underline">
+                  {t('auth.privacyPolicy')}
+                </Link>
+                {' & '}
+                <Link href="/terms" target="_blank" className="text-blue-600 hover:underline">
+                  {t('auth.termsOfService')}
+                </Link>
+              </span>
+            </label>
+            {errors.privacy && <p className="text-xs text-red-500">{errors.privacy}</p>}
+            {serverError && (
+              <div className="p-3 rounded-lg bg-red-50 dark:bg-red-950 text-red-600 text-sm">
+                {serverError}
+              </div>
+            )}
+            <button
+              type="submit"
+              disabled={loading || !name.trim()}
+              className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-medium rounded-lg transition-colors"
+            >
+              {loading ? t('auth.creatingAccount') : t('auth.createAccount')}
+            </button>
+          </form>
+          <p className="mt-4 text-center">
+            <button onClick={() => setStep('login')} className="text-sm text-blue-600 hover:underline">
+              {t('auth.backToLogin')}
+            </button>
+          </p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -93,7 +178,7 @@ function LoginForm() {
           <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleLogin} className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-1">{t('auth.email')}</label>
             <input
@@ -124,29 +209,6 @@ function LoginForm() {
             </div>
             {errors.password && <p className="mt-1 text-xs text-red-500">{errors.password}</p>}
           </div>
-          {password.length >= 8 && (
-            <div>
-              <label className="flex items-start gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={privacyAccepted}
-                  onChange={(e) => { setPrivacyAccepted(e.target.checked); setErrors((prev) => { const { privacy, ...rest } = prev; return rest }) }}
-                  className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="text-sm text-gray-600 dark:text-gray-400">
-                  {t('auth.acceptPrivacy')}{' '}
-                  <Link href="/privacy" target="_blank" className="text-blue-600 hover:underline">
-                    {t('auth.privacyPolicy')}
-                  </Link>
-                  {' & '}
-                  <Link href="/terms" target="_blank" className="text-blue-600 hover:underline">
-                    {t('auth.termsOfService')}
-                  </Link>
-                </span>
-              </label>
-              {errors.privacy && <p className="mt-1 text-xs text-red-500">{errors.privacy}</p>}
-            </div>
-          )}
           {serverError && (
             <div className="p-3 rounded-lg bg-red-50 dark:bg-red-950 text-red-600 text-sm">
               {serverError}

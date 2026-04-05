@@ -13,7 +13,6 @@ import {
 const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1),
-  privacyAccepted: z.boolean().optional(),
 })
 
 export async function POST(request: NextRequest) {
@@ -27,10 +26,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { email, password, privacyAccepted } = parsed.data
+    const { email, password } = parsed.data
     const ip = request.headers.get('x-real-ip') ?? 'unknown'
 
-    let user = await prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { email },
       select: {
         id: true,
@@ -42,44 +41,8 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    let isNewUser = false
-
     if (!user) {
-      // Auto-register: password must be at least 8 chars for new accounts
-      if (password.length < 8) {
-        audit('login_failed', { email, ip, reason: 'unknown_email' })
-        return NextResponse.json(
-          { error: 'Invalid credentials', code: 'INVALID_CREDENTIALS' },
-          { status: 401 }
-        )
-      }
-
-      // Consent required before storing personal data
-      if (!privacyAccepted) {
-        return NextResponse.json(
-          { error: 'You must accept the privacy policy and terms of service', code: 'PRIVACY_REQUIRED' },
-          { status: 400 }
-        )
-      }
-
-      const passwordHash = await hashPassword(password)
-      const defaultName = email.split('@')[0]
-      const newUser = await prisma.user.create({
-        data: { email, passwordHash, name: defaultName, privacyAcceptedAt: new Date() },
-        select: { id: true, email: true, name: true, avatarUrl: true, passwordHash: true, userRoles: { select: { role: { select: { slug: true } } } } },
-      })
-
-      const userRole = await prisma.role.findUnique({ where: { slug: 'user' } })
-      if (userRole) {
-        await prisma.userRole.create({ data: { userId: newUser.id, roleId: userRole.id } })
-      }
-
-      audit('user_registered', { userId: newUser.id, email, method: 'auto' })
-      user = {
-        ...newUser,
-        userRoles: userRole ? [{ role: { slug: 'user' } }] : [],
-      }
-      isNewUser = true
+      return NextResponse.json({ data: { needsRegistration: true } })
     } else {
       // Existing user — verify password
       const valid = await comparePassword(password, user.passwordHash)
@@ -101,7 +64,7 @@ export async function POST(request: NextRequest) {
     const { passwordHash: _, ...safeUser } = user
 
     const response = NextResponse.json({
-      data: { user: safeUser, accessToken, refreshToken, isNewUser },
+      data: { user: safeUser, accessToken, refreshToken },
     })
     response.cookies.set('refresh_token', refreshToken, {
       httpOnly: true,

@@ -11,8 +11,9 @@ import {
 
 const registerSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(8),
+  password: z.string().min(1),
   name: z.string().min(1).max(100),
+  privacyAccepted: z.literal(true, { message: 'You must accept the privacy policy and terms of service' }),
 })
 
 export async function POST(request: NextRequest) {
@@ -38,7 +39,7 @@ export async function POST(request: NextRequest) {
 
     const passwordHash = await hashPassword(password)
     const user = await prisma.user.create({
-      data: { email, passwordHash, name },
+      data: { email, passwordHash, name, privacyAcceptedAt: new Date() },
       select: { id: true, email: true, name: true, avatarUrl: true },
     })
 

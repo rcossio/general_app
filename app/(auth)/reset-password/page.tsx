@@ -36,7 +36,7 @@ function ResetPasswordForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const parsed = z.string().min(8, t('auth.passwordMinLength')).safeParse(password)
+    const parsed = z.string().min(1, t('auth.passwordRequired')).safeParse(password)
     if (!parsed.success) {
       setError(parsed.error.issues[0].message)
       return

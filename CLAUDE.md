@@ -18,6 +18,10 @@ This applies to all files that are or could be git-tracked: `.md`, `.conf`, `.sh
 
 The only place real values belong is `.env`, which is gitignored.
 
+## Working Style
+
+When making a change, grep the entire codebase for all related occurrences and update them all in one pass. Don't fix one file and leave the same constraint/pattern in other files. Verify with a grep afterward. There is no password length requirement — do not add one.
+
 ## Before Starting Any Task
 
 Read all `.md` files before doing anything. This includes — but is not limited to — `README.md`, `docs/SPEC.md`, and `docs/DEPLOYMENT.md`. These files define the intended architecture, conventions, and constraints. Code must conform to them, not to whatever pattern already exists in the codebase (existing code may already be wrong).
@@ -110,7 +114,7 @@ To add a new module:
 
 ### Auth
 
-- **Login is unified.** `/api/auth/login` handles both login and registration. If the email exists, it verifies the password. If not and password >= 8 chars, it auto-registers with the email prefix as the default name and returns `isNewUser: true`. Auto-registration requires `privacyAccepted: true` — the user must accept the Privacy Policy and Terms of Service before any data is stored (GDPR compliance). The frontend shows the checkbox when password >= 8 chars. The frontend redirects new users to `/complete-profile` to set their name. Google OAuth follows the same pattern — new OAuth users go to `/complete-profile` (where they must accept privacy/terms before proceeding), returning users go to `/dashboard`.
+- **Login is unified.** `/api/auth/login` checks if the email exists. If yes, it verifies the password. If not, it returns `{ needsRegistration: true }` — no user is created. The frontend then shows step 2 (name + privacy/terms checkbox) inline on the login page. When submitted, `POST /api/auth/register` creates the user with `privacyAcceptedAt` set (GDPR — no data stored before consent). There is no password length requirement. Google OAuth follows a similar pattern — new OAuth users go to `/complete-profile` (where they must accept privacy/terms before proceeding), returning users go to `/dashboard`.
 - **Access token:** JWT, 15 min, stored in React context (memory only — never localStorage).
 - **Refresh token:** JWT, 30 days, hashed in DB, sent as httpOnly cookie. Rotated on each refresh.
 - Fetch wrapper auto-refreshes on 401 and retries once.
