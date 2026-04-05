@@ -7,6 +7,7 @@ interface User {
   email: string
   name: string
   avatarUrl: string | null
+  privacyAcceptedAt: string | null
   roles: string[]
   permissions: string[]
 }
@@ -15,9 +16,10 @@ interface AuthContextValue {
   user: User | null
   accessToken: string | null
   loading: boolean
-  login: (email: string, password: string) => Promise<{ isNewUser?: boolean }>
+  login: (email: string, password: string, privacyAccepted?: boolean) => Promise<{ isNewUser?: boolean }>
   register: (email: string, password: string, name: string) => Promise<void>
   logout: () => Promise<void>
+  refreshUser: () => Promise<void>
   fetchWithAuth: (url: string, options?: RequestInit) => Promise<Response>
 }
 
@@ -86,11 +88,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [accessToken, refresh]
   )
 
-  const login = useCallback(async (email: string, password: string) => {
+  const login = useCallback(async (email: string, password: string, privacyAccepted?: boolean) => {
     const res = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, ...(privacyAccepted !== undefined && { privacyAccepted }) }),
       credentials: 'include',
     })
     if (!res.ok) {
@@ -119,6 +121,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await fetchMe(body.data.accessToken)
   }, [fetchMe])
 
+  const refreshUser = useCallback(async () => {
+    if (accessToken) await fetchMe(accessToken)
+  }, [accessToken, fetchMe])
+
   const logout = useCallback(async () => {
     await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
     setUser(null)
@@ -126,7 +132,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, accessToken, loading, login, register, logout, fetchWithAuth }}>
+    <AuthContext.Provider value={{ user, accessToken, loading, login, register, logout, refreshUser, fetchWithAuth }}>
       {children}
     </AuthContext.Provider>
   )

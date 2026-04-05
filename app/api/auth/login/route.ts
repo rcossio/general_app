@@ -13,6 +13,7 @@ import {
 const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1),
+  privacyAccepted: z.boolean().optional(),
 })
 
 export async function POST(request: NextRequest) {
@@ -26,7 +27,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { email, password } = parsed.data
+    const { email, password, privacyAccepted } = parsed.data
     const ip = request.headers.get('x-real-ip') ?? 'unknown'
 
     let user = await prisma.user.findUnique({
@@ -53,10 +54,18 @@ export async function POST(request: NextRequest) {
         )
       }
 
+      // Consent required before storing personal data
+      if (!privacyAccepted) {
+        return NextResponse.json(
+          { error: 'You must accept the privacy policy and terms of service', code: 'PRIVACY_REQUIRED' },
+          { status: 400 }
+        )
+      }
+
       const passwordHash = await hashPassword(password)
       const defaultName = email.split('@')[0]
       const newUser = await prisma.user.create({
-        data: { email, passwordHash, name: defaultName },
+        data: { email, passwordHash, name: defaultName, privacyAcceptedAt: new Date() },
         select: { id: true, email: true, name: true, avatarUrl: true, passwordHash: true, userRoles: { select: { role: { select: { slug: true } } } } },
       })
 

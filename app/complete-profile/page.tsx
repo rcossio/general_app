@@ -16,9 +16,10 @@ export default function CompleteProfilePage() {
 }
 
 function CompleteProfileForm() {
-  const { user, fetchWithAuth } = useAuth()
+  const { user, fetchWithAuth, refreshUser } = useAuth()
   const { t } = useLocale()
   const router = useRouter()
+  const needsPrivacy = !user?.privacyAcceptedAt
   const [name, setName] = useState(user?.name ?? '')
   const [privacyAccepted, setPrivacyAccepted] = useState(false)
   const [error, setError] = useState('')
@@ -27,7 +28,7 @@ function CompleteProfileForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!name.trim()) return
-    if (!privacyAccepted) {
+    if (needsPrivacy && !privacyAccepted) {
       setError(t('auth.privacyRequired'))
       return
     }
@@ -37,8 +38,12 @@ function CompleteProfileForm() {
       await fetchWithAuth('/api/auth/me', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), acceptPrivacy: true }),
+        body: JSON.stringify({
+          name: name.trim(),
+          ...(needsPrivacy && { acceptPrivacy: true }),
+        }),
       })
+      await refreshUser()
       router.push('/dashboard')
     } finally {
       setLoading(false)
@@ -60,20 +65,26 @@ function CompleteProfileForm() {
             autoFocus
             className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
-          <label className="flex items-start gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={privacyAccepted}
-              onChange={(e) => { setPrivacyAccepted(e.target.checked); setError('') }}
-              className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-            />
-            <span className="text-sm text-gray-600 dark:text-gray-400">
-              {t('auth.acceptPrivacy')}{' '}
-              <Link href="/privacy" target="_blank" className="text-blue-600 hover:underline">
-                {t('auth.privacyPolicy')}
-              </Link>
-            </span>
-          </label>
+          {needsPrivacy && (
+            <label className="flex items-start gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={privacyAccepted}
+                onChange={(e) => { setPrivacyAccepted(e.target.checked); setError('') }}
+                className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="text-sm text-gray-600 dark:text-gray-400">
+                {t('auth.acceptPrivacy')}{' '}
+                <Link href="/privacy" target="_blank" className="text-blue-600 hover:underline">
+                  {t('auth.privacyPolicy')}
+                </Link>
+                {' & '}
+                <Link href="/terms" target="_blank" className="text-blue-600 hover:underline">
+                  {t('auth.termsOfService')}
+                </Link>
+              </span>
+            </label>
+          )}
           {error && (
             <p className="text-sm text-red-500">{error}</p>
           )}

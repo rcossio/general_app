@@ -57,6 +57,7 @@ const en = {
     continueButton: 'Continue',
     acceptPrivacy: 'I have read and accept the',
     privacyPolicy: 'Privacy Policy',
+    termsOfService: 'Terms of Service',
     privacyRequired: 'You must accept the privacy policy to continue',
   },
   nav: {
@@ -137,6 +138,14 @@ const en = {
     directPermissions: 'Direct permissions',
     grantPermission: 'Grant permission...',
     noDirectPermissions: 'None',
+  },
+  errors: {
+    notFoundTitle: 'Page not found',
+    notFoundMessage: 'The page you\'re looking for doesn\'t exist or has been moved.',
+    errorTitle: 'Something went wrong',
+    errorMessage: 'An unexpected error occurred. Please try again.',
+    goHome: 'Go home',
+    tryAgain: 'Try again',
   },
   adventure: {
     title: 'Adventure',

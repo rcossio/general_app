@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+Allow: /privacy
+Allow: /terms
+Disallow: /api/
+Disallow: /dashboard
+Disallow: /profile
+Disallow: /admin
+Disallow: /tracker
+Disallow: /adventure
+Disallow: /complete-profile
+Disallow: /login
+
+Sitemap: https://yourdomain.com/sitemap.xml

@@ -4,6 +4,8 @@ import { Suspense, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useLocale } from '@/contexts/LocaleContext'
+import Link from 'next/link'
+import { Eye, EyeOff } from 'lucide-react'
 import { z } from 'zod'
 
 export default function LoginPage() {
@@ -17,6 +19,8 @@ function LoginForm() {
   const searchParams = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [privacyAccepted, setPrivacyAccepted] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [serverError, setServerError] = useState(
     searchParams.get('error') === 'google_failed' ? t('auth.googleFailed')
@@ -44,8 +48,13 @@ function LoginForm() {
     setErrors({})
     setServerError('')
     setLoading(true)
+    const isRegistration = password.length >= 8
+    if (isRegistration && !privacyAccepted) {
+      setErrors({ privacy: t('auth.privacyRequired') })
+      return
+    }
     try {
-      const result = await login(email, password)
+      const result = await login(email, password, isRegistration ? privacyAccepted : undefined)
       if (result.isNewUser) {
         router.push('/complete-profile')
       } else {
@@ -97,14 +106,47 @@ function LoginForm() {
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">{t('auth.password')}</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-3 py-2 pr-10 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
             {errors.password && <p className="mt-1 text-xs text-red-500">{errors.password}</p>}
           </div>
+          {password.length >= 8 && (
+            <div>
+              <label className="flex items-start gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={privacyAccepted}
+                  onChange={(e) => { setPrivacyAccepted(e.target.checked); setErrors((prev) => { const { privacy, ...rest } = prev; return rest }) }}
+                  className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  {t('auth.acceptPrivacy')}{' '}
+                  <Link href="/privacy" target="_blank" className="text-blue-600 hover:underline">
+                    {t('auth.privacyPolicy')}
+                  </Link>
+                  {' & '}
+                  <Link href="/terms" target="_blank" className="text-blue-600 hover:underline">
+                    {t('auth.termsOfService')}
+                  </Link>
+                </span>
+              </label>
+              {errors.privacy && <p className="mt-1 text-xs text-red-500">{errors.privacy}</p>}
+            </div>
+          )}
           {serverError && (
             <div className="p-3 rounded-lg bg-red-50 dark:bg-red-950 text-red-600 text-sm">
               {serverError}

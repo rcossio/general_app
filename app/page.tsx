@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useLocale } from '@/contexts/LocaleContext'
 import { useChrome } from '@/contexts/ChromeContext'
@@ -24,7 +23,6 @@ export default function LandingPage() {
   const { user, loading } = useAuth()
   const { t, locale, setLocale } = useLocale()
   const { setHideChrome } = useChrome()
-  const router = useRouter()
   const [entries, setEntries] = useState<PublicEntry[]>([])
   const [langOpen, setLangOpen] = useState(false)
 
@@ -34,11 +32,6 @@ export default function LandingPage() {
     return () => setHideChrome(false)
   }, [setHideChrome])
 
-  // If logged in, redirect to dashboard
-  useEffect(() => {
-    if (!loading && user) router.replace('/dashboard')
-  }, [user, loading, router])
-
   // Fetch public community entries
   useEffect(() => {
     fetch('/api/tracker/entries/public?limit=6')
@@ -47,7 +40,7 @@ export default function LandingPage() {
       .catch(() => {})
   }, [])
 
-  if (loading || user) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-pulse text-gray-400 text-sm">...</div>
@@ -86,10 +79,10 @@ export default function LandingPage() {
             )}
           </div>
           <Link
-            href="/login"
+            href={user ? '/dashboard' : '/login'}
             className="px-4 py-1.5 rounded-lg text-sm font-medium text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors"
           >
-            {t('auth.signIn')}
+            {user ? t('nav.dashboard') : t('auth.signIn')}
           </Link>
         </div>
       </nav>
@@ -104,10 +97,10 @@ export default function LandingPage() {
         </p>
         <div className="flex gap-3">
           <Link
-            href="/login"
+            href={user ? '/dashboard' : '/login'}
             className="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm transition-colors"
           >
-            {t('landing.playNow')}
+            {user ? t('nav.dashboard') : t('landing.playNow')}
           </Link>
           <a
             href="#how-it-works"
@@ -179,10 +172,10 @@ export default function LandingPage() {
       <section className="px-4 py-16 bg-blue-600 text-white text-center">
         <h2 className="text-2xl font-bold mb-4">{t('landing.ctaTitle')}</h2>
         <Link
-          href="/login"
+          href={user ? '/dashboard' : '/login'}
           className="inline-block px-8 py-3 rounded-xl bg-white text-blue-600 font-semibold text-sm hover:bg-blue-50 transition-colors"
         >
-          {t('landing.ctaButton')}
+          {user ? t('nav.dashboard') : t('landing.ctaButton')}
         </Link>
       </section>
 
@@ -192,6 +185,7 @@ export default function LandingPage() {
         <p>{t('landing.footer')}</p>
         <div className="flex justify-center gap-4">
           <Link href="/privacy" className="hover:text-blue-600 transition-colors">{t('auth.privacyPolicy')}</Link>
+          <Link href="/terms" className="hover:text-blue-600 transition-colors">{locale === 'it' ? 'Termini' : locale === 'es' ? 'Términos' : 'Terms'}</Link>
           <a href={`mailto:${process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? ''}`} className="hover:text-blue-600 transition-colors">{process.env.NEXT_PUBLIC_CONTACT_EMAIL}</a>
         </div>
       </footer>

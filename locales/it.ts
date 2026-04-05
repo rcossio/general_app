@@ -59,6 +59,7 @@ const it: Translations = {
     continueButton: 'Continua',
     acceptPrivacy: 'Ho letto e accetto la',
     privacyPolicy: 'Privacy Policy',
+    termsOfService: 'Termini di Servizio',
     privacyRequired: 'Devi accettare la privacy policy per continuare',
   },
   nav: {
@@ -139,6 +140,14 @@ const it: Translations = {
     directPermissions: 'Permessi diretti',
     grantPermission: 'Concedi permesso...',
     noDirectPermissions: 'Nessuno',
+  },
+  errors: {
+    notFoundTitle: 'Pagina non trovata',
+    notFoundMessage: 'La pagina che cerchi non esiste o è stata spostata.',
+    errorTitle: 'Qualcosa è andato storto',
+    errorMessage: 'Si è verificato un errore imprevisto. Riprova.',
+    goHome: 'Torna alla home',
+    tryAgain: 'Riprova',
   },
   adventure: {
     title: 'Avventura',

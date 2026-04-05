@@ -226,7 +226,7 @@ export default function PrivacyPage() {
       </main>
 
       <footer className="px-4 py-6 text-center text-xs text-gray-400 border-t border-gray-200 dark:border-gray-700">
-        <Link href="/" className="hover:text-blue-600">Vysi</Link> · <Link href="/privacy" className="hover:text-blue-600">{c.title}</Link>
+        <Link href="/" className="hover:text-blue-600">Vysi</Link> · <Link href="/privacy" className="hover:text-blue-600">{c.title}</Link> · <Link href="/terms" className="hover:text-blue-600">{locale === 'it' ? 'Termini di Servizio' : locale === 'es' ? 'Términos de Servicio' : 'Terms of Service'}</Link>
       </footer>
     </div>
   )

@@ -22,6 +22,7 @@ export async function GET(request: NextRequest) {
         name: true,
         avatarUrl: true,
         createdAt: true,
+        privacyAcceptedAt: true,
         userRoles: {
           select: {
             role: {
@@ -70,6 +71,7 @@ export async function GET(request: NextRequest) {
         name: user.name,
         avatarUrl: user.avatarUrl,
         createdAt: user.createdAt,
+        privacyAcceptedAt: user.privacyAcceptedAt,
         roles,
         permissions: Array.from(new Set(permissions)),
       },

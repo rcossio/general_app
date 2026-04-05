@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useLocale } from '@/contexts/LocaleContext'
 
@@ -9,12 +9,19 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
   const { t } = useLocale()
   const router = useRouter()
+  const pathname = usePathname()
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (loading) return
+    if (!user) {
       router.replace('/login')
+      return
     }
-  }, [user, loading, router])
+    // Redirect users who haven't accepted privacy/terms to complete-profile
+    if (!user.privacyAcceptedAt && pathname !== '/complete-profile') {
+      router.replace('/complete-profile')
+    }
+  }, [user, loading, router, pathname])
 
   if (loading) {
     return (
@@ -25,5 +32,6 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (!user) return null
+  if (!user.privacyAcceptedAt && pathname !== '/complete-profile') return null
   return <>{children}</>
 }
