@@ -203,3 +203,13 @@ After seeding (`npx prisma db seed`), a master admin account is created using th
 The seed also creates 10 bot community users with public workouts and tracker entries
 so the community feed is populated from day one. Bot accounts use the `user` role and
 cannot be distinguished from real users in the UI.
+
+---
+
+## Future Improvements
+
+- **Sentry** — client-side error tracking. Run `npx @sentry/wizard@latest -i nextjs`, add `SENTRY_DSN` to `.env`, rebuild. Free tier: 5,000 errors/month.
+- **`next/image`** — replace plain `<img>` tags for avatars and game art for automatic lazy loading, responsive sizing, and WebP conversion. Requires `remotePatterns` in `next.config.mjs` for R2 URLs.
+- **Toast/notification system** — no user feedback after save/delete/join actions. `sonner` or `react-hot-toast` are lightweight options.
+- **Confirmation dialogs** — tracker delete fires with no confirm. One reusable `<ConfirmDialog>` component.
+- **Dashboard content** — currently just welcome + module cards. Could show quick stats or recent activity.

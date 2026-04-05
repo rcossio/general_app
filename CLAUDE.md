@@ -22,6 +22,8 @@ The only place real values belong is `.env`, which is gitignored.
 
 When making a change, grep the entire codebase for all related occurrences and update them all in one pass. Don't fix one file and leave the same constraint/pattern in other files. Verify with a grep afterward. There is no password length requirement — do not add one.
 
+Do not implement changes while still discussing them with the user. Wait for explicit confirmation before writing code. If the user is asking questions or raising concerns, that is a discussion — not a green light to start coding.
+
 ## Before Starting Any Task
 
 Read all `.md` files before doing anything. This includes — but is not limited to — `README.md`, `docs/SPEC.md`, and `docs/DEPLOYMENT.md`. These files define the intended architecture, conventions, and constraints. Code must conform to them, not to whatever pattern already exists in the codebase (existing code may already be wrong).
