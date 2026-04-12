@@ -97,8 +97,9 @@ pm2 save
 
 Features are pluggable. Each module has a manifest (`modules/<name>/manifest.ts`) defining nav items, permissions, and API prefix. Active modules are registered in `config/modules.ts`.
 
-- **Life Tracker** and **Adventure** are active.
-- **Workout** is disabled: import commented in `config/modules.ts`, routes return 403, DB tables intact.
+- **Adventure** is the only active module.
+- **Life Tracker** is disabled: import commented in `config/modules.ts`, folders prefixed with `_` in `app/`, `app/api/`, `__tests__/`. DB tables intact.
+- **Workout** is disabled: import commented in `config/modules.ts`, folders prefixed with `_`. DB tables intact.
 - **Events** is disabled: import commented in `config/modules.ts`.
 
 To disable a module: comment out its import in `config/modules.ts` and prefix its folders with `_` in `app/`, `app/api/`, and `__tests__/`. Its nav item disappears and RBAC blocks its routes automatically. Tables stay intact. To re-enable: reverse both steps and run `npx prisma migrate dev`.
@@ -248,6 +249,21 @@ To add a new language: (1) create `locales/<code>.ts` implementing `Translations
 - `GET /api/health` — health check endpoint, pings DB, returns `{ status: "ok" }` or 503
 - `/privacy` — Privacy Policy (IT/EN/ES)
 - `/terms` — Terms of Service (IT/EN/ES)
+
+#### Landing page SSR architecture
+
+The landing page (`app/page.tsx`) is a **Server Component** that renders `LandingPageClient` (`app/_components/LandingPageClient.tsx`). This split exists to solve an SEO problem:
+
+**The problem:** When the landing page was a single `'use client'` component, `useAuth()` started with `loading: true` and a `if (loading) return <spinner>` gate blocked all content during SSR. Crawlers (Googlebot) saw only a spinner — zero indexable content. The `'use client'` directive itself was NOT the issue (client components are still SSR'd by Next.js App Router), the loading gate was.
+
+**The fix:**
+1. `app/page.tsx` is a Server Component (no `'use client'`). It simply renders the client component.
+2. `app/_components/LandingPageClient.tsx` is `'use client'` but has **no loading gate**. Auth-dependent elements (3 links that show "Dashboard" vs "Accedi") default to the logged-out version using `const isLoggedIn = !loading && user` and swap after auth resolves.
+3. `DEFAULT_LOCALE` in `contexts/LocaleContext.tsx` is set to `'it'` so SSR renders Italian content (primary audience). After hydration, `useEffect` reads `localStorage` and may switch to the user's stored locale.
+
+**Is this fully fixed?** Yes for the landing page — `curl https://vysi.one/` returns full page content (hero, sections, CTA, footer) in Italian. Other public pages (`/privacy`, `/terms`) also SSR correctly because they don't have a loading gate. Authenticated pages (`/dashboard`, `/adventure`, etc.) are `'use client'` with loading gates, but they don't need SEO — `robots.txt` blocks them.
+
+**Rule for future public pages:** Any page that should be indexable must NOT have a `if (loading) return <spinner>` pattern that blocks content during SSR. Either make it a Server Component, or render content unconditionally and let auth-dependent elements update after hydration.
 
 ### Testing Setup
 

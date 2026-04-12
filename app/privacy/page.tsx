@@ -182,24 +182,24 @@ export default function PrivacyPage() {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Navbar */}
-      <nav className="sticky top-0 z-50 flex items-center justify-between h-14 px-4 md:px-8 bg-white/80 dark:bg-gray-900/80 backdrop-blur border-b border-gray-200 dark:border-gray-700">
-        <Link href="/" className="font-bold text-lg text-blue-600">Vysi</Link>
+      <nav className="sticky top-0 z-50 flex items-center justify-between h-14 px-4 md:px-8 bg-brand-green">
+        <Link href="/" className="font-rubik font-extrabold text-[26px] text-white">vysi</Link>
         <div className="relative">
           <button
             onClick={() => setLangOpen((v) => !v)}
-            className="flex items-center gap-1 px-2 py-1 rounded-lg text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+            className="flex items-center gap-1 px-2 py-1 rounded-lg text-sm text-white/70 hover:text-white hover:bg-white/10"
           >
             <Globe className="h-4 w-4" />
             {LOCALE_LABELS[locale]}
             <ChevronDown className="h-3 w-3" />
           </button>
           {langOpen && (
-            <div className="absolute right-0 mt-1 py-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 min-w-[80px]">
+            <div className="absolute right-0 mt-1 py-1 bg-surface rounded-lg shadow-lg border border-brand-border min-w-[80px]">
               {LOCALES.map((l) => (
                 <button
                   key={l}
                   onClick={() => { setLocale(l); setLangOpen(false) }}
-                  className={`w-full px-3 py-1.5 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 ${locale === l ? 'text-blue-600 font-medium' : 'text-gray-700 dark:text-gray-300'}`}
+                  className={`w-full px-3 py-1.5 text-left text-sm hover:bg-brand-green-light ${locale === l ? 'text-brand-green font-medium' : 'text-brand-text'}`}
                 >
                   {LOCALE_LABELS[l]}
                 </button>
@@ -212,12 +212,12 @@ export default function PrivacyPage() {
       {/* Content */}
       <main className="flex-1 max-w-2xl mx-auto px-4 py-8 md:py-12">
         <h1 className="text-2xl font-bold mb-2">{c.title}</h1>
-        <p className="text-sm text-gray-400 mb-8">{c.lastUpdated}</p>
+        <p className="text-sm text-brand-gray mb-8">{c.lastUpdated}</p>
         <div className="space-y-6">
           {c.sections.map((s, i) => (
             <section key={i}>
               <h2 className="font-semibold text-base mb-2">{s.heading}</h2>
-              <div className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed space-y-1">
+              <div className="text-sm text-brand-text leading-relaxed space-y-1">
                 {renderMarkdownLite(s.body)}
               </div>
             </section>
@@ -225,8 +225,8 @@ export default function PrivacyPage() {
         </div>
       </main>
 
-      <footer className="px-4 py-6 text-center text-xs text-gray-400 border-t border-gray-200 dark:border-gray-700">
-        <Link href="/" className="hover:text-blue-600">Vysi</Link> · <Link href="/privacy" className="hover:text-blue-600">{c.title}</Link> · <Link href="/terms" className="hover:text-blue-600">{locale === 'it' ? 'Termini di Servizio' : locale === 'es' ? 'Términos de Servicio' : 'Terms of Service'}</Link>
+      <footer className="px-4 py-6 text-center text-xs text-brand-gray border-t border-brand-border">
+        <Link href="/" className="hover:text-brand-green">Vysi</Link> · <Link href="/privacy" className="hover:text-brand-green">{c.title}</Link> · <Link href="/terms" className="hover:text-brand-green">{locale === 'it' ? 'Termini di Servizio' : locale === 'es' ? 'Términos de Servicio' : 'Terms of Service'}</Link>
       </footer>
     </div>
   )

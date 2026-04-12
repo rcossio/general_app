@@ -38,14 +38,14 @@ export function InventorySheet({ items, playerFlags, onClose }: InventorySheetPr
     const itemName = resolveI18n(viewedItem.name, locale)
     return (
       <div className="absolute inset-0 z-[2000] flex items-end">
-        <div className="w-full bg-white dark:bg-gray-900 rounded-t-2xl shadow-2xl border-t border-gray-200 dark:border-gray-700 max-h-[80vh] overflow-y-auto">
+        <div className="w-full bg-surface rounded-t-2xl shadow-2xl border-t border-brand-border max-h-[80vh] overflow-y-auto">
           <div className="pt-3 flex justify-center">
-            <div className="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full" />
+            <div className="w-10 h-1 bg-brand-border rounded-full" />
           </div>
           <div className="px-5 pt-3 pb-2 flex items-center gap-2">
             <button
               onClick={() => setViewedItem(null)}
-              className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500"
+              className="p-1.5 rounded-full hover:bg-brand-green-light text-brand-gray"
             >
               <ArrowLeft className="h-4 w-4" />
             </button>
@@ -53,7 +53,7 @@ export function InventorySheet({ items, playerFlags, onClose }: InventorySheetPr
           </div>
           <div className="px-4 pb-8">
             {src ? (
-              <div className="w-full aspect-[3/2] md:aspect-auto md:h-64 rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+              <div className="w-full aspect-[3/2] md:aspect-auto md:h-64 rounded-xl overflow-hidden bg-background flex items-center justify-center">
                 <img
                   src={src}
                   alt={itemName}
@@ -61,7 +61,7 @@ export function InventorySheet({ items, playerFlags, onClose }: InventorySheetPr
                 />
               </div>
             ) : desc ? (
-              <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-sm">{desc}</p>
+              <p className="text-brand-text leading-relaxed text-sm">{desc}</p>
             ) : null}
           </div>
         </div>
@@ -72,18 +72,18 @@ export function InventorySheet({ items, playerFlags, onClose }: InventorySheetPr
   return (
     <div className="absolute inset-0 z-[2000] flex items-end" onClick={onClose}>
       <div
-        className="w-full bg-white dark:bg-gray-900 rounded-t-2xl shadow-2xl border-t border-gray-200 dark:border-gray-700 max-h-[60vh] overflow-y-auto"
+        className="w-full bg-surface rounded-t-2xl shadow-2xl border-t border-brand-border max-h-[60vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="pt-3 flex justify-center">
-          <div className="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full" />
+          <div className="w-10 h-1 bg-brand-border rounded-full" />
         </div>
 
         <div className="px-5 pt-4 pb-8">
           <h2 className="text-base font-bold mb-4">{t('adventure.inventory')}</h2>
 
           {carried.length === 0 ? (
-            <p className="text-sm text-gray-400 italic">{t('adventure.inventoryEmpty')}</p>
+            <p className="text-sm text-brand-gray italic">{t('adventure.inventoryEmpty')}</p>
           ) : (
             <ul className="flex flex-col gap-2">
               {carried.map((item) => {
@@ -92,10 +92,10 @@ export function InventorySheet({ items, playerFlags, onClose }: InventorySheetPr
                   <li
                     key={item.id}
                     onClick={tappable ? () => setViewedItem(item) : undefined}
-                    className={`flex items-center justify-between px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800 ${tappable ? 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200' : ''}`}
+                    className={`flex items-center justify-between px-4 py-3 rounded-xl bg-background ${tappable ? 'cursor-pointer hover:bg-brand-green-light active:bg-brand-border' : ''}`}
                   >
                     <span className="text-sm font-medium">{resolveI18n(item.name, locale)}</span>
-                    {tappable && <ArrowLeft className="h-4 w-4 text-gray-400 rotate-180" />}
+                    {tappable && <ArrowLeft className="h-4 w-4 text-brand-gray rotate-180" />}
                   </li>
                 )
               })}

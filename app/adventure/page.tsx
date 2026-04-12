@@ -101,12 +101,12 @@ function AdventureList() {
     <div className="max-w-2xl mx-auto p-4 md:p-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <Map className="h-6 w-6 text-blue-600" />
+          <Map className="h-6 w-6 text-brand-green" />
           <h1 className="text-2xl font-bold">{t('adventure.title')}</h1>
         </div>
         <button
           onClick={() => setJoinOpen((v) => !v)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-brand-green hover:bg-brand-green-light transition-colors"
         >
           <Users className="h-4 w-4" />
           {t('adventure.joinSession')}
@@ -114,8 +114,8 @@ function AdventureList() {
       </div>
 
       {joinOpen && (
-        <div className="mb-6 p-4 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950">
-          <p className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-2">{t('adventure.joinCode')}</p>
+        <div className="mb-6 p-4 rounded-xl border border-brand-green bg-brand-green-light">
+          <p className="text-sm font-medium text-brand-green mb-2">{t('adventure.joinCode')}</p>
           <div className="flex gap-2">
             <input
               type="text"
@@ -123,12 +123,12 @@ function AdventureList() {
               onChange={(e) => { setJoinCode(e.target.value.toUpperCase()); setJoinError(false) }}
               placeholder={t('adventure.joinCodePlaceholder')}
               maxLength={6}
-              className="flex-1 px-3 py-2 rounded-lg border border-blue-300 dark:border-blue-700 bg-white dark:bg-gray-900 text-sm font-mono tracking-widest uppercase focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 px-3 py-2 rounded-lg border border-brand-green bg-surface text-sm font-mono tracking-widest uppercase focus:outline-none focus:ring-2 focus:ring-brand-green"
             />
             <button
               onClick={handleJoin}
               disabled={joining || !joinCode.trim()}
-              className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-medium"
+              className="px-4 py-2 rounded-lg bg-brand-photinia hover:bg-brand-photinia-dark disabled:opacity-50 text-white text-sm font-medium"
             >
               {joining ? '...' : t('adventure.joinSession')}
             </button>
@@ -142,11 +142,11 @@ function AdventureList() {
       {loading ? (
         <div className="space-y-4">
           {[1, 2].map((i) => (
-            <div key={i} className="h-28 rounded-xl bg-gray-200 dark:bg-gray-800 animate-pulse" />
+            <div key={i} className="h-28 rounded-xl bg-brand-border animate-pulse" />
           ))}
         </div>
       ) : games.length === 0 ? (
-        <div className="text-center py-16 text-gray-500">
+        <div className="text-center py-16 text-brand-gray">
           <BookOpen className="h-12 w-12 mx-auto mb-4 opacity-30" />
           <p>{t('adventure.noGamesAvailable')}</p>
         </div>
@@ -155,12 +155,12 @@ function AdventureList() {
           {games.map((game) => (
             <li
               key={game.id}
-              className="p-5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"
+              className="p-5 rounded-xl border border-brand-border bg-surface"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                    <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-brand-photinia-light text-brand-photinia">
                       {t('adventure.chapter')} {game.chapter}
                     </span>
                     {game.session?.completedAt && (
@@ -172,10 +172,10 @@ function AdventureList() {
                   </div>
                   <h2 className="font-semibold text-lg leading-tight truncate">{resolveI18n(game.title, locale)}</h2>
                   {game.description && (
-                    <p className="text-sm text-gray-500 mt-1 line-clamp-2">{game.description}</p>
+                    <p className="text-sm text-brand-gray mt-1 line-clamp-2">{game.description}</p>
                   )}
                   {game.session && !game.session.completedAt && (
-                    <p className="text-xs text-gray-400 mt-2">
+                    <p className="text-xs text-brand-gray mt-2">
                       Started {new Date(game.session.startedAt).toLocaleDateString()}
                     </p>
                   )}
@@ -183,7 +183,7 @@ function AdventureList() {
                 <button
                   onClick={() => handlePlay(game)}
                   disabled={starting === game.id}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-medium shrink-0 transition-colors"
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-brand-photinia hover:bg-brand-photinia-dark disabled:opacity-60 text-white text-sm font-medium shrink-0 transition-colors"
                 >
                   {starting === game.id
                     ? '...'

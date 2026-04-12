@@ -89,21 +89,21 @@ function TrackerFeed() {
     <div className="max-w-2xl mx-auto p-4 md:p-6">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold">{t('tracker.title')}</h1>
-        <Link href="/tracker/new" className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium">
+        <Link href="/tracker/new" className="flex items-center gap-2 px-4 py-2 bg-brand-photinia hover:bg-brand-photinia-dark text-white rounded-lg text-sm font-medium">
           <Plus className="h-4 w-4" /> {t('tracker.newEntry')}
         </Link>
       </div>
 
       {/* Stats bar */}
       {stats && stats.total > 0 && (
-        <div className="mb-5 p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
-          <p className="text-xs text-gray-400 mb-3">{stats.total} entries · {t('tracker.avgScores')}</p>
+        <div className="mb-5 p-4 rounded-xl border border-brand-border bg-surface">
+          <p className="text-xs text-brand-gray mb-3">{stats.total} entries · {t('tracker.avgScores')}</p>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             {Object.entries(stats.typeStats).map(([type, s]) => (
               <div key={type} className="text-center">
                 <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium mb-1 ${TYPE_COLORS[type] ?? ''}`}>{type}</span>
-                <p className="text-lg font-bold text-blue-600">{s.avg.toFixed(1)}</p>
-                <p className="text-xs text-gray-400">{s.count} entries</p>
+                <p className="text-lg font-bold text-brand-photinia">{s.avg.toFixed(1)}</p>
+                <p className="text-xs text-brand-gray">{s.count} entries</p>
               </div>
             ))}
           </div>
@@ -118,8 +118,8 @@ function TrackerFeed() {
             onClick={() => setFilter(tp)}
             className={`px-3 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors ${
               filter === tp
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+                ? 'bg-brand-photinia text-white'
+                : 'bg-background text-brand-gray hover:bg-brand-green-light'
             }`}
           >
             {tp || 'All'}
@@ -130,36 +130,36 @@ function TrackerFeed() {
       {loading ? (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-24 rounded-xl bg-gray-200 dark:bg-gray-800 animate-pulse" />
+            <div key={i} className="h-24 rounded-xl bg-brand-border animate-pulse" />
           ))}
         </div>
       ) : entries.length === 0 ? (
-        <div className="text-center py-16 text-gray-500">
+        <div className="text-center py-16 text-brand-gray">
           <BarChart2 className="h-12 w-12 mx-auto mb-4 opacity-30" />
           <p>{t('tracker.noEntriesYet')}</p>
         </div>
       ) : (
         <ul className="space-y-3">
           {entries.map((e) => (
-            <li key={e.id} className="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+            <li key={e.id} className="p-4 rounded-xl border border-brand-border bg-surface">
               <div className="flex items-start justify-between gap-3 mb-1">
                 <p className="font-semibold">{e.title}</p>
                 <div className="flex items-center gap-1 shrink-0">
-                  <span className="text-lg font-bold text-blue-600">{e.score}<span className="text-xs text-gray-400">/10</span></span>
-                  {e.isPublic && <Globe className="h-3.5 w-3.5 text-blue-400" aria-label={t('common.public')} />}
-                  <Link href={`/tracker/${e.id}`} className="p-1 text-gray-400 hover:text-blue-600"><Pencil className="h-3.5 w-3.5" /></Link>
-                  <button onClick={() => deleteEntry(e.id)} className="p-1 text-gray-400 hover:text-red-600"><Trash2 className="h-3.5 w-3.5" /></button>
+                  <span className="text-lg font-bold text-brand-photinia">{e.score}<span className="text-xs text-brand-gray">/10</span></span>
+                  {e.isPublic && <Globe className="h-3.5 w-3.5 text-brand-green" aria-label={t('common.public')} />}
+                  <Link href={`/tracker/${e.id}`} className="p-1 text-brand-gray hover:text-brand-green"><Pencil className="h-3.5 w-3.5" /></Link>
+                  <button onClick={() => deleteEntry(e.id)} className="p-1 text-brand-gray hover:text-red-600"><Trash2 className="h-3.5 w-3.5" /></button>
                 </div>
               </div>
-              {e.content && <p className="text-sm text-gray-500 mb-2 line-clamp-2">{e.content}</p>}
+              {e.content && <p className="text-sm text-brand-gray mb-2 line-clamp-2">{e.content}</p>}
               <div className="flex items-center gap-2 flex-wrap">
                 <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${TYPE_COLORS[e.type] ?? ''}`}>
                   {e.type}
                 </span>
                 {e.tags.map((tag) => (
-                  <span key={tag} className="px-2 py-0.5 rounded-full text-xs bg-gray-100 dark:bg-gray-800 text-gray-500">{tag}</span>
+                  <span key={tag} className="px-2 py-0.5 rounded-full text-xs bg-background text-brand-gray">{tag}</span>
                 ))}
-                <span className="text-xs text-gray-400 ml-auto">{new Date(e.createdAt).toLocaleDateString()}</span>
+                <span className="text-xs text-brand-gray ml-auto">{new Date(e.createdAt).toLocaleDateString()}</span>
               </div>
             </li>
           ))}
@@ -170,22 +170,22 @@ function TrackerFeed() {
       {publicEntries.length > 0 && (
         <div className="mt-10">
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <Globe className="h-4 w-4 text-blue-500" /> {t('tracker.community')}
+            <Globe className="h-4 w-4 text-brand-green" /> {t('tracker.community')}
           </h2>
           <ul className="space-y-3 max-h-[560px] overflow-y-auto pr-1">
             {publicEntries.map((e) => (
-              <li key={e.id} className="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+              <li key={e.id} className="p-4 rounded-xl border border-brand-border bg-surface">
                 <div className="flex items-start justify-between gap-3 mb-1">
                   <p className="font-semibold">{e.title}</p>
-                  <span className="text-lg font-bold text-blue-600 shrink-0">{e.score}<span className="text-xs text-gray-400">/10</span></span>
+                  <span className="text-lg font-bold text-brand-green shrink-0">{e.score}<span className="text-xs text-brand-gray">/10</span></span>
                 </div>
-                {e.content && <p className="text-sm text-gray-500 mb-2 line-clamp-2">{e.content}</p>}
+                {e.content && <p className="text-sm text-brand-gray mb-2 line-clamp-2">{e.content}</p>}
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${TYPE_COLORS[e.type] ?? ''}`}>{e.type}</span>
                   {e.tags.map((tag) => (
-                    <span key={tag} className="px-2 py-0.5 rounded-full text-xs bg-gray-100 dark:bg-gray-800 text-gray-500">{tag}</span>
+                    <span key={tag} className="px-2 py-0.5 rounded-full text-xs bg-background text-brand-gray">{tag}</span>
                   ))}
-                  <span className="text-xs text-gray-400 ml-auto">{t('common.by')} {e.user.name} · {new Date(e.createdAt).toLocaleDateString()}</span>
+                  <span className="text-xs text-brand-gray ml-auto">{t('common.by')} {e.user.name} · {new Date(e.createdAt).toLocaleDateString()}</span>
                 </div>
               </li>
             ))}

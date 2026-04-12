@@ -31,8 +31,8 @@ const AdventureMap = dynamic(
 
 function MapPlaceholder() {
   return (
-    <div className="flex items-center justify-center h-full bg-gray-100 dark:bg-gray-800">
-      <div className="animate-pulse text-gray-400 text-sm">…</div>
+    <div className="flex items-center justify-center h-full bg-background">
+      <div className="animate-pulse text-brand-gray text-sm">…</div>
     </div>
   )
 }
@@ -390,16 +390,16 @@ function GameMap({ sessionId }: { sessionId: string }) {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-64px)]">
-        <div className="animate-pulse text-gray-400 text-sm">{t('adventure.loading')}</div>
+        <div className="animate-pulse text-brand-gray text-sm">{t('adventure.loading')}</div>
       </div>
     )
   }
 
   if (!state) {
     return (
-      <div className="flex flex-col items-center justify-center h-[calc(100vh-64px)] gap-4 text-gray-500">
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-64px)] gap-4 text-brand-gray">
         <p>{t('adventure.sessionNotFound')}</p>
-        <button onClick={() => router.push('/adventure')} className="text-blue-600 underline text-sm">
+        <button onClick={() => router.push('/adventure')} className="text-brand-green underline text-sm">
           {t('adventure.backToAdventures')}
         </button>
       </div>
@@ -444,7 +444,7 @@ function GameMap({ sessionId }: { sessionId: string }) {
 
       {/* Spectator banner */}
       {isSpectator && (
-        <div className="px-4 py-2 bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 text-xs border-b border-blue-200 dark:border-blue-800 shrink-0 text-center">
+        <div className="px-4 py-2 bg-brand-green-light text-brand-green text-xs border-b border-brand-green shrink-0 text-center">
           {t('adventure.spectatorBanner')} · {t('adventure.spectatorRefreshHint')}
         </div>
       )}
@@ -468,10 +468,10 @@ function GameMap({ sessionId }: { sessionId: string }) {
       </div>
 
       {/* Bottom bar */}
-      <div className="relative flex items-center justify-between px-6 py-2 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shrink-0 z-10 text-xs text-gray-500">
+      <div className="relative flex items-center justify-between px-6 py-2 bg-surface border-t border-brand-border shrink-0 z-10 text-xs text-brand-gray">
         <button
           onClick={() => router.push('/adventure')}
-          className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+          className="p-1.5 rounded-full hover:bg-brand-green-light"
         >
           <ArrowLeft className="h-4 w-4" />
         </button>
@@ -479,13 +479,13 @@ function GameMap({ sessionId }: { sessionId: string }) {
           <MapPin className="h-3.5 w-3.5" />
           {visitedCount}/{visibleCount}
         </span>
-        <button onClick={() => loadState(sessionId)} className="p-1 hover:text-blue-600">
+        <button onClick={() => loadState(sessionId)} className="p-1 hover:text-brand-green">
           <RefreshCw className="h-3.5 w-3.5" />
         </button>
-        <button onClick={() => setInventoryOpen(true)} className="p-1 hover:text-blue-600">
+        <button onClick={() => setInventoryOpen(true)} className="p-1 hover:text-brand-green">
           <Backpack className="h-4 w-4" />
         </button>
-        <button onClick={() => setMenuOpen((v) => !v)} className="p-1 hover:text-blue-600">
+        <button onClick={() => setMenuOpen((v) => !v)} className="p-1 hover:text-brand-green">
           <Settings className="h-4 w-4" />
         </button>
 
@@ -494,18 +494,18 @@ function GameMap({ sessionId }: { sessionId: string }) {
       {/* Settings sheet */}
       {menuOpen && (
         <div className="absolute inset-0 z-[2000] flex items-end" onClick={() => { setMenuOpen(false); setConfirmRestart(false); setConfirmRevoke(false) }}>
-          <div className="w-full bg-white dark:bg-gray-900 rounded-t-2xl shadow-2xl border-t border-gray-200 dark:border-gray-700 p-5 pb-8" onClick={(e) => e.stopPropagation()}>
-            <div className="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mb-4" />
+          <div className="w-full bg-surface rounded-t-2xl shadow-2xl border-t border-brand-border p-5 pb-8" onClick={(e) => e.stopPropagation()}>
+            <div className="w-10 h-1 bg-brand-border rounded-full mx-auto mb-4" />
             {confirmRestart ? (
               <>
                 <p className="font-bold text-base mb-2">{t('adventure.restartChapterConfirm')}</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                <p className="text-sm text-brand-gray mb-6">
                   {t('adventure.restartChapterWarning')}
                 </p>
                 <div className="flex gap-3">
                   <button
                     onClick={() => setConfirmRestart(false)}
-                    className="flex-1 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-sm"
+                    className="flex-1 py-2 rounded-xl border border-brand-border text-sm"
                   >
                     {t('common.cancel')}
                   </button>
@@ -525,13 +525,13 @@ function GameMap({ sessionId }: { sessionId: string }) {
             ) : confirmRevoke ? (
               <>
                 <p className="font-bold text-base mb-2">{t('adventure.revokeCode')}</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                <p className="text-sm text-brand-gray mb-6">
                   {t('adventure.revokeCodeConfirm')}
                 </p>
                 <div className="flex gap-3">
                   <button
                     onClick={() => setConfirmRevoke(false)}
-                    className="flex-1 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-sm"
+                    className="flex-1 py-2 rounded-xl border border-brand-border text-sm"
                   >
                     {t('common.cancel')}
                   </button>
@@ -545,15 +545,15 @@ function GameMap({ sessionId }: { sessionId: string }) {
               </>
             ) : (
               <>
-                <p className="text-xs text-gray-400 uppercase tracking-wide mb-3">{t('adventure.chapterSettings')}</p>
+                <p className="text-xs text-brand-gray uppercase tracking-wide mb-3">{t('adventure.chapterSettings')}</p>
 
                 {/* Share session — owner only */}
                 {!isSpectator && (
                   <>
                     {shareCode ? (
-                      <div className="mb-1 px-4 py-3 rounded-xl bg-blue-50 dark:bg-blue-950">
+                      <div className="mb-1 px-4 py-3 rounded-xl bg-brand-green-light">
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">{t('adventure.joinCode')}</span>
+                          <span className="text-xs text-brand-green font-medium">{t('adventure.joinCode')}</span>
                           <button
                             onClick={() => setConfirmRevoke(true)}
                             className="p-1 text-red-500 hover:text-red-600"
@@ -562,10 +562,10 @@ function GameMap({ sessionId }: { sessionId: string }) {
                           </button>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-2xl font-mono font-bold tracking-[0.3em] text-blue-700 dark:text-blue-300">{shareCode}</span>
+                          <span className="text-2xl font-mono font-bold tracking-[0.3em] text-brand-green">{shareCode}</span>
                           <button
                             onClick={handleCopyCode}
-                            className="p-1.5 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900 text-blue-600 dark:text-blue-400"
+                            className="p-1.5 rounded-lg hover:bg-brand-green-light text-brand-green"
                           >
                             {codeCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                           </button>
@@ -574,7 +574,7 @@ function GameMap({ sessionId }: { sessionId: string }) {
                     ) : (
                       <button
                         onClick={handleGenerateCode}
-                        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium mb-1 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300"
+                        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium mb-1 hover:bg-brand-green-light text-brand-text"
                       >
                         <Share2 className="h-4 w-4" />
                         {t('adventure.shareSession')}
@@ -587,7 +587,7 @@ function GameMap({ sessionId }: { sessionId: string }) {
                 {!isSpectator && canUseFakeGps && (
                   <button
                     onClick={() => { setFakeMode((v) => !v); setMenuOpen(false) }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium mb-1 ${fakeMode ? 'bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300' : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'}`}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium mb-1 ${fakeMode ? 'bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300' : 'hover:bg-brand-green-light text-brand-text'}`}
                   >
                     <Crosshair className="h-4 w-4" />
                     {t('adventure.fakeGps')}

@@ -1,18 +1,27 @@
 import type { Metadata, Viewport } from 'next'
-import localFont from 'next/font/local'
+import { Rubik, Plus_Jakarta_Sans } from 'next/font/google'
 import './globals.css'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { LocaleProvider } from '@/contexts/LocaleContext'
 import { ChromeProvider } from '@/contexts/ChromeContext'
+import { ThemeProvider } from '@/contexts/ThemeContext'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { Header } from '@/components/layout/Header'
 import { ServiceWorkerRegistrar } from '@/components/ServiceWorkerRegistrar'
 
-const geistSans = localFont({
-  src: './fonts/GeistVF.woff',
-  variable: '--font-geist-sans',
-  weight: '100 900',
+const rubik = Rubik({
+  subsets: ['latin', 'latin-ext'],
+  variable: '--font-rubik',
+  weight: ['600', '700', '800', '900'],
+  display: 'swap',
+})
+
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ['latin', 'latin-ext'],
+  variable: '--font-jakarta',
+  weight: ['400', '500', '600', '700'],
+  display: 'swap',
 })
 
 export const metadata: Metadata = {
@@ -39,7 +48,7 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: '#2563eb',
+  themeColor: '#48b35c',
   width: 'device-width',
   initialScale: 1,
 }
@@ -53,8 +62,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
       </head>
-      <body className={`${geistSans.variable} antialiased bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white`}>
+      <body className={`${rubik.variable} ${jakarta.variable} font-jakarta antialiased bg-background text-brand-text`}>
         <LocaleProvider>
+        <ThemeProvider>
         <ChromeProvider>
         <AuthProvider>
           <div className="flex min-h-screen">
@@ -70,6 +80,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <ServiceWorkerRegistrar />
         </AuthProvider>
         </ChromeProvider>
+        </ThemeProvider>
         </LocaleProvider>
       </body>
     </html>
