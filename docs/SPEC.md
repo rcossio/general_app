@@ -276,11 +276,11 @@ npx tsx scripts/adventure/import-game.ts \
 ### Endpoints
 
 ```
-POST /api/auth/register   → create user, assign 'user' role, return tokens
-POST /api/auth/login      → validate credentials, return access + refresh tokens
+POST /api/auth/login      → login or auto-register; returns { isNewUser } flag
 POST /api/auth/refresh    → exchange refresh token for new access token
 POST /api/auth/logout     → revoke refresh token in DB
 GET  /api/auth/me         → return current user with roles and flat permissions list
+PATCH /api/auth/me        → update name or avatar
 ```
 
 ### Token rules
@@ -377,11 +377,12 @@ GET    /api/tracker/stats                   → score averages by type (cached 6
 ### Pages
 
 **Core:**
-- `/` — Dashboard: module cards, recent activity
-- `/login` — Login form (+ Google OAuth)
-- `/register` — Register form
+- `/` — Public landing page (redirects to `/dashboard` if logged in)
+- `/dashboard` — Protected dashboard: module cards
+- `/login` — Unified login/register form (+ Google OAuth). Auto-registers new emails.
+- `/complete-profile` — New users set their display name after first login
 - `/profile` — View/edit name and avatar; language selector (EN / IT / ES)
-- `/admin` — User list with role assignment (admin and master_admin only)
+- `/admin` — User management: search, role assignment, direct permissions, user deletion (admin and master_admin only)
 
 **Life Tracker module:**
 - `/tracker` — Entry feed, filter by type, stats bar; community public feed

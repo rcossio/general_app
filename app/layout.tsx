@@ -24,6 +24,18 @@ export const metadata: Metadata = {
     statusBarStyle: 'default',
     title: 'Vysi',
   },
+  openGraph: {
+    title: 'Vysi',
+    description: 'A GPS adventure game that transforms your city into a living story.',
+    siteName: 'Vysi',
+    type: 'website',
+    locale: 'en_US',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Vysi',
+    description: 'A GPS adventure game that transforms your city into a living story.',
+  },
 }
 
 export const viewport: Viewport = {

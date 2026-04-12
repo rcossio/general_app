@@ -129,6 +129,13 @@ See `.env.example` for the full list. Required before first run:
 | `R2_BUCKET_NAME` | R2 bucket name |
 | `NEXT_PUBLIC_R2_PUBLIC_URL` | Public URL for R2 bucket |
 
+Optional (for email — password reset):
+
+| Variable | Description |
+|---|---|
+| `RESEND_API_KEY` | Resend API key (resend.com) |
+| `RESEND_FROM_EMAIL` | Sender address, e.g. `noreply@yourdomain.com` — domain must be verified in Resend |
+
 Optional (for tests):
 
 | Variable | Description |
@@ -196,3 +203,21 @@ After seeding (`npx prisma db seed`), a master admin account is created using th
 The seed also creates 10 bot community users with public workouts and tracker entries
 so the community feed is populated from day one. Bot accounts use the `user` role and
 cannot be distinguished from real users in the UI.
+
+---
+
+## Future Improvements
+
+- **Sentry** — client-side error tracking. Run `npx @sentry/wizard@latest -i nextjs`, add `SENTRY_DSN` to `.env`, rebuild. Free tier: 5,000 errors/month.
+
+### Adventure Engine
+
+1. **Hint system** — GPS games have high friction when players get stuck. Add a progressive hint array per location value (nudge → stronger hint → spoiler) with cooldown, optionally auto-revealing after prolonged inactivity.
+2. **Chapter lint script** — A validation pass run during `import-game.ts` (or standalone) that catches common authoring bugs before they reach players. Checks: `when: null` not in last position (shadows all values below it), duplicate conditions on the same location, `cb_` flags granted but never revoked (callback stuck forever), flags referenced in `when`/`visibleWhen` that are never granted anywhere in the chapter (typo detection), flags missing the required prefix (`vis_`, `has_`, `st_`, `cb_`), items referencing a flag that no location ever grants (unobtainable item). Prints warnings without blocking the import.
+3. **Puzzle types beyond password** — Only exact text match exists. Support regex patterns for flexible answers, multi-input combinations (3-digit lock), and sequence puzzles to expand the puzzle design space. E.g. placing/dragging objects in specific locations, touching/selecting things in order, pairing items by touching them, scanning an image with the camera, drawing a pattern. 
+4. **Timed / sequenced events** — No time pressure exists. Add flag expiry timestamps and location visibility windows to enable countdowns, dawn/dusk cycles, and "solve before the guard returns" tension.
+5. **Item combination** — Can't combine inventory items. Add chapter-level combination recipes (e.g. rope + hook = grappling hook) with a combine mode in the inventory UI.
+6. **Counters / numeric variables** — Flags are boolean-only. Add key-value session variables with numeric support to enable "collect 3 of 5 clues" mechanics, reputation scores, and consumable items without combinatorial flag explosions.
+7. **Randomness / replayability** — Everything is deterministic. Add weighted random value selection or shuffle groups so playthroughs can vary (different red herrings, randomized clue placement).
+
+

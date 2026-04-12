@@ -6,10 +6,10 @@ export const startSessionSchema = z.object({
 
 export const visitLocationSchema = z.object({
   locationId: z.string().min(1),
-  lat: z.number(),
-  lng: z.number(),
+  lat: z.number().min(-90).max(90),
+  lng: z.number().min(-180).max(180),
   choiceId: z.string().optional(),
-  password: z.string().optional(),
+  password: z.string().max(100).optional(),
 })
 
 export const closeLocationSchema = z.object({

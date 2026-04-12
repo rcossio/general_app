@@ -11,6 +11,7 @@ async function main() {
     { name: 'Admin', slug: 'admin', description: 'Administrative access' },
     { name: 'Moderator', slug: 'moderator', description: 'Moderation access' },
     { name: 'User', slug: 'user', description: 'Standard user access' },
+    { name: 'Bot User', slug: 'bot_user', description: 'Seeded bot accounts for community content' },
   ]
 
   for (const role of roles) {
@@ -38,15 +39,14 @@ async function main() {
     })
   }
 
-  // Assign all permissions to master_admin and admin
+  // Assign permissions to roles
   const masterAdmin = await prisma.role.findUniqueOrThrow({ where: { slug: 'master_admin' } })
   const admin = await prisma.role.findUniqueOrThrow({ where: { slug: 'admin' } })
   const user = await prisma.role.findUniqueOrThrow({ where: { slug: 'user' } })
+  const botUser = await prisma.role.findUniqueOrThrow({ where: { slug: 'bot_user' } })
   const allPermissions = await prisma.permission.findMany()
 
-  // Actions restricted to admins only
-  const adminOnlyActions = ['manage', 'delete_any']
-
+  // master_admin and admin get all permissions
   for (const permission of allPermissions) {
     for (const role of [masterAdmin, admin]) {
       await prisma.rolePermission.upsert({
@@ -55,16 +55,36 @@ async function main() {
         create: { roleId: role.id, permissionId: permission.id },
       })
     }
-    if (!adminOnlyActions.includes(permission.action)) {
-      await prisma.rolePermission.upsert({
-        where: { roleId_permissionId: { roleId: user.id, permissionId: permission.id } },
-        update: {},
-        create: { roleId: user.id, permissionId: permission.id },
+  }
+
+  // Explicit allowlist for user and bot_user — new permissions default to admin-only
+  const userAllowlist = [
+    'adventure:play',
+    'tracker:read',
+    'tracker:create',
+    'tracker:update',
+    'tracker:delete',
+  ]
+
+  // Clear old user/bot_user role_permissions and re-assign from allowlist
+  await prisma.rolePermission.deleteMany({
+    where: { roleId: { in: [user.id, botUser.id] } },
+  })
+
+  for (const permStr of userAllowlist) {
+    const [resource, action] = permStr.split(':')
+    const perm = allPermissions.find((p) => p.resource === resource && p.action === action)
+    if (!perm) continue
+    for (const r of [user, botUser]) {
+      await prisma.rolePermission.create({
+        data: { roleId: r.id, permissionId: perm.id },
       })
     }
   }
 
   // Seed default master_admin user
+  // If the user already exists (e.g. created via Google OAuth), update their password
+  // so they can also log in with email/password. Always ensure master_admin role.
   const adminEmail = process.env.ADMIN_EMAIL
   const adminPassword = process.env.ADMIN_PASSWORD
   if (!adminEmail || !adminPassword) {
@@ -73,7 +93,7 @@ async function main() {
   const passwordHash = await bcrypt.hash(adminPassword, 12)
   const adminUser = await prisma.user.upsert({
     where: { email: adminEmail },
-    update: {},
+    update: { passwordHash },
     create: {
       email: adminEmail,
       passwordHash,
@@ -81,13 +101,13 @@ async function main() {
     },
   })
 
-  await prisma.userRole.upsert({
-    where: { userId_roleId: { userId: adminUser.id, roleId: masterAdmin.id } },
-    update: {},
-    create: { userId: adminUser.id, roleId: masterAdmin.id },
+  // Remove any existing roles and assign master_admin
+  await prisma.userRole.deleteMany({ where: { userId: adminUser.id } })
+  await prisma.userRole.create({
+    data: { userId: adminUser.id, roleId: masterAdmin.id },
   })
 
-  await seedBotUsers(user.id)
+  await seedBotUsers(botUser.id)
   console.log('Seed completed successfully')
 }
 
@@ -309,9 +329,14 @@ async function seedBotUsers(userRoleId: string) {
 
   for (const bot of bots) {
     const existingUser = await prisma.user.findUnique({ where: { email: bot.email } })
-    if (existingUser) continue  // skip if already seeded
+    if (existingUser) {
+      // Ensure existing bots have bot_user role
+      await prisma.userRole.deleteMany({ where: { userId: existingUser.id } })
+      await prisma.userRole.create({ data: { userId: existingUser.id, roleId: userRole.id } })
+      continue
+    }
 
-    const botUser = await prisma.user.create({
+    const botAccount = await prisma.user.create({
       data: {
         email: bot.email,
         passwordHash: await hash('BotUser!2024'),
@@ -319,11 +344,11 @@ async function seedBotUsers(userRoleId: string) {
       },
     })
 
-    await prisma.userRole.create({ data: { userId: botUser.id, roleId: userRole.id } })
+    await prisma.userRole.create({ data: { userId: botAccount.id, roleId: userRole.id } })
 
     for (const r of bot.routines) {
       const routine = await prisma.workoutRoutine.create({
-        data: { userId: botUser.id, name: r.name, description: r.description, isPublic: true },
+        data: { userId: botAccount.id, name: r.name, description: r.description, isPublic: true },
       })
       for (const d of r.days) {
         const day = await prisma.workoutDay.create({
@@ -338,7 +363,7 @@ async function seedBotUsers(userRoleId: string) {
     for (const e of bot.entries) {
       await prisma.trackerEntry.create({
         data: {
-          userId: botUser.id,
+          userId: botAccount.id,
           type: e.type,
           title: e.title,
           content: 'content' in e ? e.content : undefined,

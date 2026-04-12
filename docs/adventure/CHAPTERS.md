@@ -433,7 +433,7 @@ Import the next chapter first, then import the current one referencing it via `-
 - **Start simple.** One flag per location, one condition per value. Complexity grows fast.
 - **The order of `values` matters.** The engine picks the first match. Put the most specific conditions first, `null` last.
 - **Every location needs a fallback.** Always end `values` with `when: null`.
-- **Flag names are free-form strings.** Use a consistent convention: `visited_x`, `has_x`, `talked_to_x`.
+- **Flag names must follow the naming convention** described below.
 - **Omit what you don't need.** `grants`, `revokes`, `radiusM`, `imageUrl`, `type`, `itemImageUrl` are all optional. Only specify them when you need a non-default value.
 - **Test with fake GPS.** The app has a built-in D-pad (enable via Settings → Fake GPS) for walking through a chapter on a desktop or indoors.
 - **Re-import after every change.** The database is not updated automatically. Run the import command and the app will reflect the changes immediately.
@@ -448,12 +448,33 @@ npx tsx scripts/adventure/import-game.ts \
 
 ---
 
+## Flag naming convention
+
+All flags must use one of these prefixes. The prefix communicates the flag's purpose and lifecycle.
+
+| Prefix | Purpose | Lifecycle | Example |
+|---|---|---|---|
+| `vis_` | Visit marker — records that the player interacted with a location. | Permanent. Set once, never revoked. | `vis_start`, `vis_church` |
+| `has_` | Possession — the player holds an item or piece of knowledge. Tied to inventory items via the `items[].flag` field. | Permanent unless explicitly revoked (e.g. an event takes the item away). | `has_key`, `has_lantern` |
+| `st_` | Story state — tracks narrative progression, NPC attitudes, world changes. Anything that isn't a visit marker or an item. | Permanent. May be revoked by story events when state changes. | `st_door_open`, `st_guard_bribed`, `st_dog_chased` |
+| `cb_` | Callback — temporary flag used by the choice/password pattern. Granted when the player picks a choice or enters a correct password, then **always revoked** in the outcome value. | Temporary. Must appear in both `grants` (on the choice/password) and `revokes` (on the outcome value). A `cb_` flag that is never revoked is a bug. | `cb_shed_grab`, `cb_toolbox_correct` |
+
+### Rules
+
+- Every flag in the chapter must start with one of the four prefixes.
+- `cb_` flags must always be revoked in the outcome value that matches them. Forgetting the revoke causes the callback text to show permanently instead of the choices/password prompt on revisit.
+- Within a chapter, use a consistent naming style after the prefix: `snake_case`, descriptive, no abbreviations. Example: `st_guard_bribed`, not `st_gb`.
+- Across chapters, flag names are scoped to a session (one session per chapter), so collisions between chapters are not possible. No chapter prefix needed.
+
+---
+
 ## JSON (legacy)
 
 The import script also accepts `.json` files. The data structure is identical — only the syntax differs. JSON requires quoted keys, quoted strings, explicit `null` values, and no trailing commas. Existing JSON chapter files continue to work without changes.
 
 ---
 
-## Full example
+## Full examples
 
-See `scripts/adventure/0_tutorial.yaml` for a complete working example covering all engine features: items, flag grants, flag revokes, choices with callback flags, password with callback flags, events, and chapter completion.
+- `scripts/adventure/0_tutorial.yaml` — A playable tutorial covering all engine features in a narrative context.
+- `scripts/adventure/designer_dev.yaml` — A test chapter for designers and developers. Each location demonstrates one engine capability with self-documenting narrative text. Locations are spaced 100 m apart in cardinal directions for easy testing with Fake GPS.

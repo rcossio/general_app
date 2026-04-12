@@ -27,7 +27,7 @@ export function Sidebar() {
   const isAdmin = user?.roles.some((r) => ['master_admin', 'admin'].includes(r))
 
   const navItems = [
-    { label: t('nav.dashboard'), href: '/', icon: 'Home' },
+    { label: t('nav.dashboard'), href: '/dashboard', icon: 'Home' },
     ...activeModules.map((m) => ({ ...m.navItem, label: t(MODULE_NAV_KEYS[m.id] ?? 'nav.home') })),
     { label: t('nav.profile'), href: '/profile', icon: 'User' },
     ...(isAdmin ? [{ label: t('nav.admin'), href: '/admin', icon: 'Shield' }] : []),
@@ -41,8 +41,8 @@ export function Sidebar() {
     >
       <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
         {!collapsed && (
-          <span className="font-semibold text-gray-900 dark:text-white truncate">
-            Platform
+          <span className="font-bold text-blue-600 truncate">
+            Vysi
           </span>
         )}
         <button

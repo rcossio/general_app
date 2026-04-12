@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
+import { audit } from '@/lib/audit'
 import {
   comparePassword,
+  hashPassword,
   signAccessToken,
   signRefreshToken,
   storeRefreshToken,
@@ -25,6 +27,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { email, password } = parsed.data
+    const ip = request.headers.get('x-real-ip') ?? 'unknown'
 
     const user = await prisma.user.findUnique({
       where: { email },
@@ -39,18 +42,17 @@ export async function POST(request: NextRequest) {
     })
 
     if (!user) {
-      return NextResponse.json(
-        { error: 'Invalid credentials', code: 'INVALID_CREDENTIALS' },
-        { status: 401 }
-      )
-    }
-
-    const valid = await comparePassword(password, user.passwordHash)
-    if (!valid) {
-      return NextResponse.json(
-        { error: 'Invalid credentials', code: 'INVALID_CREDENTIALS' },
-        { status: 401 }
-      )
+      return NextResponse.json({ data: { needsRegistration: true } })
+    } else {
+      // Existing user — verify password
+      const valid = await comparePassword(password, user.passwordHash)
+      if (!valid) {
+        audit('login_failed', { email, ip, reason: 'wrong_password' })
+        return NextResponse.json(
+          { error: 'Invalid credentials', code: 'INVALID_CREDENTIALS' },
+          { status: 401 }
+        )
+      }
     }
 
     const roles = user.userRoles.map((ur) => ur.role.slug)

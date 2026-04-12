@@ -6,6 +6,7 @@ import { z } from 'zod'
 const patchSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   avatarUrl: z.string().url().optional().or(z.literal('')),
+  acceptPrivacy: z.boolean().optional(),
 })
 
 export async function GET(request: NextRequest) {
@@ -21,6 +22,7 @@ export async function GET(request: NextRequest) {
         name: true,
         avatarUrl: true,
         createdAt: true,
+        privacyAcceptedAt: true,
         userRoles: {
           select: {
             role: {
@@ -36,6 +38,11 @@ export async function GET(request: NextRequest) {
             },
           },
         },
+        userPermissions: {
+          select: {
+            permission: { select: { resource: true, action: true } },
+          },
+        },
       },
     })
 
@@ -47,11 +54,15 @@ export async function GET(request: NextRequest) {
     }
 
     const roles = user.userRoles.map((ur) => ur.role.slug)
-    const permissions = user.userRoles.flatMap((ur) =>
+    const rolePermissions = user.userRoles.flatMap((ur) =>
       ur.role.rolePermissions.map(
         (rp) => `${rp.permission.resource}:${rp.permission.action}`
       )
     )
+    const directPermissions = user.userPermissions.map(
+      (up) => `${up.permission.resource}:${up.permission.action}`
+    )
+    const permissions = [...rolePermissions, ...directPermissions]
 
     return NextResponse.json({
       data: {
@@ -60,6 +71,7 @@ export async function GET(request: NextRequest) {
         name: user.name,
         avatarUrl: user.avatarUrl,
         createdAt: user.createdAt,
+        privacyAcceptedAt: user.privacyAcceptedAt,
         roles,
         permissions: Array.from(new Set(permissions)),
       },
@@ -87,6 +99,7 @@ export async function PATCH(request: NextRequest) {
     data: {
       ...(parsed.data.name !== undefined && { name: parsed.data.name }),
       ...(parsed.data.avatarUrl !== undefined && { avatarUrl: parsed.data.avatarUrl || null }),
+      ...(parsed.data.acceptPrivacy && { privacyAcceptedAt: new Date() }),
     },
     select: { id: true, email: true, name: true, avatarUrl: true },
   })

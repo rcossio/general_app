@@ -18,9 +18,15 @@ This applies to all files that are or could be git-tracked: `.md`, `.conf`, `.sh
 
 The only place real values belong is `.env`, which is gitignored.
 
+## Working Style
+
+When making a change, grep the entire codebase for all related occurrences and update them all in one pass. Don't fix one file and leave the same constraint/pattern in other files. Verify with a grep afterward. There is no password length requirement — do not add one.
+
+Do not implement changes while still discussing them with the user. Wait for explicit confirmation before writing code. If the user is asking questions or raising concerns, that is a discussion — not a green light to start coding.
+
 ## Before Starting Any Task
 
-Read all `.md` files before doing anything. This includes — but is not limited to — `README.md`, `docs/SPEC.md`, `docs/DEPLOYMENT.md`, and `docs/CHAPTERS.md`. These files define the intended architecture, conventions, and constraints. Code must conform to them, not to whatever pattern already exists in the codebase (existing code may already be wrong).
+Read all `.md` files before doing anything. This includes — but is not limited to — `README.md`, `docs/SPEC.md`, and `docs/DEPLOYMENT.md`. These files define the intended architecture, conventions, and constraints. Code must conform to them, not to whatever pattern already exists in the codebase (existing code may already be wrong).
 
 Scan the project structure first. Check what already exists before creating anything new — test folders, config files, scripts, docs. Do not create a file if one already serves the same purpose.
 
@@ -64,9 +70,6 @@ npx tsx scripts/adventure/import-game.ts --file=scripts/adventure/1_chuch_murder
 npx tsx scripts/adventure/import-game.ts --file=scripts/adventure/0_tutorial.yaml --slug=tutorial --chapter=0 --activate --next-chapter-slug=chapter-1
 # Chapter files live in scripts/adventure/ (YAML preferred; JSON also accepted)
 
-# Trace all story paths (outputs scripts/adventure/paths.md, gitignored):
-npx tsx scripts/adventure/trace-paths.ts
-
 # Production — no deploy script. Run in order on the server:
 npm install                                        # if dependencies changed — never use npm ci (causes SIGBUS on low-memory VPS)
 npx prisma migrate deploy                          # if schema changed
@@ -88,7 +91,7 @@ pm2 save
 
 ## Architecture
 
-**Stack:** Next.js 14 (App Router) + TypeScript (strict, no `any`) + PostgreSQL + Prisma + Tailwind CSS + Vitest. Single-process monolith deployed on a VPS via PM2 + Nginx.
+**Stack:** Next.js 14 (App Router) + TypeScript (strict, no `any`) + PostgreSQL + Prisma + Tailwind CSS + Leaflet (react-leaflet v4) + Vitest. PWA (manifest.json + service worker). Single-process monolith deployed on a VPS via PM2 + Nginx.
 
 ### Module System
 
@@ -110,12 +113,31 @@ To add a new module:
 
 ### Auth
 
+- **Login is unified.** `/api/auth/login` checks if the email exists. If yes, it verifies the password. If not, it returns `{ needsRegistration: true }` — no user is created. The frontend then shows step 2 (name + privacy/terms checkbox) inline on the login page. When submitted, `POST /api/auth/register` creates the user with `privacyAcceptedAt` set (GDPR — no data stored before consent). There is no password length requirement. Google OAuth follows a similar pattern — new OAuth users go to `/complete-profile` (where they must accept privacy/terms before proceeding), returning users go to `/dashboard`.
 - **Access token:** JWT, 15 min, stored in React context (memory only — never localStorage).
 - **Refresh token:** JWT, 30 days, hashed in DB, sent as httpOnly cookie. Rotated on each refresh.
 - Fetch wrapper auto-refreshes on 401 and retries once.
 - `lib/auth.ts` — token signing/verification, password hashing.
 - `lib/permissions.ts` — `requirePermission(request, resource, action)` RBAC middleware. `master_admin` and `admin` bypass all checks.
 - Permissions follow `resource:action` format — e.g. `tracker:create`, `adventure:play`. Seeded automatically from `activeModules[].permissions`.
+- **Two permission paths:** role-based (`role_permissions` — assigned to a role, inherited by all users with that role) and direct (`user_permissions` — granted to a specific user by an admin). `requirePermission` checks both. The `/me` endpoint returns the merged flat list.
+- **Role → permission mapping** (seeded by `prisma/seed.ts`). Uses an **explicit allowlist** — new permissions added to a module manifest default to admin-only until explicitly added to the `userAllowlist` array in the seed:
+
+  | Role | Permissions |
+  |---|---|
+  | `master_admin` | All (bypasses checks entirely) |
+  | `admin` | All (bypasses checks entirely) |
+  | `user` | `adventure:play`, `tracker:read`, `tracker:create`, `tracker:update`, `tracker:delete` |
+  | `bot_user` | Same as `user` |
+  | `moderator` | None assigned |
+
+  To grant a new permission to regular users: add it to `userAllowlist` in `prisma/seed.ts` and re-seed.
+
+- **Direct permissions** (`user_permissions` table) are for granting specific capabilities to individual users without changing their role — e.g. `adventure:tester` enables fake GPS for a non-admin user. Managed via the admin panel. These are checked by `requirePermission()` alongside role-based permissions.
+- **Privacy/Terms consent gate:** `ProtectedRoute` checks `user.privacyAcceptedAt`. Users who haven't accepted (e.g. OAuth users who closed the tab during `/complete-profile`) are redirected back to `/complete-profile` and cannot access any protected page until they accept.
+- **Password reset:** `POST /api/auth/forgot-password` generates a hashed token (1h expiry, rate-limited to 1 per email per 5 min) and sends a reset email via Resend. `POST /api/auth/reset-password` verifies the token, updates the password, and revokes all refresh tokens (forces re-login). Always returns success on forgot-password to prevent email enumeration. OAuth-only accounts (password starts with `oauth:`) are silently skipped.
+- **Data ownership:** All user-facing endpoints filter by `userId` from the JWT (`result.user.sub`). The permission controls feature access; the `userId` filter ensures users can only read/modify their own data. This is the security boundary — never remove the `userId` filter from a query.
+- **Privacy principle (future — tiered access):** Private data (e.g. tracker entries with `isPublic: false`) must never be visible to admins. Only the owner can see their private entries. If an admin moderation tool is built later, it should use tiered access: admins see metadata and public entries only, master_admin can access private content only through an audit-logged interface where every access is recorded and visible to the user.
 
 ### API Design
 
@@ -200,9 +222,32 @@ To add a new language: (1) create `locales/<code>.ts` implementing `Translations
 - All foreign keys have explicit indexes.
 - `@updatedAt` on every `updated_at` field.
 
+### Environment Validation
+
+`lib/env.ts` validates all required environment variables at startup using Zod. If any required var is missing, the app crashes immediately with a clear error message instead of failing at runtime. Server-side files import `env` from `lib/env` instead of using `process.env.X!` assertions. `NODE_ENV` is the only exception — it's read directly from `process.env` since it's a Node runtime constant.
+
+### Email
+
+`lib/email.ts` — Resend SDK wrapper. Sends transactional emails (currently only password reset). Gracefully skips if `RESEND_API_KEY` or `RESEND_FROM_EMAIL` are not configured. Domain must be verified in Resend dashboard (DNS records: DKIM, SPF, DMARC added via domain registrar).
+
 ### File Uploads
 
 `lib/storage.ts` — Cloudflare R2 via AWS S3 SDK. Exports `getUploadUrl(key)` (presigned PUT, 5min), `getPublicUrl(key)`, and `deleteFile(key)`. Configured via `R2_*` env vars.
+
+### Error Handling
+
+- `app/not-found.tsx` — branded 404 page with i18n
+- `app/error.tsx` — error boundary with "Try again" button, i18n
+- `app/global-error.tsx` — root-level fallback (no providers available, English only)
+- Loading skeletons: `loading.tsx` files in `/dashboard`, `/tracker`, `/adventure`, `/profile`, `/admin`
+
+### SEO & Public Pages
+
+- `public/robots.txt` — allows `/`, `/privacy`, `/terms`; blocks authenticated routes and `/api/`
+- Open Graph and Twitter Card meta tags in root `layout.tsx`
+- `GET /api/health` — health check endpoint, pings DB, returns `{ status: "ok" }` or 503
+- `/privacy` — Privacy Policy (IT/EN/ES)
+- `/terms` — Terms of Service (IT/EN/ES)
 
 ### Testing Setup
 

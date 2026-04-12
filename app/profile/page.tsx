@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useLocale } from '@/contexts/LocaleContext'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
@@ -18,12 +19,16 @@ export default function ProfilePage() {
 function ProfileForm() {
   const { user, fetchWithAuth, logout } = useAuth()
   const { t, locale, setLocale } = useLocale()
+  const router = useRouter()
   const [name, setName] = useState(user?.name ?? '')
   const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl ?? '')
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [deleteConfirm, setDeleteConfirm] = useState('')
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const profileSchema = z.object({
@@ -202,6 +207,47 @@ function ProfileForm() {
         >
           {t('auth.logOut')}
         </button>
+      </div>
+
+      {/* Delete account — collapsible danger zone */}
+      <div className="mt-10 pt-6 border-t border-gray-200 dark:border-gray-700">
+        <button
+          onClick={() => { setDeleteOpen((v) => !v); setDeleteConfirm('') }}
+          className="text-sm text-gray-400 hover:text-red-500 transition-colors"
+        >
+          {t('profile.deleteAccount')}
+        </button>
+        {deleteOpen && (
+          <div className="mt-3 p-4 rounded-xl border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/30 space-y-3">
+            <p className="text-sm text-red-600 dark:text-red-400">{t('profile.deleteAccountWarning')}</p>
+            <p className="text-xs text-gray-500">{t('profile.deleteAccountConfirm', { name: user?.name ?? '' })}</p>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={deleteConfirm}
+                onChange={(e) => setDeleteConfirm(e.target.value)}
+                placeholder={user?.name ?? ''}
+                className="flex-1 px-3 py-1.5 rounded-lg border border-red-300 dark:border-red-800 bg-white dark:bg-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+              />
+              <button
+                onClick={async () => {
+                  setDeleting(true)
+                  try {
+                    await fetchWithAuth('/api/auth/delete-account', { method: 'POST' })
+                    await logout()
+                    router.push('/')
+                  } finally {
+                    setDeleting(false)
+                  }
+                }}
+                disabled={deleteConfirm !== user?.name || deleting}
+                className="px-4 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 disabled:opacity-30 disabled:hover:bg-red-600 text-white text-sm font-medium transition-colors"
+              >
+                {t('profile.deleteAccount')}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

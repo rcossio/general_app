@@ -30,22 +30,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Upsert: return existing session if one exists (even completed)
-    const existing = await prisma.gameSession.findUnique({
+    // Atomic upsert: avoids race condition if two requests arrive simultaneously
+    const session = await prisma.gameSession.upsert({
       where: { gameId_userId: { gameId, userId: result.user.sub } },
+      update: {},
+      create: { gameId, userId: result.user.sub },
       select: { id: true },
     })
 
-    if (existing) {
-      return NextResponse.json({ data: { sessionId: existing.id } })
-    }
-
-    const session = await prisma.gameSession.create({
-      data: { gameId, userId: result.user.sub },
-      select: { id: true },
-    })
-
-    return NextResponse.json({ data: { sessionId: session.id } }, { status: 201 })
+    return NextResponse.json({ data: { sessionId: session.id } })
   } catch {
     return NextResponse.json(
       { error: 'Internal server error', code: 'INTERNAL_ERROR' },

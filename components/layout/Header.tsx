@@ -28,7 +28,7 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-40 flex items-center justify-between h-14 px-4 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 md:hidden">
-      <span className="font-semibold text-gray-900 dark:text-white">Platform</span>
+      <a href="/" className="font-bold text-blue-600">Vysi</a>
       <div className="flex items-center gap-2">
         <button onClick={toggleTheme} className="p-2 rounded text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800">
           {dark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
