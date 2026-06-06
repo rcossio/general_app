@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useLocale } from '@/contexts/LocaleContext'
 import { useChrome } from '@/contexts/ChromeContext'
@@ -15,11 +16,30 @@ export default function LandingPageClient() {
   const { setHideChrome } = useChrome()
   const { openPreferences } = useConsent()
   const [langOpen, setLangOpen] = useState(false)
+  const router = useRouter()
 
   useEffect(() => {
     setHideChrome(true)
     return () => setHideChrome(false)
   }, [setHideChrome])
+
+  // Route away from the marketing landing depending on context:
+  //  - logged-in (anywhere): go straight to the app.
+  //  - logged-out inside the installed PWA (standalone): go to login.
+  //  - logged-out in a normal browser tab (or a crawler): stay on the landing
+  //    so the marketing page and its SEO are unaffected.
+  // Runs client-side only, so SSR still serves the full landing to crawlers.
+  useEffect(() => {
+    if (loading) return
+    if (user) {
+      router.replace('/dashboard')
+      return
+    }
+    const isStandalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (window.navigator as { standalone?: boolean }).standalone === true
+    if (isStandalone) router.replace('/login')
+  }, [loading, user, router])
 
   const isLoggedIn = !loading && user
 

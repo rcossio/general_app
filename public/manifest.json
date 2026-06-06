@@ -2,7 +2,7 @@
   "name": "Vysi",
   "short_name": "Vysi",
   "description": "A GPS adventure game that transforms your city into a living story.",
-  "start_url": "/",
+  "start_url": "/dashboard",
   "display": "standalone",
   "orientation": "portrait",
   "theme_color": "#48b35c",
