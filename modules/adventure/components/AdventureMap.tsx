@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { MapContainer, TileLayer, CircleMarker, Marker, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import { getInitialProvider, OSM_PROVIDER } from '@/modules/adventure/lib/tileProviders'
+import { getInitialProvider, OSM_PROVIDER } from '@/lib/mapTiles'
 
 // Base map tiles. Uses the provider chosen via NEXT_PUBLIC_MAP_PROVIDER, but
 // auto-falls back to OSM if that provider starts erroring (e.g. MapTiler quota

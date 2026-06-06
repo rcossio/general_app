@@ -14,6 +14,7 @@ const MODULE_NAV_KEYS: Record<string, string> = {
   workout: 'nav.workout',
   'life-tracker': 'nav.lifeTracker',
   adventure: 'nav.adventure',
+  community: 'nav.community',
 }
 
 export function Sidebar() {

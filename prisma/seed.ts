@@ -64,6 +64,7 @@ async function main() {
     'tracker:create',
     'tracker:update',
     'tracker:delete',
+    'community:create',
   ]
 
   // Clear old user/bot_user role_permissions and re-assign from allowlist

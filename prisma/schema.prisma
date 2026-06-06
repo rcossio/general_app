@@ -32,6 +32,7 @@ model User {
   trackerEntries        TrackerEntry[]
   gameSessions          GameSession[]
   sessionParticipations SessionParticipant[]
+  communityNotices      CommunityNotice[]
 
   @@map("users")
 }
@@ -327,4 +328,35 @@ model TrackerEntry {
   @@index([userId, type])
   @@index([isPublic, createdAt])
   @@map("tracker_entries")
+}
+
+// ============================================================
+// SECTION: Community module (municipal notices)
+// ============================================================
+
+model CommunityNotice {
+  id         String    @id @default(cuid())
+  userId     String    @map("user_id")
+  category   String // category key (free string — see modules/community/lib/categories.ts)
+  lat        Float
+  lng        Float
+  note       String?   @db.VarChar(280)
+  photoUrl   String?   @map("photo_url")
+  status     String    @default("open") // open | fixed
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  resolvedAt DateTime? @map("resolved_at")
+
+  // Set when a volunteer marks the notice fixed (before/after photos required).
+  fixedAt        DateTime? @map("fixed_at")
+  fixedByUserId  String?   @map("fixed_by_user_id")
+  beforePhotoUrl String?   @map("before_photo_url")
+  afterPhotoUrl  String?   @map("after_photo_url")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("community_notices")
 }
