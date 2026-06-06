@@ -31,6 +31,16 @@ const config: Config = {
         rubik: ['var(--font-rubik)', 'sans-serif'],
         jakarta: ['var(--font-jakarta)', 'sans-serif'],
       },
+      keyframes: {
+        // Two quick up-and-down hops with a little pop, then rest — repeats each cycle.
+        'badge-bounce': {
+          '0%, 16%, 32%, 100%': { transform: 'translateY(0) scale(1)' },
+          '8%, 24%': { transform: 'translateY(-110%) scale(1.2)' },
+        },
+      },
+      animation: {
+        'badge-bounce': 'badge-bounce 3s ease-in-out infinite',
+      },
     },
   },
   plugins: [],

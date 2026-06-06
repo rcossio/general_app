@@ -12,7 +12,7 @@ import { InventorySheet, type GameItem } from '@/modules/adventure/components/In
 import { FakeGpsDpad } from '@/modules/adventure/components/FakeGpsDpad'
 import { usePlayerPosition } from '@/modules/adventure/lib/usePlayerPosition'
 import { distanceMeters } from '@/modules/adventure/lib/haversine'
-import { ArrowLeft, MapPin, Trophy, RefreshCw, Settings, RotateCcw, Crosshair, X, Backpack, Share2, Copy, Check, Trash2 } from 'lucide-react'
+import { ArrowLeft, Trophy, RefreshCw, Settings, RotateCcw, Crosshair, X, Backpack, Share2, Copy, Check, Trash2, LocateFixed } from 'lucide-react'
 import type { MapLocation } from '@/modules/adventure/components/AdventureMap'
 
 type ResolvedLocation = MapLocation & {
@@ -121,6 +121,14 @@ function GameMap({ sessionId }: { sessionId: string }) {
   const [state, setState] = useState<SessionState | null>(null)
   const [fakeMode, setFakeMode] = useState(false)
   const { playerPos, gpsError, move, teleport, recenterKey } = usePlayerPosition(fakeMode)
+  // Camera follow: on by default; a manual map drag pauses it, the center button resumes it.
+  const [followMode, setFollowMode] = useState(true)
+  const [recenterTick, setRecenterTick] = useState(0)
+  const pauseFollow = useCallback(() => setFollowMode(false), [])
+  const recenterToGps = useCallback(() => {
+    setFollowMode(true)
+    setRecenterTick((t) => t + 1)
+  }, [])
   const [selectedLocation, setSelectedLocation] = useState<ResolvedLocation | null>(null)
   const [visiting, setVisiting] = useState(false)
   const [passwordWrong, setPasswordWrong] = useState(false)
@@ -459,8 +467,6 @@ function GameMap({ sessionId }: { sessionId: string }) {
     setTimeout(() => setCodeCopied(false), 2000)
   }
 
-  const visibleCount = resolvedLocations.filter((l) => l.visible).length
-  const visitedCount = state.session.visitedLocationIds.length
   // Hint bar only for locations (events auto-open the sheet, no hint needed)
   const nearbyLocation = resolvedLocations.find(
     (l) => nearbyLocationIds.has(l.id) && l.status === null && l.type === 'location'
@@ -511,41 +517,52 @@ function GameMap({ sessionId }: { sessionId: string }) {
       )}
 
       {/* Map — fills all space except stats bar */}
-      <div className="flex-1 relative overflow-hidden">
+      <div className="flex-1 relative overflow-hidden z-0">
         <AdventureMap
           locations={resolvedLocations}
           playerPosition={playerPos}
           onLocationClick={(loc) => setSelectedLocation(loc as ResolvedLocation)}
           nearbyLocationIds={nearbyLocationIds}
-          recenterKey={recenterKey}
+          follow={followMode}
+          recenterSignal={recenterKey + recenterTick}
+          onUserPan={pauseFollow}
         />
+        {playerPos && (
+          <button
+            onClick={recenterToGps}
+            aria-label="Center on my location"
+            className={`absolute bottom-4 right-3 z-[1000] flex items-center justify-center w-11 h-11 rounded-full shadow-lg border transition-colors ${
+              followMode
+                ? 'bg-brand-green border-brand-green text-white'
+                : 'bg-surface border-brand-border text-brand-text'
+            }`}
+          >
+            <LocateFixed className="h-5 w-5" />
+          </button>
+        )}
       </div>
 
       {/* Bottom bar */}
-      <div className="relative flex items-center justify-between px-6 py-2 bg-surface border-t border-brand-border shrink-0 z-10 text-xs text-brand-gray">
+      <div className="relative flex items-center justify-between px-6 py-3 bg-surface border-t border-brand-border shrink-0 z-10 text-xs text-brand-gray">
         <button
           onClick={() => router.push('/adventure')}
-          className="p-1.5 rounded-full hover:bg-brand-green-light"
+          className="p-2 rounded-full hover:bg-brand-green-light"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="h-6 w-6" strokeWidth={2.5} />
         </button>
-        <span className="flex items-center gap-1">
-          <MapPin className="h-3.5 w-3.5" />
-          {visitedCount}/{visibleCount}
-        </span>
-        <button onClick={() => loadState(sessionId)} className="p-1 hover:text-brand-green">
-          <RefreshCw className="h-3.5 w-3.5" />
+        <button onClick={() => loadState(sessionId)} className="p-2 hover:text-brand-green">
+          <RefreshCw className="h-6 w-6" strokeWidth={2.5} />
         </button>
-        <button onClick={openInventory} className="relative p-1 hover:text-brand-green">
-          <Backpack className="h-4 w-4" />
+        <button onClick={openInventory} className="relative p-2 hover:text-brand-green">
+          <Backpack className="h-6 w-6" strokeWidth={2.5} />
           {seenLoaded && newItemCount > 0 && (
-            <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full bg-brand-photinia text-white text-[10px] font-rubik font-bold leading-none">
+            <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full bg-brand-photinia text-white text-[10px] font-rubik font-bold leading-none animate-badge-bounce">
               +{newItemCount}
             </span>
           )}
         </button>
-        <button onClick={() => setMenuOpen((v) => !v)} className="p-1 hover:text-brand-green">
-          <Settings className="h-4 w-4" />
+        <button onClick={() => setMenuOpen((v) => !v)} className="p-2 hover:text-brand-green">
+          <Settings className="h-6 w-6" strokeWidth={2.5} />
         </button>
 
       </div>
