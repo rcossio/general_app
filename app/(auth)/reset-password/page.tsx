@@ -26,7 +26,7 @@ function ResetPasswordForm() {
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="w-full max-w-sm text-center">
           <p className="text-sm text-red-500 mb-4">{t('auth.invalidResetLink')}</p>
-          <Link href="/login" className="text-sm text-blue-600 hover:underline">
+          <Link href="/login" className="text-sm text-brand-green hover:underline">
             {t('auth.backToLogin')}
           </Link>
         </div>
@@ -66,11 +66,11 @@ function ResetPasswordForm() {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="w-full max-w-sm text-center">
-          <h1 className="text-2xl font-bold mb-4">{t('auth.resetPasswordTitle')}</h1>
+          <h1 className="text-2xl font-rubik font-bold mb-4">{t('auth.resetPasswordTitle')}</h1>
           <p className="text-sm text-green-600 dark:text-green-400 mb-6">{t('auth.passwordResetSuccess')}</p>
           <Link
             href="/login"
-            className="inline-block px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+            className="inline-block px-4 py-2 bg-brand-photinia hover:bg-brand-photinia-dark text-white text-sm font-rubik font-bold rounded-lg transition-colors"
           >
             {t('auth.signIn')}
           </Link>
@@ -82,7 +82,7 @@ function ResetPasswordForm() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
-        <h1 className="text-2xl font-bold mb-6 text-center">{t('auth.resetPasswordTitle')}</h1>
+        <h1 className="text-2xl font-rubik font-bold mb-6 text-center">{t('auth.resetPasswordTitle')}</h1>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-1">{t('auth.newPassword')}</label>
@@ -92,12 +92,12 @@ function ResetPasswordForm() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 autoFocus
-                className="w-full px-3 py-2 pr-10 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 pr-10 rounded-lg border border-brand-border bg-surface focus:outline-none focus:ring-2 focus:ring-brand-green"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-brand-gray hover:text-brand-text"
                 tabIndex={-1}
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -108,13 +108,13 @@ function ResetPasswordForm() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-medium rounded-lg transition-colors"
+            className="w-full py-2 px-4 bg-brand-photinia hover:bg-brand-photinia-dark disabled:opacity-50 text-white font-rubik font-bold rounded-lg transition-colors"
           >
             {loading ? t('auth.resettingPassword') : t('auth.resetPassword')}
           </button>
         </form>
         <p className="mt-4 text-center">
-          <Link href="/login" className="text-sm text-blue-600 hover:underline">
+          <Link href="/login" className="text-sm text-brand-green hover:underline">
             {t('auth.backToLogin')}
           </Link>
         </p>

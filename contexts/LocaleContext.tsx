@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useState } from 'react'
 import { type Locale, translations } from '@/locales'
 
 const STORAGE_KEY = 'locale'
-const DEFAULT_LOCALE: Locale = 'en'
+const DEFAULT_LOCALE: Locale = 'it'
 
 interface LocaleContextValue {
   locale: Locale

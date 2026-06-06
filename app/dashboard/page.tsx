@@ -21,7 +21,7 @@ function Dashboard() {
 
   return (
     <div className="max-w-4xl mx-auto p-4 md:p-6">
-      <h1 className="text-2xl font-bold mb-6">
+      <h1 className="text-2xl font-rubik font-bold mb-6">
         {t('dashboard.welcomeBack', { name: user?.name ?? '' })}
       </h1>
 
@@ -33,10 +33,10 @@ function Dashboard() {
             <Link
               key={mod.id}
               href={mod.navItem.href}
-              className="p-5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:shadow-md transition-shadow"
+              className="p-5 rounded-xl border border-brand-border bg-surface hover:shadow-md transition-shadow"
             >
               <div className="flex items-center gap-3 mb-2">
-                {IconComponent && <IconComponent className="h-6 w-6 text-blue-600" />}
+                {IconComponent && <IconComponent className="h-6 w-6 text-brand-photinia" />}
                 <span className="font-semibold">{mod.name}</span>
               </div>
             </Link>

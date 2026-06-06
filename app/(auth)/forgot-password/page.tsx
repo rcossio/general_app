@@ -39,9 +39,9 @@ export default function ForgotPasswordPage() {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="w-full max-w-sm text-center">
-          <h1 className="text-2xl font-bold mb-4">{t('auth.forgotPasswordTitle')}</h1>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">{t('auth.resetLinkSent')}</p>
-          <Link href="/login" className="text-sm text-blue-600 hover:underline">
+          <h1 className="text-2xl font-rubik font-bold mb-4">{t('auth.forgotPasswordTitle')}</h1>
+          <p className="text-sm text-brand-gray mb-6">{t('auth.resetLinkSent')}</p>
+          <Link href="/login" className="text-sm text-brand-green hover:underline">
             {t('auth.backToLogin')}
           </Link>
         </div>
@@ -52,8 +52,8 @@ export default function ForgotPasswordPage() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
-        <h1 className="text-2xl font-bold mb-2 text-center">{t('auth.forgotPasswordTitle')}</h1>
-        <p className="text-sm text-gray-500 text-center mb-6">{t('auth.forgotPasswordDesc')}</p>
+        <h1 className="text-2xl font-rubik font-bold mb-2 text-center">{t('auth.forgotPasswordTitle')}</h1>
+        <p className="text-sm text-brand-gray text-center mb-6">{t('auth.forgotPasswordDesc')}</p>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-1">{t('auth.email')}</label>
@@ -62,20 +62,20 @@ export default function ForgotPasswordPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               autoFocus
-              className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 rounded-lg border border-brand-border bg-surface focus:outline-none focus:ring-2 focus:ring-brand-green"
             />
             {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
           </div>
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-medium rounded-lg transition-colors"
+            className="w-full py-2 px-4 bg-brand-photinia hover:bg-brand-photinia-dark disabled:opacity-50 text-white font-rubik font-bold rounded-lg transition-colors"
           >
             {loading ? t('auth.sendingResetLink') : t('auth.sendResetLink')}
           </button>
         </form>
         <p className="mt-4 text-center">
-          <Link href="/login" className="text-sm text-blue-600 hover:underline">
+          <Link href="/login" className="text-sm text-brand-green hover:underline">
             {t('auth.backToLogin')}
           </Link>
         </p>

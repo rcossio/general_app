@@ -79,17 +79,17 @@ export function LocationSheet({
   return (
     <div className="absolute inset-0 z-[2000] flex items-end" onClick={effectiveLocked ? undefined : onDismiss}>
       <div
-        className="w-full bg-white dark:bg-gray-900 rounded-t-2xl shadow-2xl border-t border-gray-200 dark:border-gray-700 max-h-[80vh] overflow-y-auto"
+        className="w-full bg-surface rounded-t-2xl shadow-2xl border-t border-brand-border max-h-[80vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Drag handle */}
         <div className="pt-3 flex justify-center">
-          <div className="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full" />
+          <div className="w-10 h-1 bg-brand-border rounded-full" />
         </div>
 
         {/* Image — 3:2 ratio on mobile, fixed height on desktop */}
         <div className="px-4 pt-3">
-          <div className="w-full aspect-[3/2] md:aspect-auto md:h-48 rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800">
+          <div className="w-full aspect-[3/2] md:aspect-auto md:h-48 rounded-xl overflow-hidden bg-background">
             <img
               src={src}
               alt={name}
@@ -106,7 +106,7 @@ export function LocationSheet({
             <div className="flex-1 min-w-0">
               <h2 className="text-lg font-bold truncate">{name}</h2>
               {distance !== null && !withinRange && (
-                <p className="text-xs text-gray-400 flex items-center gap-1 mt-1">
+                <p className="text-xs text-brand-gray flex items-center gap-1 mt-1">
                   <Navigation className="h-3 w-3" />
                   {Math.round(distance)}m
                 </p>
@@ -115,7 +115,7 @@ export function LocationSheet({
             {!effectiveLocked && (
               <button
                 onClick={onDismiss}
-                className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400"
+                className="p-1.5 rounded-full hover:bg-brand-green-light text-brand-gray"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -125,10 +125,10 @@ export function LocationSheet({
           {/* Narrative + actions */}
           {withinRange || visited ? (
             visiting ? (
-              <p className="text-gray-400 italic text-sm">...</p>
+              <p className="text-brand-gray italic text-sm">...</p>
             ) : (
               <>
-                <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-sm mb-4">
+                <p className="text-brand-text leading-relaxed text-sm mb-4">
                   {narrative ? renderNarrative(narrative) : null}
                 </p>
                 {passwordWrong ? (
@@ -136,7 +136,7 @@ export function LocationSheet({
                     <p className="text-red-500 text-sm font-medium">{t('adventure.wrongPassword')}</p>
                     <button
                       onClick={onDismiss}
-                      className="w-full py-3 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold text-sm"
+                      className="w-full py-3 rounded-xl bg-background text-brand-text font-semibold text-sm"
                     >
                       {t('adventure.visitLocation')}
                     </button>
@@ -150,7 +150,7 @@ export function LocationSheet({
                       onChange={(e) => setPasswordInput(e.target.value)}
                       placeholder={t('adventure.passwordPrompt')}
                       maxLength={20}
-                      className="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                      className="w-full px-4 py-2 rounded-xl border border-brand-border bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                     />
                     <button
                       onClick={() => { onPassword(passwordInput); setPasswordInput('') }}
@@ -161,14 +161,14 @@ export function LocationSheet({
                     </button>
                     <button
                       onClick={onDismiss}
-                      className="w-full py-3 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold text-sm"
+                      className="w-full py-3 rounded-xl bg-background text-brand-text font-semibold text-sm"
                     >
                       {t('adventure.keepExploring')}
                     </button>
                   </div>
                 ) : hasChoices ? (
                   <>
-                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
+                    <p className="text-xs font-semibold text-brand-gray uppercase tracking-wide mb-2">
                       {t('adventure.chooseAction')}
                     </p>
                     <div className="flex flex-col gap-2">
@@ -194,7 +194,7 @@ export function LocationSheet({
               </>
             )
           ) : (
-            <p className="text-gray-400 italic text-sm">
+            <p className="text-brand-gray italic text-sm">
               {t('adventure.outOfRange')}
             </p>
           )}

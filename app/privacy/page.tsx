@@ -14,7 +14,7 @@ const CONTACT_EMAIL = process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? 'you@example.com'
 const content: Record<string, { title: string; lastUpdated: string; sections: { heading: string; body: string }[] }> = {
   it: {
     title: 'Informativa sulla Privacy',
-    lastUpdated: 'Ultimo aggiornamento: 5 aprile 2026',
+    lastUpdated: 'Ultimo aggiornamento: 6 giugno 2026',
     sections: [
       {
         heading: '1. Titolare del trattamento',
@@ -46,7 +46,7 @@ const content: Record<string, { title: string; lastUpdated: string; sections: { 
       },
       {
         heading: '8. Cookie',
-        body: 'Utilizziamo un solo cookie tecnico strettamente necessario:\n• **refresh_token**: cookie httpOnly per mantenere la tua sessione di accesso. Non traccia la tua attività.\n\nNon utilizziamo cookie di analytics, di profilazione o pubblicitari. Non è necessario un banner cookie.',
+        body: 'Utilizziamo un cookie tecnico strettamente necessario:\n• **refresh_token**: cookie httpOnly per mantenere la tua sessione di accesso. Non traccia la tua attività.\n\nCon il tuo consenso, utilizziamo anche cookie di analytics di prima parte per misurare in forma aggregata come viene usata l\'app (ad esempio quante persone iniziano e completano un\'avventura). Vengono impostati solo dopo che hai cliccato "Accetta" nel banner dei cookie. Puoi accettarli o rifiutarli in qualsiasi momento tramite "Preferenze cookie" nel footer, e rifiutare è facile quanto accettare. Non utilizziamo cookie pubblicitari o di profilazione cross-site.',
       },
       {
         heading: '9. Sicurezza',
@@ -60,7 +60,7 @@ const content: Record<string, { title: string; lastUpdated: string; sections: { 
   },
   en: {
     title: 'Privacy Policy',
-    lastUpdated: 'Last updated: April 5, 2026',
+    lastUpdated: 'Last updated: June 6, 2026',
     sections: [
       {
         heading: '1. Data controller',
@@ -92,7 +92,7 @@ const content: Record<string, { title: string; lastUpdated: string; sections: { 
       },
       {
         heading: '8. Cookies',
-        body: 'We use a single strictly necessary technical cookie:\n• **refresh_token**: httpOnly cookie to maintain your login session. It does not track your activity.\n\nWe do not use analytics, profiling, or advertising cookies. No cookie banner is required.',
+        body: 'We use a strictly necessary technical cookie:\n• **refresh_token**: httpOnly cookie to maintain your login session. It does not track your activity.\n\nWith your consent, we also use first-party analytics cookies to measure, in aggregate, how the app is used (for example, how many people start and finish an adventure). They are set only after you click "Accept" in the cookie banner. You can accept or reject them at any time via "Cookie preferences" in the footer, and rejecting is as easy as accepting. We do not use advertising or cross-site profiling cookies.',
       },
       {
         heading: '9. Security',
@@ -106,7 +106,7 @@ const content: Record<string, { title: string; lastUpdated: string; sections: { 
   },
   es: {
     title: 'Política de Privacidad',
-    lastUpdated: 'Última actualización: 5 de abril de 2026',
+    lastUpdated: 'Última actualización: 6 de junio de 2026',
     sections: [
       {
         heading: '1. Responsable del tratamiento',
@@ -138,7 +138,7 @@ const content: Record<string, { title: string; lastUpdated: string; sections: { 
       },
       {
         heading: '8. Cookies',
-        body: 'Utilizamos una sola cookie técnica estrictamente necesaria:\n• **refresh_token**: cookie httpOnly para mantener tu sesión iniciada. No rastrea tu actividad.\n\nNo utilizamos cookies de analítica, de perfilado o publicitarias. No se requiere banner de cookies.',
+        body: 'Utilizamos una cookie técnica estrictamente necesaria:\n• **refresh_token**: cookie httpOnly para mantener tu sesión iniciada. No rastrea tu actividad.\n\nCon tu consentimiento, también utilizamos cookies de analítica de origen propio para medir, de forma agregada, cómo se usa la app (por ejemplo, cuántas personas inician y completan una aventura). Se establecen solo después de que hagas clic en "Aceptar" en el banner de cookies. Puedes aceptarlas o rechazarlas en cualquier momento mediante "Preferencias de cookies" en el pie de página, y rechazar es tan fácil como aceptar. No utilizamos cookies publicitarias ni de perfilado entre sitios.',
       },
       {
         heading: '9. Seguridad',
@@ -182,24 +182,24 @@ export default function PrivacyPage() {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Navbar */}
-      <nav className="sticky top-0 z-50 flex items-center justify-between h-14 px-4 md:px-8 bg-white/80 dark:bg-gray-900/80 backdrop-blur border-b border-gray-200 dark:border-gray-700">
-        <Link href="/" className="font-bold text-lg text-blue-600">Vysi</Link>
+      <nav className="sticky top-0 z-50 flex items-center justify-between h-14 px-4 md:px-8 bg-brand-green">
+        <Link href="/" className="font-rubik font-extrabold text-[26px] text-white">vysi</Link>
         <div className="relative">
           <button
             onClick={() => setLangOpen((v) => !v)}
-            className="flex items-center gap-1 px-2 py-1 rounded-lg text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+            className="flex items-center gap-1 px-2 py-1 rounded-lg text-sm text-white/70 hover:text-white hover:bg-white/10"
           >
             <Globe className="h-4 w-4" />
             {LOCALE_LABELS[locale]}
             <ChevronDown className="h-3 w-3" />
           </button>
           {langOpen && (
-            <div className="absolute right-0 mt-1 py-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 min-w-[80px]">
+            <div className="absolute right-0 mt-1 py-1 bg-surface rounded-lg shadow-lg border border-brand-border min-w-[80px]">
               {LOCALES.map((l) => (
                 <button
                   key={l}
                   onClick={() => { setLocale(l); setLangOpen(false) }}
-                  className={`w-full px-3 py-1.5 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 ${locale === l ? 'text-blue-600 font-medium' : 'text-gray-700 dark:text-gray-300'}`}
+                  className={`w-full px-3 py-1.5 text-left text-sm hover:bg-brand-green-light ${locale === l ? 'text-brand-green font-medium' : 'text-brand-text'}`}
                 >
                   {LOCALE_LABELS[l]}
                 </button>
@@ -212,12 +212,12 @@ export default function PrivacyPage() {
       {/* Content */}
       <main className="flex-1 max-w-2xl mx-auto px-4 py-8 md:py-12">
         <h1 className="text-2xl font-bold mb-2">{c.title}</h1>
-        <p className="text-sm text-gray-400 mb-8">{c.lastUpdated}</p>
+        <p className="text-sm text-brand-gray mb-8">{c.lastUpdated}</p>
         <div className="space-y-6">
           {c.sections.map((s, i) => (
             <section key={i}>
               <h2 className="font-semibold text-base mb-2">{s.heading}</h2>
-              <div className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed space-y-1">
+              <div className="text-sm text-brand-text leading-relaxed space-y-1">
                 {renderMarkdownLite(s.body)}
               </div>
             </section>
@@ -225,8 +225,8 @@ export default function PrivacyPage() {
         </div>
       </main>
 
-      <footer className="px-4 py-6 text-center text-xs text-gray-400 border-t border-gray-200 dark:border-gray-700">
-        <Link href="/" className="hover:text-blue-600">Vysi</Link> · <Link href="/privacy" className="hover:text-blue-600">{c.title}</Link> · <Link href="/terms" className="hover:text-blue-600">{locale === 'it' ? 'Termini di Servizio' : locale === 'es' ? 'Términos de Servicio' : 'Terms of Service'}</Link>
+      <footer className="px-4 py-6 text-center text-xs text-brand-gray border-t border-brand-border">
+        <Link href="/" className="hover:text-brand-green">Vysi</Link> · <Link href="/privacy" className="hover:text-brand-green">{c.title}</Link> · <Link href="/terms" className="hover:text-brand-green">{locale === 'it' ? 'Termini di Servizio' : locale === 'es' ? 'Términos de Servicio' : 'Terms of Service'}</Link>
       </footer>
     </div>
   )

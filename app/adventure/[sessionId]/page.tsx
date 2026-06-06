@@ -12,7 +12,7 @@ import { InventorySheet, type GameItem } from '@/modules/adventure/components/In
 import { FakeGpsDpad } from '@/modules/adventure/components/FakeGpsDpad'
 import { usePlayerPosition } from '@/modules/adventure/lib/usePlayerPosition'
 import { distanceMeters } from '@/modules/adventure/lib/haversine'
-import { ArrowLeft, MapPin, Trophy, RefreshCw, Settings, RotateCcw, Crosshair, X, Backpack, Share2, Copy, Check, Trash2 } from 'lucide-react'
+import { ArrowLeft, Trophy, RefreshCw, Settings, RotateCcw, Crosshair, X, Backpack, Share2, Copy, Check, Trash2, LocateFixed } from 'lucide-react'
 import type { MapLocation } from '@/modules/adventure/components/AdventureMap'
 
 type ResolvedLocation = MapLocation & {
@@ -31,8 +31,8 @@ const AdventureMap = dynamic(
 
 function MapPlaceholder() {
   return (
-    <div className="flex items-center justify-center h-full bg-gray-100 dark:bg-gray-800">
-      <div className="animate-pulse text-gray-400 text-sm">…</div>
+    <div className="flex items-center justify-center h-full bg-background">
+      <div className="animate-pulse text-brand-gray text-sm">…</div>
     </div>
   )
 }
@@ -60,6 +60,7 @@ interface ApiLocation {
   imageUrl: string | null
   visible: boolean
   visited: boolean
+  hasUpdate: boolean
   status: string | null
   narrative: I18nString | null
   choices: ApiLocationChoice[] | null
@@ -120,6 +121,14 @@ function GameMap({ sessionId }: { sessionId: string }) {
   const [state, setState] = useState<SessionState | null>(null)
   const [fakeMode, setFakeMode] = useState(false)
   const { playerPos, gpsError, move, teleport, recenterKey } = usePlayerPosition(fakeMode)
+  // Camera follow: on by default; a manual map drag pauses it, the center button resumes it.
+  const [followMode, setFollowMode] = useState(true)
+  const [recenterTick, setRecenterTick] = useState(0)
+  const pauseFollow = useCallback(() => setFollowMode(false), [])
+  const recenterToGps = useCallback(() => {
+    setFollowMode(true)
+    setRecenterTick((t) => t + 1)
+  }, [])
   const [selectedLocation, setSelectedLocation] = useState<ResolvedLocation | null>(null)
   const [visiting, setVisiting] = useState(false)
   const [passwordWrong, setPasswordWrong] = useState(false)
@@ -127,10 +136,39 @@ function GameMap({ sessionId }: { sessionId: string }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [confirmRestart, setConfirmRestart] = useState(false)
   const [inventoryOpen, setInventoryOpen] = useState(false)
+  // Per-item "seen" counter: times the inventory was opened since the item was
+  // acquired. 0/absent = new (drives the badge); 1 = show red dot; >=2 = seen.
+  const [inventorySeen, setInventorySeen] = useState<Record<string, number>>({})
+  const [seenLoaded, setSeenLoaded] = useState(false)
   const [completeBannerDismissed, setCompleteBannerDismissed] = useState(false)
   const [shareCode, setShareCode] = useState<string | null>(null)
   const [codeCopied, setCodeCopied] = useState(false)
   const [confirmRevoke, setConfirmRevoke] = useState(false)
+
+  // Load (or seed) the inventory "seen" markers from localStorage, per session.
+  // On first-ever load, seed currently-carried items as already seen so an
+  // in-progress inventory doesn't flash every item as "new" after deploy.
+  useEffect(() => {
+    if (!state || seenLoaded) return
+    const key = `adventure_inventory_seen_${sessionId}`
+    const raw = localStorage.getItem(key)
+    if (raw) {
+      try {
+        setInventorySeen(JSON.parse(raw) as Record<string, number>)
+      } catch {
+        /* ignore corrupt value */
+      }
+    } else {
+      const flagSet = new Set(state.session.flags)
+      const seed: Record<string, number> = {}
+      for (const it of state.game.items as GameItem[]) {
+        if (flagSet.has(it.flag)) seed[it.id] = 2
+      }
+      localStorage.setItem(key, JSON.stringify(seed))
+      setInventorySeen(seed)
+    }
+    setSeenLoaded(true)
+  }, [state, seenLoaded, sessionId])
 
   const loadState = useCallback(
     async (sid: string) => {
@@ -268,7 +306,8 @@ function GameMap({ sessionId }: { sessionId: string }) {
           const updateMap = new Map(locationUpdates.map((u) => [u.id, u]))
           const updatedLocations = prev.locations.map((loc) => {
             if (loc.id === selectedLocation.id) {
-              return { ...loc, status: 'closed' as const, choices: null }
+              // Just closed — seen state was stamped to its current value, so no update.
+              return { ...loc, status: 'closed' as const, choices: null, hasUpdate: false }
             }
             const update = updateMap.get(loc.id)
             if (update) {
@@ -279,6 +318,9 @@ function GameMap({ sessionId }: { sessionId: string }) {
                 choices: update.choices,
                 hasPassword: update.hasPassword,
                 imageUrl: update.imageUrl ?? loc.imageUrl,
+                // A closed location whose state just changed should re-brighten now,
+                // matching what the next GET would compute server-side.
+                hasUpdate: loc.visited && loc.status === 'closed' ? true : loc.hasUpdate,
               }
             }
             return loc
@@ -390,16 +432,16 @@ function GameMap({ sessionId }: { sessionId: string }) {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-64px)]">
-        <div className="animate-pulse text-gray-400 text-sm">{t('adventure.loading')}</div>
+        <div className="animate-pulse text-brand-gray text-sm">{t('adventure.loading')}</div>
       </div>
     )
   }
 
   if (!state) {
     return (
-      <div className="flex flex-col items-center justify-center h-[calc(100vh-64px)] gap-4 text-gray-500">
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-64px)] gap-4 text-brand-gray">
         <p>{t('adventure.sessionNotFound')}</p>
-        <button onClick={() => router.push('/adventure')} className="text-blue-600 underline text-sm">
+        <button onClick={() => router.push('/adventure')} className="text-brand-green underline text-sm">
           {t('adventure.backToAdventures')}
         </button>
       </div>
@@ -425,12 +467,30 @@ function GameMap({ sessionId }: { sessionId: string }) {
     setTimeout(() => setCodeCopied(false), 2000)
   }
 
-  const visibleCount = resolvedLocations.filter((l) => l.visible).length
-  const visitedCount = state.session.visitedLocationIds.length
   // Hint bar only for locations (events auto-open the sheet, no hint needed)
   const nearbyLocation = resolvedLocations.find(
     (l) => nearbyLocationIds.has(l.id) && l.status === null && l.type === 'location'
   ) ?? null
+
+  // Inventory "new item" tracking
+  const carriedItems = (state.game.items as GameItem[]).filter((i) =>
+    state.session.flags.includes(i.flag)
+  )
+  const newItemCount = carriedItems.filter((i) => (inventorySeen[i.id] ?? 0) === 0).length
+  const newItemIds = new Set(
+    carriedItems.filter((i) => inventorySeen[i.id] === 1).map((i) => i.id)
+  )
+
+  // Opening the inventory acknowledges new items: bump each carried item's seen
+  // counter. Items that land on 1 show the dot this view; on the next open they
+  // reach 2 and the dot disappears.
+  const openInventory = () => {
+    const next = { ...inventorySeen }
+    for (const i of carriedItems) next[i.id] = (inventorySeen[i.id] ?? 0) + 1
+    localStorage.setItem(`adventure_inventory_seen_${sessionId}`, JSON.stringify(next))
+    setInventorySeen(next)
+    setInventoryOpen(true)
+  }
 
   return (
     <div className="relative flex flex-col" style={{ height: '100dvh' }}>
@@ -444,7 +504,7 @@ function GameMap({ sessionId }: { sessionId: string }) {
 
       {/* Spectator banner */}
       {isSpectator && (
-        <div className="px-4 py-2 bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 text-xs border-b border-blue-200 dark:border-blue-800 shrink-0 text-center">
+        <div className="px-4 py-2 bg-brand-green-light text-brand-green text-xs border-b border-brand-green shrink-0 text-center">
           {t('adventure.spectatorBanner')} · {t('adventure.spectatorRefreshHint')}
         </div>
       )}
@@ -457,36 +517,52 @@ function GameMap({ sessionId }: { sessionId: string }) {
       )}
 
       {/* Map — fills all space except stats bar */}
-      <div className="flex-1 relative overflow-hidden">
+      <div className="flex-1 relative overflow-hidden z-0">
         <AdventureMap
           locations={resolvedLocations}
           playerPosition={playerPos}
           onLocationClick={(loc) => setSelectedLocation(loc as ResolvedLocation)}
           nearbyLocationIds={nearbyLocationIds}
-          recenterKey={recenterKey}
+          follow={followMode}
+          recenterSignal={recenterKey + recenterTick}
+          onUserPan={pauseFollow}
         />
+        {playerPos && (
+          <button
+            onClick={recenterToGps}
+            aria-label="Center on my location"
+            className={`absolute bottom-4 right-3 z-[1000] flex items-center justify-center w-11 h-11 rounded-full shadow-lg border transition-colors ${
+              followMode
+                ? 'bg-brand-green border-brand-green text-white'
+                : 'bg-surface border-brand-border text-brand-text'
+            }`}
+          >
+            <LocateFixed className="h-5 w-5" />
+          </button>
+        )}
       </div>
 
       {/* Bottom bar */}
-      <div className="relative flex items-center justify-between px-6 py-2 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shrink-0 z-10 text-xs text-gray-500">
+      <div className="relative flex items-center justify-between px-6 py-3 bg-surface border-t border-brand-border shrink-0 z-10 text-xs text-brand-gray">
         <button
           onClick={() => router.push('/adventure')}
-          className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+          className="p-2 rounded-full hover:bg-brand-green-light"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="h-6 w-6" strokeWidth={2.5} />
         </button>
-        <span className="flex items-center gap-1">
-          <MapPin className="h-3.5 w-3.5" />
-          {visitedCount}/{visibleCount}
-        </span>
-        <button onClick={() => loadState(sessionId)} className="p-1 hover:text-blue-600">
-          <RefreshCw className="h-3.5 w-3.5" />
+        <button onClick={() => loadState(sessionId)} className="p-2 hover:text-brand-green">
+          <RefreshCw className="h-6 w-6" strokeWidth={2.5} />
         </button>
-        <button onClick={() => setInventoryOpen(true)} className="p-1 hover:text-blue-600">
-          <Backpack className="h-4 w-4" />
+        <button onClick={openInventory} className="relative p-2 hover:text-brand-green">
+          <Backpack className="h-6 w-6" strokeWidth={2.5} />
+          {seenLoaded && newItemCount > 0 && (
+            <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full bg-brand-photinia text-white text-[10px] font-rubik font-bold leading-none animate-badge-bounce">
+              +{newItemCount}
+            </span>
+          )}
         </button>
-        <button onClick={() => setMenuOpen((v) => !v)} className="p-1 hover:text-blue-600">
-          <Settings className="h-4 w-4" />
+        <button onClick={() => setMenuOpen((v) => !v)} className="p-2 hover:text-brand-green">
+          <Settings className="h-6 w-6" strokeWidth={2.5} />
         </button>
 
       </div>
@@ -494,18 +570,18 @@ function GameMap({ sessionId }: { sessionId: string }) {
       {/* Settings sheet */}
       {menuOpen && (
         <div className="absolute inset-0 z-[2000] flex items-end" onClick={() => { setMenuOpen(false); setConfirmRestart(false); setConfirmRevoke(false) }}>
-          <div className="w-full bg-white dark:bg-gray-900 rounded-t-2xl shadow-2xl border-t border-gray-200 dark:border-gray-700 p-5 pb-8" onClick={(e) => e.stopPropagation()}>
-            <div className="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mb-4" />
+          <div className="w-full bg-surface rounded-t-2xl shadow-2xl border-t border-brand-border p-5 pb-8" onClick={(e) => e.stopPropagation()}>
+            <div className="w-10 h-1 bg-brand-border rounded-full mx-auto mb-4" />
             {confirmRestart ? (
               <>
                 <p className="font-bold text-base mb-2">{t('adventure.restartChapterConfirm')}</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                <p className="text-sm text-brand-gray mb-6">
                   {t('adventure.restartChapterWarning')}
                 </p>
                 <div className="flex gap-3">
                   <button
                     onClick={() => setConfirmRestart(false)}
-                    className="flex-1 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-sm"
+                    className="flex-1 py-2 rounded-xl border border-brand-border text-sm"
                   >
                     {t('common.cancel')}
                   </button>
@@ -525,13 +601,13 @@ function GameMap({ sessionId }: { sessionId: string }) {
             ) : confirmRevoke ? (
               <>
                 <p className="font-bold text-base mb-2">{t('adventure.revokeCode')}</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                <p className="text-sm text-brand-gray mb-6">
                   {t('adventure.revokeCodeConfirm')}
                 </p>
                 <div className="flex gap-3">
                   <button
                     onClick={() => setConfirmRevoke(false)}
-                    className="flex-1 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-sm"
+                    className="flex-1 py-2 rounded-xl border border-brand-border text-sm"
                   >
                     {t('common.cancel')}
                   </button>
@@ -545,15 +621,15 @@ function GameMap({ sessionId }: { sessionId: string }) {
               </>
             ) : (
               <>
-                <p className="text-xs text-gray-400 uppercase tracking-wide mb-3">{t('adventure.chapterSettings')}</p>
+                <p className="text-xs text-brand-gray uppercase tracking-wide mb-3">{t('adventure.chapterSettings')}</p>
 
                 {/* Share session — owner only */}
                 {!isSpectator && (
                   <>
                     {shareCode ? (
-                      <div className="mb-1 px-4 py-3 rounded-xl bg-blue-50 dark:bg-blue-950">
+                      <div className="mb-1 px-4 py-3 rounded-xl bg-brand-green-light">
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">{t('adventure.joinCode')}</span>
+                          <span className="text-xs text-brand-green font-medium">{t('adventure.joinCode')}</span>
                           <button
                             onClick={() => setConfirmRevoke(true)}
                             className="p-1 text-red-500 hover:text-red-600"
@@ -562,10 +638,10 @@ function GameMap({ sessionId }: { sessionId: string }) {
                           </button>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-2xl font-mono font-bold tracking-[0.3em] text-blue-700 dark:text-blue-300">{shareCode}</span>
+                          <span className="text-2xl font-mono font-bold tracking-[0.3em] text-brand-green">{shareCode}</span>
                           <button
                             onClick={handleCopyCode}
-                            className="p-1.5 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900 text-blue-600 dark:text-blue-400"
+                            className="p-1.5 rounded-lg hover:bg-brand-green-light text-brand-green"
                           >
                             {codeCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                           </button>
@@ -574,7 +650,7 @@ function GameMap({ sessionId }: { sessionId: string }) {
                     ) : (
                       <button
                         onClick={handleGenerateCode}
-                        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium mb-1 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300"
+                        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium mb-1 hover:bg-brand-green-light text-brand-text"
                       >
                         <Share2 className="h-4 w-4" />
                         {t('adventure.shareSession')}
@@ -587,7 +663,7 @@ function GameMap({ sessionId }: { sessionId: string }) {
                 {!isSpectator && canUseFakeGps && (
                   <button
                     onClick={() => { setFakeMode((v) => !v); setMenuOpen(false) }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium mb-1 ${fakeMode ? 'bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300' : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'}`}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium mb-1 ${fakeMode ? 'bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300' : 'hover:bg-brand-green-light text-brand-text'}`}
                   >
                     <Crosshair className="h-4 w-4" />
                     {t('adventure.fakeGps')}
@@ -682,6 +758,7 @@ function GameMap({ sessionId }: { sessionId: string }) {
         <InventorySheet
           items={state.game.items}
           playerFlags={state.session.flags}
+          newItemIds={newItemIds}
           onClose={() => setInventoryOpen(false)}
         />
       )}

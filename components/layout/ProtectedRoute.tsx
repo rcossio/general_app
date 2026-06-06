@@ -26,7 +26,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-pulse text-gray-400">{t('common.loading')}</div>
+        <div className="animate-pulse text-brand-gray">{t('common.loading')}</div>
       </div>
     )
   }

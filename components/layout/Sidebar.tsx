@@ -35,19 +35,19 @@ export function Sidebar() {
 
   return (
     <aside
-      className={`hidden md:flex flex-col h-screen sticky top-0 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 transition-all duration-200 ${
+      className={`hidden md:flex flex-col h-screen sticky top-0 bg-brand-green transition-all duration-200 ${
         collapsed ? 'w-16' : 'w-56'
       }`}
     >
-      <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex items-center justify-between p-4 border-b border-white/20">
         {!collapsed && (
-          <span className="font-bold text-blue-600 truncate">
-            Vysi
+          <span className="font-rubik font-extrabold text-white text-[26px] truncate">
+            vysi
           </span>
         )}
         <button
           onClick={() => setCollapsed((c) => !c)}
-          className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500"
+          className="p-1 rounded hover:bg-white/10 text-white/70"
         >
           {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
         </button>
@@ -61,10 +61,10 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               title={collapsed ? item.label : undefined}
-              className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
+              className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-rubik font-semibold transition-colors ${
                 isActive
-                  ? 'bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300'
-                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                  ? 'bg-white/20 text-white'
+                  : 'text-white/70 hover:bg-white/10 hover:text-white'
               }`}
             >
               {IconComponent ? <IconComponent className="h-5 w-5 flex-shrink-0" /> : null}

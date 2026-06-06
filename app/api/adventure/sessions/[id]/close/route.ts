@@ -41,6 +41,15 @@ function resolveActiveValue(
   return null
 }
 
+// Index of the first value whose `when` matches the flags, or -1 if none.
+// Identifies which state a location is resolved to, for change detection.
+function resolveValueIndex(values: LocationValue[], flags: Set<string>): number {
+  for (let i = 0; i < values.length; i++) {
+    if (evaluate(values[i].when as Condition, flags)) return i
+  }
+  return -1
+}
+
 function resolveNarrative(
   values: LocationValue[],
   flags: Set<string>
@@ -149,6 +158,15 @@ export async function POST(request: NextRequest, { params }: Params) {
 
     const completesChapter = activeValue?.completesChapter ?? false
 
+    // Compute the new flag set after grants/revokes
+    const newFlagSet = new Set(oldFlagSet)
+    for (const f of newFlags) newFlagSet.add(f)
+    for (const f of revokedFlags) newFlagSet.delete(f)
+
+    // Record the value the player leaves this location in, so the marker can
+    // re-brighten later if a future flag change resolves it to a different state.
+    const seenValueIndex = resolveValueIndex(values, newFlagSet)
+
     await prisma.$transaction(async (tx) => {
       for (const flag of newFlags) {
         await tx.sessionFlag.upsert({
@@ -173,14 +191,9 @@ export async function POST(request: NextRequest, { params }: Params) {
 
       await tx.locationVisit.update({
         where: { id: visit.id },
-        data: { status: 'closed' },
+        data: { status: 'closed', seenValueIndex },
       })
     })
-
-    // Compute the new flag set after grants/revokes
-    const newFlagSet = new Set(oldFlagSet)
-    for (const f of newFlags) newFlagSet.add(f)
-    for (const f of revokedFlags) newFlagSet.delete(f)
 
     const flagsChanged = newFlags.length > 0 || revokedFlags.length > 0
 

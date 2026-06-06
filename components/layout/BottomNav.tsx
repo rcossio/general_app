@@ -31,7 +31,7 @@ export function BottomNav() {
   ]
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 md:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-brand-green md:hidden">
       <div className="flex items-center justify-around h-16">
         {navItems.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
@@ -40,10 +40,10 @@ export function BottomNav() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-col items-center gap-1 px-3 py-2 text-xs transition-colors ${
+              className={`flex flex-col items-center gap-1 px-3 py-2 text-xs font-rubik font-semibold transition-colors ${
                 isActive
-                  ? 'text-blue-600 dark:text-blue-400'
-                  : 'text-gray-500 dark:text-gray-400'
+                  ? 'text-white'
+                  : 'text-white/60'
               }`}
             >
               {IconComponent ? <IconComponent className="h-5 w-5" /> : null}

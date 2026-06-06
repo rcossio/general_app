@@ -95,8 +95,8 @@ function LoginForm() {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="w-full max-w-sm">
-          <h1 className="text-2xl font-bold mb-2 text-center">{t('auth.completeProfile')}</h1>
-          <p className="text-sm text-gray-500 text-center mb-6">{t('auth.whatsYourName')}</p>
+          <h1 className="text-2xl font-rubik font-bold mb-2 text-center">{t('auth.completeProfile')}</h1>
+          <p className="text-sm text-brand-gray text-center mb-6">{t('auth.whatsYourName')}</p>
           <form onSubmit={handleRegister} className="space-y-4">
             <div>
               <label className="block text-sm font-medium mb-1">{t('auth.name')}</label>
@@ -106,7 +106,7 @@ function LoginForm() {
                 onChange={(e) => setName(e.target.value)}
                 maxLength={100}
                 autoFocus
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 rounded-lg border border-brand-border bg-surface focus:outline-none focus:ring-2 focus:ring-brand-green"
               />
               {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name}</p>}
             </div>
@@ -115,15 +115,15 @@ function LoginForm() {
                 type="checkbox"
                 checked={privacyAccepted}
                 onChange={(e) => { setPrivacyAccepted(e.target.checked); setErrors((prev) => { const { privacy, ...rest } = prev; return rest }) }}
-                className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                className="mt-1 h-4 w-4 rounded border-brand-border text-brand-green focus:ring-brand-green"
               />
-              <span className="text-sm text-gray-600 dark:text-gray-400">
+              <span className="text-sm text-brand-gray">
                 {t('auth.acceptPrivacy')}{' '}
-                <Link href="/privacy" target="_blank" className="text-blue-600 hover:underline">
+                <Link href="/privacy" target="_blank" className="text-brand-green hover:underline">
                   {t('auth.privacyPolicy')}
                 </Link>
                 {' & '}
-                <Link href="/terms" target="_blank" className="text-blue-600 hover:underline">
+                <Link href="/terms" target="_blank" className="text-brand-green hover:underline">
                   {t('auth.termsOfService')}
                 </Link>
               </span>
@@ -137,13 +137,13 @@ function LoginForm() {
             <button
               type="submit"
               disabled={loading || !name.trim()}
-              className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-medium rounded-lg transition-colors"
+              className="w-full py-2 px-4 bg-brand-photinia hover:bg-brand-photinia-dark disabled:opacity-50 text-white font-rubik font-bold rounded-lg transition-colors"
             >
               {loading ? t('auth.creatingAccount') : t('auth.createAccount')}
             </button>
           </form>
           <p className="mt-4 text-center">
-            <button onClick={() => setStep('login')} className="text-sm text-blue-600 hover:underline">
+            <button onClick={() => setStep('login')} className="text-sm text-brand-green hover:underline">
               {t('auth.backToLogin')}
             </button>
           </p>
@@ -155,12 +155,12 @@ function LoginForm() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
-        <h1 className="text-2xl font-bold mb-6 text-center">{t('auth.signIn')}</h1>
+        <h1 className="text-2xl font-rubik font-bold mb-6 text-center">{t('auth.signIn')}</h1>
 
         {/* Google sign-in */}
         <a
           href="/api/auth/google"
-          className="flex items-center justify-center gap-3 w-full py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors mb-4"
+          className="flex items-center justify-center gap-3 w-full py-2 px-4 border border-brand-border rounded-lg hover:bg-brand-green-light transition-colors mb-4"
         >
           <svg width="18" height="18" viewBox="0 0 48 48">
             <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
@@ -173,9 +173,9 @@ function LoginForm() {
         </a>
 
         <div className="flex items-center gap-3 mb-4">
-          <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
-          <span className="text-xs text-gray-400">{t('auth.orEmail')}</span>
-          <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
+          <div className="flex-1 h-px bg-brand-border" />
+          <span className="text-xs text-brand-gray">{t('auth.orEmail')}</span>
+          <div className="flex-1 h-px bg-brand-border" />
         </div>
 
         <form onSubmit={handleLogin} className="space-y-4">
@@ -185,7 +185,7 @@ function LoginForm() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 rounded-lg border border-brand-border bg-surface focus:outline-none focus:ring-2 focus:ring-brand-green"
             />
             {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email}</p>}
           </div>
@@ -196,12 +196,12 @@ function LoginForm() {
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3 py-2 pr-10 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 pr-10 rounded-lg border border-brand-border bg-surface focus:outline-none focus:ring-2 focus:ring-brand-green"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-brand-gray hover:text-brand-text"
                 tabIndex={-1}
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -217,13 +217,13 @@ function LoginForm() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-medium rounded-lg transition-colors"
+            className="w-full py-2 px-4 bg-brand-photinia hover:bg-brand-photinia-dark disabled:opacity-50 text-white font-rubik font-bold rounded-lg transition-colors"
           >
             {loading ? t('auth.signingIn') : t('auth.signIn')}
           </button>
         </form>
         <p className="mt-4 text-center">
-          <Link href="/forgot-password" className="text-sm text-blue-600 hover:underline">
+          <Link href="/forgot-password" className="text-sm text-brand-green hover:underline">
             {t('auth.forgotPassword')}
           </Link>
         </p>

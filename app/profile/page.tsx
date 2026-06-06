@@ -4,8 +4,10 @@ import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useLocale } from '@/contexts/LocaleContext'
+import { useTheme } from '@/contexts/ThemeContext'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
 import { LOCALES } from '@/locales'
+import { Sun, Moon, Monitor } from 'lucide-react'
 import { z } from 'zod'
 
 export default function ProfilePage() {
@@ -19,6 +21,7 @@ export default function ProfilePage() {
 function ProfileForm() {
   const { user, fetchWithAuth, logout } = useAuth()
   const { t, locale, setLocale } = useLocale()
+  const { mode, setMode } = useTheme()
   const router = useRouter()
   const [name, setName] = useState(user?.name ?? '')
   const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl ?? '')
@@ -113,7 +116,7 @@ function ProfileForm() {
 
   return (
     <div className="max-w-lg mx-auto p-4 md:p-6">
-      <h1 className="text-2xl font-bold mb-6">{t('profile.title')}</h1>
+      <h1 className="text-2xl font-rubik font-bold mb-6">{t('profile.title')}</h1>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Avatar picker */}
@@ -122,7 +125,7 @@ function ProfileForm() {
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-blue-500 transition-colors flex-shrink-0 disabled:opacity-50"
+            className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-dashed border-brand-border hover:border-brand-green transition-colors flex-shrink-0 disabled:opacity-50"
           >
             {avatarUrl ? (
               <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
@@ -137,7 +140,7 @@ function ProfileForm() {
           </button>
           <div>
             <p className="text-sm font-medium">{t('profile.avatarUrl')}</p>
-            <p className="text-xs text-gray-500 mt-0.5">{t('profile.avatarHint')}</p>
+            <p className="text-xs text-brand-gray mt-0.5">{t('profile.avatarHint')}</p>
             {errors.avatar && <p className="mt-1 text-xs text-red-500">{errors.avatar}</p>}
           </div>
           <input
@@ -154,33 +157,33 @@ function ProfileForm() {
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 rounded-lg border border-brand-border bg-transparent focus:outline-none focus:ring-2 focus:ring-brand-green"
           />
           {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name}</p>}
         </div>
-        {success && <div className="p-3 rounded-lg bg-green-50 dark:bg-green-950 text-green-600 text-sm">{t('profile.updated')}</div>}
+        {success && <div className="p-3 rounded-lg bg-brand-green-light text-brand-green text-sm">{t('profile.updated')}</div>}
         <button
           type="submit"
           disabled={loading}
-          className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-medium rounded-lg transition-colors"
+          className="px-6 py-2 bg-brand-photinia hover:bg-brand-photinia-dark disabled:opacity-50 text-white font-rubik font-bold rounded-lg transition-colors"
         >
           {loading ? t('common.saving') : t('common.save')}
         </button>
       </form>
 
-      <div className="mt-8 p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
-        <p className="text-sm text-gray-500 mb-1">{t('profile.email')}</p>
+      <div className="mt-8 p-4 rounded-xl border border-brand-border bg-surface">
+        <p className="text-sm text-brand-gray mb-1">{t('profile.email')}</p>
         <p className="font-medium">{user?.email}</p>
-        <p className="text-sm text-gray-500 mt-3 mb-1">{t('profile.roles')}</p>
+        <p className="text-sm text-brand-gray mt-3 mb-1">{t('profile.roles')}</p>
         <div className="flex flex-wrap gap-2">
           {user?.roles.map((r) => (
-            <span key={r} className="px-2 py-0.5 bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 rounded-full text-xs">{r}</span>
+            <span key={r} className="px-2 py-0.5 bg-brand-green-light text-brand-green rounded-full text-xs">{r}</span>
           ))}
         </div>
       </div>
 
       {/* Language selector */}
-      <div className="mt-6 p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+      <div className="mt-6 p-4 rounded-xl border border-brand-border bg-surface">
         <p className="text-sm font-medium mb-3">{t('profile.language')}</p>
         <div className="flex gap-2">
           {LOCALES.map((l) => (
@@ -189,12 +192,37 @@ function ProfileForm() {
               onClick={() => setLocale(l.value)}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${
                 locale === l.value
-                  ? 'border-blue-600 bg-blue-600 text-white'
-                  : 'border-gray-300 dark:border-gray-600 hover:border-blue-400'
+                  ? 'border-brand-photinia bg-brand-photinia text-white'
+                  : 'border-brand-border hover:border-brand-green'
               }`}
             >
               <span>{l.flag}</span>
               <span>{l.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Theme selector */}
+      <div className="mt-6 p-4 rounded-xl border border-brand-border bg-surface">
+        <p className="text-sm font-medium mb-3">{t('profile.theme')}</p>
+        <div className="flex gap-2">
+          {([
+            { value: 'light' as const, label: t('profile.themeLight'), icon: Sun },
+            { value: 'dark' as const, label: t('profile.themeDark'), icon: Moon },
+            { value: 'system' as const, label: t('profile.themeSystem'), icon: Monitor },
+          ]).map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => setMode(opt.value)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                mode === opt.value
+                  ? 'border-brand-photinia bg-brand-photinia text-white'
+                  : 'border-brand-border hover:border-brand-green'
+              }`}
+            >
+              <opt.icon className="h-4 w-4" />
+              <span>{opt.label}</span>
             </button>
           ))}
         </div>
@@ -210,24 +238,24 @@ function ProfileForm() {
       </div>
 
       {/* Delete account — collapsible danger zone */}
-      <div className="mt-10 pt-6 border-t border-gray-200 dark:border-gray-700">
+      <div className="mt-10 pt-6 border-t border-brand-border">
         <button
           onClick={() => { setDeleteOpen((v) => !v); setDeleteConfirm('') }}
-          className="text-sm text-gray-400 hover:text-red-500 transition-colors"
+          className="text-sm text-brand-gray hover:text-red-500 transition-colors"
         >
           {t('profile.deleteAccount')}
         </button>
         {deleteOpen && (
           <div className="mt-3 p-4 rounded-xl border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/30 space-y-3">
             <p className="text-sm text-red-600 dark:text-red-400">{t('profile.deleteAccountWarning')}</p>
-            <p className="text-xs text-gray-500">{t('profile.deleteAccountConfirm', { name: user?.name ?? '' })}</p>
+            <p className="text-xs text-brand-gray">{t('profile.deleteAccountConfirm', { name: user?.name ?? '' })}</p>
             <div className="flex gap-2">
               <input
                 type="text"
                 value={deleteConfirm}
                 onChange={(e) => setDeleteConfirm(e.target.value)}
                 placeholder={user?.name ?? ''}
-                className="flex-1 px-3 py-1.5 rounded-lg border border-red-300 dark:border-red-800 bg-white dark:bg-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="flex-1 px-3 py-1.5 rounded-lg border border-red-300 dark:border-red-800 bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
               />
               <button
                 onClick={async () => {
