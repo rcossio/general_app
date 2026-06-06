@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { useLocale } from '@/contexts/LocaleContext'
 import { useChrome } from '@/contexts/ChromeContext'
+import { useConsent } from '@/contexts/ConsentContext'
 import { ChevronDown, MapPin, Clock, Smartphone, X } from 'lucide-react'
 import { LOCALES } from '@/locales'
 
@@ -12,6 +13,7 @@ export default function LandingPageClient() {
   const { user, loading } = useAuth()
   const { t, locale, setLocale } = useLocale()
   const { setHideChrome } = useChrome()
+  const { openPreferences } = useConsent()
   const [langOpen, setLangOpen] = useState(false)
 
   useEffect(() => {
@@ -291,6 +293,7 @@ export default function LandingPageClient() {
         <div className="flex justify-center gap-4">
           <Link href="/privacy" className="hover:text-brand-green transition-colors">{t('auth.privacyPolicy')}</Link>
           <Link href="/terms" className="hover:text-brand-green transition-colors">{locale === 'it' ? 'Termini' : locale === 'es' ? 'Términos' : 'Terms'}</Link>
+          <button onClick={openPreferences} className="hover:text-brand-green transition-colors">{t('cookies.preferences')}</button>
           <a href={`mailto:${process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? ''}`} className="hover:text-brand-green transition-colors">{process.env.NEXT_PUBLIC_CONTACT_EMAIL}</a>
         </div>
       </footer>

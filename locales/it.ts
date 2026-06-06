@@ -240,6 +240,14 @@ const it: Translations = {
     spectatorRefreshHint: 'Aggiorna ogni 10s o tocca ricarica',
     joinFailed: 'Codice non valido',
   },
+  cookies: {
+    title: 'Cookie',
+    message: 'Vorremmo usare cookie di analytics di prima parte per capire, in forma aggregata, come viene usata l\'avventura. I cookie essenziali restano attivi in ogni caso.',
+    accept: 'Accetta',
+    reject: 'Rifiuta',
+    preferences: 'Preferenze cookie',
+    learnMore: 'Scopri di più',
+  },
 }
 
 export default it

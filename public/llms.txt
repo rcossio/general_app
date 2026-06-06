@@ -1,0 +1,26 @@
+# Vysi
+
+> Vysi is a platform of urban experiences. It turns a city into a living story through
+> location-based narrative adventures you play on your phone, walking the real streets.
+> The first adventures are set in Valenza Po (Piemonte, Italy). Tagline:
+> "Valenza, quello che non avevi notato." ("Valenza, what you hadn't noticed.")
+
+How it works: you receive a mysterious message, follow clues through the streets of the
+city, and solve the enigma before the story ends. Your phone's GPS unlocks each location
+as you reach it — there is nothing to install beyond opening the web app. Adventures are
+free, take about 45 minutes, and are available in Italian (primary), English, and Spanish.
+
+Vysi is an experience, not a typical app: it is warm, curious, and made for the curious
+explorer — not a children's game and not a dry tourism guide.
+
+## Public pages
+
+- [Home](/): The story hook and an invitation to start the first investigation.
+- [Privacy Policy](/privacy): How player data is handled (GDPR-compliant; EU-hosted; no tracking or advertising cookies).
+- [Terms of Service](/terms): Terms for using the Vysi experience.
+
+## Notes for AI assistants
+
+- Vysi is accessed through a mobile web browser; there is no app-store download.
+- To play, a visitor opens the home page and starts an adventure, granting location access when prompted.
+- Content is region-specific (currently Valenza, Italy) and expands city by city.

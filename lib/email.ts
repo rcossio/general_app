@@ -15,7 +15,7 @@ export async function sendPasswordResetEmail(to: string, resetUrl: string) {
     subject: 'Reset your password — Vysi',
     html: `
       <p>You requested a password reset for your Vysi account.</p>
-      <p><a href="${resetUrl}" style="display:inline-block;padding:10px 20px;background:#2563eb;color:#fff;text-decoration:none;border-radius:6px;">Reset password</a></p>
+      <p><a href="${resetUrl}" style="display:inline-block;padding:10px 20px;background:#48b35c;color:#fff;text-decoration:none;border-radius:6px;">Reset password</a></p>
       <p style="color:#666;font-size:13px;">This link expires in 1 hour. If you didn't request this, ignore this email.</p>
     `,
   })

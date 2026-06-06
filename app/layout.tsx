@@ -5,6 +5,9 @@ import { AuthProvider } from '@/contexts/AuthContext'
 import { LocaleProvider } from '@/contexts/LocaleContext'
 import { ChromeProvider } from '@/contexts/ChromeContext'
 import { ThemeProvider } from '@/contexts/ThemeContext'
+import { ConsentProvider } from '@/contexts/ConsentContext'
+import { CookieBanner } from '@/components/CookieBanner'
+import { AnalyticsLoader } from '@/components/AnalyticsLoader'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { Header } from '@/components/layout/Header'
@@ -26,7 +29,7 @@ const jakarta = Plus_Jakarta_Sans({
 
 export const metadata: Metadata = {
   title: 'Vysi',
-  description: 'Your hub for ideas and well-being',
+  description: 'A GPS adventure game that transforms your city into a living story.',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
@@ -57,7 +60,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+        <link rel="apple-touch-icon" href="/icons/icon-192x192.v2.png" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -66,6 +69,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <LocaleProvider>
         <ThemeProvider>
         <ChromeProvider>
+        <ConsentProvider>
         <AuthProvider>
           <div className="flex min-h-screen">
             <Sidebar />
@@ -77,8 +81,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </div>
           </div>
           <BottomNav />
+          <CookieBanner />
+          <AnalyticsLoader />
           <ServiceWorkerRegistrar />
         </AuthProvider>
+        </ConsentProvider>
         </ChromeProvider>
         </ThemeProvider>
         </LocaleProvider>

@@ -60,6 +60,7 @@ interface ApiLocation {
   imageUrl: string | null
   visible: boolean
   visited: boolean
+  hasUpdate: boolean
   status: string | null
   narrative: I18nString | null
   choices: ApiLocationChoice[] | null
@@ -127,10 +128,39 @@ function GameMap({ sessionId }: { sessionId: string }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [confirmRestart, setConfirmRestart] = useState(false)
   const [inventoryOpen, setInventoryOpen] = useState(false)
+  // Per-item "seen" counter: times the inventory was opened since the item was
+  // acquired. 0/absent = new (drives the badge); 1 = show red dot; >=2 = seen.
+  const [inventorySeen, setInventorySeen] = useState<Record<string, number>>({})
+  const [seenLoaded, setSeenLoaded] = useState(false)
   const [completeBannerDismissed, setCompleteBannerDismissed] = useState(false)
   const [shareCode, setShareCode] = useState<string | null>(null)
   const [codeCopied, setCodeCopied] = useState(false)
   const [confirmRevoke, setConfirmRevoke] = useState(false)
+
+  // Load (or seed) the inventory "seen" markers from localStorage, per session.
+  // On first-ever load, seed currently-carried items as already seen so an
+  // in-progress inventory doesn't flash every item as "new" after deploy.
+  useEffect(() => {
+    if (!state || seenLoaded) return
+    const key = `adventure_inventory_seen_${sessionId}`
+    const raw = localStorage.getItem(key)
+    if (raw) {
+      try {
+        setInventorySeen(JSON.parse(raw) as Record<string, number>)
+      } catch {
+        /* ignore corrupt value */
+      }
+    } else {
+      const flagSet = new Set(state.session.flags)
+      const seed: Record<string, number> = {}
+      for (const it of state.game.items as GameItem[]) {
+        if (flagSet.has(it.flag)) seed[it.id] = 2
+      }
+      localStorage.setItem(key, JSON.stringify(seed))
+      setInventorySeen(seed)
+    }
+    setSeenLoaded(true)
+  }, [state, seenLoaded, sessionId])
 
   const loadState = useCallback(
     async (sid: string) => {
@@ -268,7 +298,8 @@ function GameMap({ sessionId }: { sessionId: string }) {
           const updateMap = new Map(locationUpdates.map((u) => [u.id, u]))
           const updatedLocations = prev.locations.map((loc) => {
             if (loc.id === selectedLocation.id) {
-              return { ...loc, status: 'closed' as const, choices: null }
+              // Just closed — seen state was stamped to its current value, so no update.
+              return { ...loc, status: 'closed' as const, choices: null, hasUpdate: false }
             }
             const update = updateMap.get(loc.id)
             if (update) {
@@ -279,6 +310,9 @@ function GameMap({ sessionId }: { sessionId: string }) {
                 choices: update.choices,
                 hasPassword: update.hasPassword,
                 imageUrl: update.imageUrl ?? loc.imageUrl,
+                // A closed location whose state just changed should re-brighten now,
+                // matching what the next GET would compute server-side.
+                hasUpdate: loc.visited && loc.status === 'closed' ? true : loc.hasUpdate,
               }
             }
             return loc
@@ -432,6 +466,26 @@ function GameMap({ sessionId }: { sessionId: string }) {
     (l) => nearbyLocationIds.has(l.id) && l.status === null && l.type === 'location'
   ) ?? null
 
+  // Inventory "new item" tracking
+  const carriedItems = (state.game.items as GameItem[]).filter((i) =>
+    state.session.flags.includes(i.flag)
+  )
+  const newItemCount = carriedItems.filter((i) => (inventorySeen[i.id] ?? 0) === 0).length
+  const newItemIds = new Set(
+    carriedItems.filter((i) => inventorySeen[i.id] === 1).map((i) => i.id)
+  )
+
+  // Opening the inventory acknowledges new items: bump each carried item's seen
+  // counter. Items that land on 1 show the dot this view; on the next open they
+  // reach 2 and the dot disappears.
+  const openInventory = () => {
+    const next = { ...inventorySeen }
+    for (const i of carriedItems) next[i.id] = (inventorySeen[i.id] ?? 0) + 1
+    localStorage.setItem(`adventure_inventory_seen_${sessionId}`, JSON.stringify(next))
+    setInventorySeen(next)
+    setInventoryOpen(true)
+  }
+
   return (
     <div className="relative flex flex-col" style={{ height: '100dvh' }}>
 
@@ -482,8 +536,13 @@ function GameMap({ sessionId }: { sessionId: string }) {
         <button onClick={() => loadState(sessionId)} className="p-1 hover:text-brand-green">
           <RefreshCw className="h-3.5 w-3.5" />
         </button>
-        <button onClick={() => setInventoryOpen(true)} className="p-1 hover:text-brand-green">
+        <button onClick={openInventory} className="relative p-1 hover:text-brand-green">
           <Backpack className="h-4 w-4" />
+          {seenLoaded && newItemCount > 0 && (
+            <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full bg-brand-photinia text-white text-[10px] font-rubik font-bold leading-none">
+              +{newItemCount}
+            </span>
+          )}
         </button>
         <button onClick={() => setMenuOpen((v) => !v)} className="p-1 hover:text-brand-green">
           <Settings className="h-4 w-4" />
@@ -682,6 +741,7 @@ function GameMap({ sessionId }: { sessionId: string }) {
         <InventorySheet
           items={state.game.items}
           playerFlags={state.session.flags}
+          newItemIds={newItemIds}
           onClose={() => setInventoryOpen(false)}
         />
       )}

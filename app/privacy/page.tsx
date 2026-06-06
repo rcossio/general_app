@@ -14,7 +14,7 @@ const CONTACT_EMAIL = process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? 'you@example.com'
 const content: Record<string, { title: string; lastUpdated: string; sections: { heading: string; body: string }[] }> = {
   it: {
     title: 'Informativa sulla Privacy',
-    lastUpdated: 'Ultimo aggiornamento: 5 aprile 2026',
+    lastUpdated: 'Ultimo aggiornamento: 6 giugno 2026',
     sections: [
       {
         heading: '1. Titolare del trattamento',
@@ -46,7 +46,7 @@ const content: Record<string, { title: string; lastUpdated: string; sections: { 
       },
       {
         heading: '8. Cookie',
-        body: 'Utilizziamo un solo cookie tecnico strettamente necessario:\n• **refresh_token**: cookie httpOnly per mantenere la tua sessione di accesso. Non traccia la tua attività.\n\nNon utilizziamo cookie di analytics, di profilazione o pubblicitari. Non è necessario un banner cookie.',
+        body: 'Utilizziamo un cookie tecnico strettamente necessario:\n• **refresh_token**: cookie httpOnly per mantenere la tua sessione di accesso. Non traccia la tua attività.\n\nCon il tuo consenso, utilizziamo anche cookie di analytics di prima parte per misurare in forma aggregata come viene usata l\'app (ad esempio quante persone iniziano e completano un\'avventura). Vengono impostati solo dopo che hai cliccato "Accetta" nel banner dei cookie. Puoi accettarli o rifiutarli in qualsiasi momento tramite "Preferenze cookie" nel footer, e rifiutare è facile quanto accettare. Non utilizziamo cookie pubblicitari o di profilazione cross-site.',
       },
       {
         heading: '9. Sicurezza',
@@ -60,7 +60,7 @@ const content: Record<string, { title: string; lastUpdated: string; sections: { 
   },
   en: {
     title: 'Privacy Policy',
-    lastUpdated: 'Last updated: April 5, 2026',
+    lastUpdated: 'Last updated: June 6, 2026',
     sections: [
       {
         heading: '1. Data controller',
@@ -92,7 +92,7 @@ const content: Record<string, { title: string; lastUpdated: string; sections: { 
       },
       {
         heading: '8. Cookies',
-        body: 'We use a single strictly necessary technical cookie:\n• **refresh_token**: httpOnly cookie to maintain your login session. It does not track your activity.\n\nWe do not use analytics, profiling, or advertising cookies. No cookie banner is required.',
+        body: 'We use a strictly necessary technical cookie:\n• **refresh_token**: httpOnly cookie to maintain your login session. It does not track your activity.\n\nWith your consent, we also use first-party analytics cookies to measure, in aggregate, how the app is used (for example, how many people start and finish an adventure). They are set only after you click "Accept" in the cookie banner. You can accept or reject them at any time via "Cookie preferences" in the footer, and rejecting is as easy as accepting. We do not use advertising or cross-site profiling cookies.',
       },
       {
         heading: '9. Security',
@@ -106,7 +106,7 @@ const content: Record<string, { title: string; lastUpdated: string; sections: { 
   },
   es: {
     title: 'Política de Privacidad',
-    lastUpdated: 'Última actualización: 5 de abril de 2026',
+    lastUpdated: 'Última actualización: 6 de junio de 2026',
     sections: [
       {
         heading: '1. Responsable del tratamiento',
@@ -138,7 +138,7 @@ const content: Record<string, { title: string; lastUpdated: string; sections: { 
       },
       {
         heading: '8. Cookies',
-        body: 'Utilizamos una sola cookie técnica estrictamente necesaria:\n• **refresh_token**: cookie httpOnly para mantener tu sesión iniciada. No rastrea tu actividad.\n\nNo utilizamos cookies de analítica, de perfilado o publicitarias. No se requiere banner de cookies.',
+        body: 'Utilizamos una cookie técnica estrictamente necesaria:\n• **refresh_token**: cookie httpOnly para mantener tu sesión iniciada. No rastrea tu actividad.\n\nCon tu consentimiento, también utilizamos cookies de analítica de origen propio para medir, de forma agregada, cómo se usa la app (por ejemplo, cuántas personas inician y completan una aventura). Se establecen solo después de que hagas clic en "Aceptar" en el banner de cookies. Puedes aceptarlas o rechazarlas en cualquier momento mediante "Preferencias de cookies" en el pie de página, y rechazar es tan fácil como aceptar. No utilizamos cookies publicitarias ni de perfilado entre sitios.',
       },
       {
         heading: '9. Seguridad',

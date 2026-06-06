@@ -238,6 +238,14 @@ const en = {
     spectatorRefreshHint: 'Updates every 10s or tap refresh',
     joinFailed: 'Invalid join code',
   },
+  cookies: {
+    title: 'Cookies',
+    message: 'We\'d like to use first-party analytics cookies to understand, in aggregate, how the adventure is used. Essential cookies stay either way.',
+    accept: 'Accept',
+    reject: 'Reject',
+    preferences: 'Cookie preferences',
+    learnMore: 'Learn more',
+  },
 }
 
 export default en

@@ -23,14 +23,19 @@ export interface GameItem {
 interface InventorySheetProps {
   items: GameItem[]
   playerFlags: string[]
+  // Item ids to mark as new (red dot + sorted to the top).
+  newItemIds: Set<string>
   onClose: () => void
 }
 
-export function InventorySheet({ items, playerFlags, onClose }: InventorySheetProps) {
+export function InventorySheet({ items, playerFlags, newItemIds, onClose }: InventorySheetProps) {
   const { t, locale } = useLocale()
   const [viewedItem, setViewedItem] = useState<GameItem | null>(null)
   const flagSet = new Set(playerFlags)
-  const carried = items.filter((item) => flagSet.has(item.flag))
+  // New items first; stable sort preserves the original game.items order within each group.
+  const carried = items
+    .filter((item) => flagSet.has(item.flag))
+    .sort((a, b) => (newItemIds.has(b.id) ? 1 : 0) - (newItemIds.has(a.id) ? 1 : 0))
 
   if (viewedItem) {
     const src = resolveI18n(viewedItem.itemImageUrl, locale)
@@ -88,14 +93,20 @@ export function InventorySheet({ items, playerFlags, onClose }: InventorySheetPr
             <ul className="flex flex-col gap-2">
               {carried.map((item) => {
                 const tappable = !!item.itemImageUrl || !!item.description
+                const isNew = newItemIds.has(item.id)
                 return (
                   <li
                     key={item.id}
                     onClick={tappable ? () => setViewedItem(item) : undefined}
                     className={`flex items-center justify-between px-4 py-3 rounded-xl bg-background ${tappable ? 'cursor-pointer hover:bg-brand-green-light active:bg-brand-border' : ''}`}
                   >
-                    <span className="text-sm font-medium">{resolveI18n(item.name, locale)}</span>
-                    {tappable && <ArrowLeft className="h-4 w-4 text-brand-gray rotate-180" />}
+                    <span className="flex items-center gap-2 min-w-0">
+                      {isNew && (
+                        <span className="w-2 h-2 rounded-full bg-brand-photinia shrink-0" aria-label="new" />
+                      )}
+                      <span className="text-sm font-medium truncate">{resolveI18n(item.name, locale)}</span>
+                    </span>
+                    {tappable && <ArrowLeft className="h-4 w-4 text-brand-gray rotate-180 shrink-0" />}
                   </li>
                 )
               })}

@@ -1,9 +1,36 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { MapContainer, TileLayer, CircleMarker, Marker, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import { getInitialProvider, OSM_PROVIDER } from '@/modules/adventure/lib/tileProviders'
+
+// Base map tiles. Uses the provider chosen via NEXT_PUBLIC_MAP_PROVIDER, but
+// auto-falls back to OSM if that provider starts erroring (e.g. MapTiler quota
+// or auth failure) so the map never goes blank during a session.
+function BaseTiles() {
+  const [provider, setProvider] = useState(getInitialProvider)
+  const errorCount = useRef(0)
+
+  return (
+    <TileLayer
+      key={provider.id}
+      url={provider.url}
+      attribution={provider.attribution}
+      maxZoom={provider.maxZoom}
+      eventHandlers={{
+        tileerror: () => {
+          if (provider.id === 'osm') return
+          errorCount.current += 1
+          // A few errors can be transient single tiles; a burst means the
+          // provider is down — switch to the OSM fallback.
+          if (errorCount.current >= 3) setProvider(OSM_PROVIDER)
+        },
+      }}
+    />
+  )
+}
 
 function exclamationIcon(color: string) {
   return L.divIcon({
@@ -70,6 +97,9 @@ export interface MapLocation {
   type: string
   visible: boolean
   visited: boolean
+  // True when a closed location's resolved state changed due to new flags —
+  // re-brightens the marker to the unvisited color to signal something new.
+  hasUpdate: boolean
 }
 
 interface PlayerPosition {
@@ -130,10 +160,7 @@ export default function AdventureMap({
       style={{ height: '100%', width: '100%' }}
       zoomControl={true}
     >
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
+      <BaseTiles />
 
       <GradientDefs />
       <PlayerTracker position={playerPosition} recenterKey={recenterKey} />
@@ -157,10 +184,8 @@ export default function AdventureMap({
         const isNearby = nearbyLocationIds.has(loc.id)
         const gradId = isNearby
           ? 'loc-grad-green'
-          : loc.visited
+          : loc.visited && !loc.hasUpdate
           ? 'loc-grad-orange-light'
-          : loc.type === 'event'
-          ? 'loc-grad-orange'
           : 'loc-grad-orange'
 
         return (

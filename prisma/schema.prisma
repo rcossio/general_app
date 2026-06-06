@@ -286,6 +286,10 @@ model LocationVisit {
   locationId String   @map("location_id")
   status     String   @default("open")
   visitedAt  DateTime @default(now()) @map("visited_at")
+  // Index of the location value the player saw when last closing it. Used to
+  // re-brighten the marker (unvisited color) when the resolved state later
+  // changes due to new flags. Null until the location has been closed once.
+  seenValueIndex Int? @map("seen_value_index")
 
   session  GameSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   location GameLocation @relation(fields: [locationId], references: [id], onDelete: Cascade)

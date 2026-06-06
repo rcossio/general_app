@@ -44,6 +44,15 @@ function resolveNarrative(
   return { content: {}, completesChapter: false, choices: null, hasPassword: false, imageUrl: null }
 }
 
+// Index of the first value whose `when` matches the flags, or -1 if none.
+// Used to detect whether a closed location's resolved state has changed.
+function resolveValueIndex(values: LocationValue[], flags: Set<string>): number {
+  for (let i = 0; i < values.length; i++) {
+    if (evaluate(values[i].when as Condition, flags)) return i
+  }
+  return -1
+}
+
 export async function GET(request: NextRequest, { params }: Params) {
   const result = await requirePermission(request, 'adventure', 'play')
   if (isNextResponse(result)) return result
@@ -73,7 +82,7 @@ export async function GET(request: NextRequest, { params }: Params) {
         },
       },
       flags: { select: { flag: true } },
-      visits: { select: { locationId: true, status: true } },
+      visits: { select: { locationId: true, status: true, seenValueIndex: true } },
     },
   })
 
@@ -89,6 +98,7 @@ export async function GET(request: NextRequest, { params }: Params) {
   const flagSet = new Set(session.flags.map((f) => f.flag))
   const visitedIds = new Set(session.visits.map((v) => v.locationId))
   const visitStatusMap = new Map(session.visits.map((v) => [v.locationId, v.status]))
+  const seenValueMap = new Map(session.visits.map((v) => [v.locationId, v.seenValueIndex]))
 
   const locations = session.game.locations.map((loc) => {
     const visible =
@@ -99,6 +109,16 @@ export async function GET(request: NextRequest, { params }: Params) {
     const { content: narrative, choices, hasPassword, imageUrl: valueImageUrl } = visible
       ? resolveNarrative(values, flagSet)
       : { content: null, choices: null, hasPassword: false, imageUrl: null }
+
+    // A closed location whose resolved value now differs from the one the player
+    // last saw has "new state" — the marker should re-brighten to the unvisited color.
+    const seenValueIndex = seenValueMap.get(loc.id) ?? null
+    const hasUpdate =
+      visible &&
+      visited &&
+      status === 'closed' &&
+      seenValueIndex !== null &&
+      resolveValueIndex(values, flagSet) !== seenValueIndex
 
     return {
       id: loc.id,
@@ -112,6 +132,7 @@ export async function GET(request: NextRequest, { params }: Params) {
       visible,
       visited,
       status,
+      hasUpdate,
       narrative: narrative ?? null,
       // Show choices when status is not 'closed' (interaction still open)
       choices: status === 'closed' ? null : (choices ?? null),

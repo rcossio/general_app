@@ -344,6 +344,25 @@ pm2 save
 
 ---
 
+## Changing the App Icon (PWA)
+
+When you change the app icon, **bump the filename version** rather than overwriting in
+place — e.g. `icon-192x192.v2.png` → `icon-192x192.v3.png`. A new URL forces browsers,
+Nginx, and the OS (on reinstall) to fetch the new image instead of a cached copy.
+
+Steps:
+1. Add the new icon files under `public/icons/` with a bumped version suffix.
+2. Update the references: the two `icons[].src` entries in `public/manifest.json` and the
+   `apple-touch-icon` href in `app/layout.tsx`.
+3. Rebuild and redeploy (see "Redeploying After Code Changes" above).
+
+**Important:** this does **not** update an already-installed PWA. The OS captures the
+home-screen icon at install time and never re-reads the manifest for that install. Existing
+users must remove the app and re-add it to see a new icon; only fresh installs pick it up
+automatically.
+
+---
+
 ## Database Backups
 
 No backup script. Run manually when needed:
