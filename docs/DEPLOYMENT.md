@@ -319,6 +319,18 @@ Log in with those credentials after the first deploy.
 
 ## Redeploying After Code Changes
 
+> **This VPS is both the testing and the production environment** — it has become
+> production organically. Deploys are done **in place**: the server's working
+> directory sits on the active feature branch and the app is built from it (there
+> is no `git pull` step in the deploy). So whatever has been built + reloaded here
+> is what's live, regardless of what is merged to `main`.
+>
+> Consequence: when a change adds a **DB migration**, a **new dependency**, or
+> **new seeded permissions**, those steps must be run on the server as part of the
+> deploy (see the commands below). They are NOT optional just because the code
+> built — e.g. the Community module needed `npx prisma migrate deploy`,
+> `npx prisma db seed`, and `npm install` (for `heic2any`) before it worked.
+
 There is no deploy script. Run these commands in order on the server:
 
 ```bash

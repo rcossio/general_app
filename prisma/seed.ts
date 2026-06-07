@@ -12,6 +12,7 @@ async function main() {
     { name: 'Moderator', slug: 'moderator', description: 'Moderation access' },
     { name: 'User', slug: 'user', description: 'Standard user access' },
     { name: 'Bot User', slug: 'bot_user', description: 'Seeded bot accounts for community content' },
+    { name: 'Users Admin', slug: 'users_admin', description: 'Receives new-user notification emails' },
   ]
 
   for (const role of roles) {
@@ -44,6 +45,7 @@ async function main() {
   const admin = await prisma.role.findUniqueOrThrow({ where: { slug: 'admin' } })
   const user = await prisma.role.findUniqueOrThrow({ where: { slug: 'user' } })
   const botUser = await prisma.role.findUniqueOrThrow({ where: { slug: 'bot_user' } })
+  const usersAdmin = await prisma.role.findUniqueOrThrow({ where: { slug: 'users_admin' } })
   const allPermissions = await prisma.permission.findMany()
 
   // master_admin and admin get all permissions
@@ -102,10 +104,14 @@ async function main() {
     },
   })
 
-  // Remove any existing roles and assign master_admin
+  // Remove any existing roles and assign master_admin + users_admin (so the
+  // operator receives new-user notification emails).
   await prisma.userRole.deleteMany({ where: { userId: adminUser.id } })
-  await prisma.userRole.create({
-    data: { userId: adminUser.id, roleId: masterAdmin.id },
+  await prisma.userRole.createMany({
+    data: [
+      { userId: adminUser.id, roleId: masterAdmin.id },
+      { userId: adminUser.id, roleId: usersAdmin.id },
+    ],
   })
 
   await seedBotUsers(botUser.id)

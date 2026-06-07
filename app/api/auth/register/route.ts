@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { audit } from '@/lib/audit'
+import { sendNewUserNotification } from '@/lib/email'
 import {
   hashPassword,
   signAccessToken,
@@ -50,6 +51,14 @@ export async function POST(request: NextRequest) {
     }
 
     audit('user_registered', { userId: user.id, email })
+
+    // Notify the operator (best-effort, off the response path).
+    prisma.user
+      .count({ where: { deletedAt: null } })
+      .then((totalUsers) =>
+        sendNewUserNotification({ name: user.name, email: user.email, provider: 'email', totalUsers })
+      )
+      .catch(() => {})
 
     const payload = { sub: user.id, email: user.email, roles: ['user'] }
     const accessToken = signAccessToken(payload)

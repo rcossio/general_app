@@ -27,6 +27,11 @@ const envSchema = z.object({
   // Email (optional — password reset disabled without it)
   RESEND_API_KEY: z.string().optional(),
   RESEND_FROM_EMAIL: z.string().optional(),
+
+  // Admin / notifications (optional). New-user notifications go to
+  // NOTIFY_EMAIL, falling back to ADMIN_EMAIL.
+  ADMIN_EMAIL: z.string().optional(),
+  NOTIFY_EMAIL: z.string().optional(),
 })
 
 const parsed = envSchema.safeParse(process.env)
