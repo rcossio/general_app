@@ -77,6 +77,8 @@ export async function GET(request: NextRequest) {
         select: { id: true, email: true, name: true, userRoles: { select: { role: { select: { slug: true } } } } },
       })
       isNewUser = true
+      // New-user notifications are batched into a once-a-day digest job
+      // (scripts/notify-new-users-digest.ts), not sent per signup.
     }
 
     const roles = user.userRoles.map((ur) => ur.role.slug)

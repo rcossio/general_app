@@ -48,11 +48,13 @@ export async function POST(request: NextRequest) {
       select: {
         id: true,
         email: true,
+        deletedAt: true,
         userRoles: { select: { role: { select: { slug: true } } } },
       },
     })
 
-    if (!user) {
+    // A soft-deleted account must not be able to mint fresh access tokens.
+    if (!user || user.deletedAt) {
       return NextResponse.json(
         { error: 'User not found', code: 'USER_NOT_FOUND' },
         { status: 401 }

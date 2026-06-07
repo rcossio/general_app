@@ -1,7 +1,5 @@
-// import workout from '@/modules/workout/manifest'
-// import lifeTracker from '@/modules/life-tracker/manifest'  // commented = disconnected
 import adventure from '@/modules/adventure/manifest'
-// import events from '@/modules/events/manifest'  // commented = disconnected
+import community from '@/modules/community/manifest'
 
 export interface ModuleNavItem {
   label: string
@@ -19,6 +17,6 @@ export interface ModuleManifest {
   testEndpoint: string
 }
 
-export const activeModules: ModuleManifest[] = [adventure].filter(
+export const activeModules: ModuleManifest[] = [community, adventure].filter(
   (m) => m.isActive
 )

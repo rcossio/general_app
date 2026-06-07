@@ -3,70 +3,15 @@ import { requirePermission, isNextResponse } from '@/lib/permissions'
 import { prisma } from '@/lib/prisma'
 import { closeLocationSchema } from '@/modules/adventure/lib/schemas'
 import { evaluate, type Condition } from '@/modules/adventure/lib/condition'
+import {
+  resolveActiveValue,
+  resolveValueIndex,
+  resolveNarrative,
+  type LocationValue,
+  type GrantEntry,
+} from '@/modules/adventure/lib/narrative'
 
 type Params = { params: Promise<{ id: string }> }
-
-type GrantEntry = { flag: string }
-
-type Choice = {
-  id: string
-  label: Record<string, string>
-  outcome: Record<string, string>
-  grants: GrantEntry[]
-}
-
-type PasswordData = {
-  value: string
-  grants: GrantEntry[]
-}
-
-type LocationValue = {
-  when: Condition
-  content: Record<string, string>
-  completesChapter?: boolean
-  choices?: Choice[]
-  password?: PasswordData
-  grants?: GrantEntry[]
-  revokes?: GrantEntry[]
-  imageUrl?: string | null
-}
-
-function resolveActiveValue(
-  values: LocationValue[],
-  flags: Set<string>
-): LocationValue | null {
-  for (const v of values) {
-    if (evaluate(v.when as Condition, flags)) return v
-  }
-  return null
-}
-
-// Index of the first value whose `when` matches the flags, or -1 if none.
-// Identifies which state a location is resolved to, for change detection.
-function resolveValueIndex(values: LocationValue[], flags: Set<string>): number {
-  for (let i = 0; i < values.length; i++) {
-    if (evaluate(values[i].when as Condition, flags)) return i
-  }
-  return -1
-}
-
-function resolveNarrative(
-  values: LocationValue[],
-  flags: Set<string>
-): { content: Record<string, string>; completesChapter: boolean; choices: { id: string; label: Record<string, string> }[] | null; hasPassword: boolean; imageUrl: string | null } {
-  for (const v of values) {
-    if (evaluate(v.when as Condition, flags)) {
-      return {
-        content: v.content,
-        completesChapter: v.completesChapter ?? false,
-        choices: v.choices?.map((c) => ({ id: c.id, label: c.label })) ?? null,
-        hasPassword: !!v.password,
-        imageUrl: v.imageUrl ?? null,
-      }
-    }
-  }
-  return { content: {}, completesChapter: false, choices: null, hasPassword: false, imageUrl: null }
-}
 
 export async function POST(request: NextRequest, { params }: Params) {
   const result = await requirePermission(request, 'adventure', 'play')
@@ -94,7 +39,7 @@ export async function POST(request: NextRequest, { params }: Params) {
           select: {
             nextGameId: true,
             locations: {
-              select: { id: true, visibleWhen: true, values: true, imageUrl: true },
+              select: { id: true, visibleWhen: true, values: true, imageUrl: true, grants: true, revokes: true },
               orderBy: { order: 'asc' },
             },
           },
@@ -118,17 +63,6 @@ export async function POST(request: NextRequest, { params }: Params) {
       )
     }
 
-    const fullLocation = await prisma.gameLocation.findFirst({
-      where: { id: locationId, gameId: session.gameId },
-    })
-
-    if (!fullLocation) {
-      return NextResponse.json(
-        { error: 'Location not found', code: 'NOT_FOUND' },
-        { status: 404 }
-      )
-    }
-
     const visit = await prisma.locationVisit.findUnique({
       where: { sessionId_locationId: { sessionId, locationId } },
     })
@@ -141,18 +75,18 @@ export async function POST(request: NextRequest, { params }: Params) {
     }
 
     const oldFlagSet = new Set(session.flags.map((f) => f.flag))
-    const values = fullLocation.values as LocationValue[]
+    const values = location.values as LocationValue[]
     const activeValue = resolveActiveValue(values, oldFlagSet)
 
     // Grants: location-level (unconditional) + active value-level (conditional)
-    const locationGrants = (fullLocation.grants as GrantEntry[]) ?? []
+    const locationGrants = (location.grants as GrantEntry[]) ?? []
     const valueGrants = activeValue?.grants ?? []
     const newFlags = [...locationGrants, ...valueGrants]
       .map((g) => g.flag)
       .filter((f) => !oldFlagSet.has(f))
 
     // Revokes: location-level (unconditional) + active value-level (applied last so they can remove callback flags)
-    const locationRevokes = (fullLocation.revokes as GrantEntry[]) ?? []
+    const locationRevokes = (location.revokes as GrantEntry[]) ?? []
     const valueRevokes = activeValue?.revokes ?? []
     const revokedFlags = [...locationRevokes, ...valueRevokes].map((r) => r.flag)
 

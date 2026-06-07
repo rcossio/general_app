@@ -50,7 +50,7 @@ export function usePlayerPosition(fakeMode: boolean) {
         watchIdRef.current = null
       }
     }
-  }, [fakeMode]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [fakeMode]) // eslint-disable-line react-hooks/exhaustive-deps -- re-subscribe to geolocation only when fakeMode toggles; adding callbacks would thrash watchPosition every render
 
   // Fake GPS — keyboard control
   useEffect(() => {

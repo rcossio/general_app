@@ -10,7 +10,8 @@ export async function register(email: string, password = 'Smoke!Test99', name = 
   return fetch(`${BASE}/api/auth/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password, name }),
+    // The register endpoint enforces the GDPR consent gate — privacyAccepted is required.
+    body: JSON.stringify({ email, password, name, privacyAccepted: true }),
   })
 }
 

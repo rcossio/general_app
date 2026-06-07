@@ -1,36 +1,31 @@
 import { NextResponse } from 'next/server'
 import { getUserFromRequest, JwtPayload } from './auth'
 import { prisma } from './prisma'
+import { isAdminRole } from './roles'
 
-const BYPASS_ROLES = ['master_admin', 'admin']
+// In-process cache of each user's merged permission set (role-based + direct).
+// The role→permission mapping is effectively static (seeded), so re-querying it
+// on every request is pure waste. TTL keeps grant/revoke lag bounded; each PM2
+// worker keeps its own cache. Invalidated explicitly when an admin mutates a
+// user's roles/permissions (see invalidatePermissionCache).
+const PERM_CACHE_TTL_MS = 60_000
+const permCache = new Map<string, { perms: Set<string>; expires: number }>()
 
-export async function requirePermission(
-  request: Request,
-  resource: string,
-  action: string
-): Promise<{ user: JwtPayload } | NextResponse> {
-  const user = getUserFromRequest(request)
-  if (!user) {
-    return NextResponse.json(
-      { error: 'Unauthorized', code: 'AUTH_REQUIRED' },
-      { status: 401 }
-    )
-  }
+export function invalidatePermissionCache(userId: string): void {
+  permCache.delete(userId)
+}
 
-  // master_admin and admin bypass all checks
-  if (user.roles.some((r) => BYPASS_ROLES.includes(r))) {
-    return { user }
-  }
+async function loadUserPermissions(userId: string): Promise<Set<string>> {
+  const cached = permCache.get(userId)
+  if (cached && cached.expires > Date.now()) return cached.perms
 
-  // Check DB for specific permission (role-based OR direct user-permission)
   const userWithPerms = await prisma.user.findUnique({
-    where: { id: user.sub },
+    where: { id: userId },
     select: {
       userRoles: {
         select: {
           role: {
             select: {
-              slug: true,
               rolePermissions: {
                 select: {
                   permission: { select: { resource: true, action: true } },
@@ -48,17 +43,40 @@ export async function requirePermission(
     },
   })
 
-  const hasRolePerm = userWithPerms?.userRoles.some((ur) =>
-    ur.role.rolePermissions.some(
-      (rp) => rp.permission.resource === resource && rp.permission.action === action
+  const perms = new Set<string>()
+  for (const ur of userWithPerms?.userRoles ?? []) {
+    for (const rp of ur.role.rolePermissions) {
+      perms.add(`${rp.permission.resource}:${rp.permission.action}`)
+    }
+  }
+  for (const up of userWithPerms?.userPermissions ?? []) {
+    perms.add(`${up.permission.resource}:${up.permission.action}`)
+  }
+
+  permCache.set(userId, { perms, expires: Date.now() + PERM_CACHE_TTL_MS })
+  return perms
+}
+
+export async function requirePermission(
+  request: Request,
+  resource: string,
+  action: string
+): Promise<{ user: JwtPayload } | NextResponse> {
+  const user = getUserFromRequest(request)
+  if (!user) {
+    return NextResponse.json(
+      { error: 'Unauthorized', code: 'AUTH_REQUIRED' },
+      { status: 401 }
     )
-  )
+  }
 
-  const hasDirectPerm = userWithPerms?.userPermissions.some(
-    (up) => up.permission.resource === resource && up.permission.action === action
-  )
+  // master_admin and admin bypass all checks
+  if (isAdminRole(user.roles)) {
+    return { user }
+  }
 
-  if (!hasRolePerm && !hasDirectPerm) {
+  const perms = await loadUserPermissions(user.sub)
+  if (!perms.has(`${resource}:${action}`)) {
     return NextResponse.json(
       { error: 'Forbidden', code: 'PERMISSION_DENIED' },
       { status: 403 }
@@ -79,6 +97,22 @@ export async function requireAuth(
     )
   }
   return { user }
+}
+
+// Requires the caller to be an admin (master_admin or admin). Used by admin-only
+// routes instead of requireAuth + a hand-rolled role check.
+export async function requireAdmin(
+  request: Request
+): Promise<{ user: JwtPayload } | NextResponse> {
+  const result = await requireAuth(request)
+  if (isNextResponse(result)) return result
+  if (!isAdminRole(result.user.roles)) {
+    return NextResponse.json(
+      { error: 'Forbidden', code: 'PERMISSION_DENIED' },
+      { status: 403 }
+    )
+  }
+  return result
 }
 
 export function isNextResponse(value: unknown): value is NextResponse {

@@ -46,9 +46,15 @@ describe('Auth: Login', () => {
     expect(res.status).toBe(401)
   })
 
-  it('returns 401 for unknown email', async () => {
-    const { res } = await login(uniqueEmail('ghost'))
-    expect(res.status).toBe(401)
+  it('returns needsRegistration for unknown email (unified login)', async () => {
+    const res = await fetch(`${BASE}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: uniqueEmail('ghost'), password: 'Smoke!Test99' }),
+    })
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.data.needsRegistration).toBe(true)
   })
 })
 

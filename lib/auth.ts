@@ -16,23 +16,28 @@ export interface JwtPayload {
 }
 
 export function signAccessToken(payload: JwtPayload): string {
-  return jwt.sign(payload, ACCESS_SECRET, { expiresIn: ACCESS_EXPIRES } as jwt.SignOptions)
+  return jwt.sign(payload, ACCESS_SECRET, {
+    algorithm: 'HS256',
+    expiresIn: ACCESS_EXPIRES,
+  } as jwt.SignOptions)
 }
 
 export function signRefreshToken(payload: JwtPayload): string {
   return jwt.sign(
     { ...payload, jti: crypto.randomUUID() },
     REFRESH_SECRET,
-    { expiresIn: REFRESH_EXPIRES } as jwt.SignOptions
+    { algorithm: 'HS256', expiresIn: REFRESH_EXPIRES } as jwt.SignOptions
   )
 }
 
 export function verifyAccessToken(token: string): JwtPayload {
-  return jwt.verify(token, ACCESS_SECRET) as JwtPayload
+  // Pin the algorithm so a forged token cannot downgrade to `alg: none` or
+  // trigger algorithm confusion. Our secrets are symmetric → HS256 only.
+  return jwt.verify(token, ACCESS_SECRET, { algorithms: ['HS256'] }) as JwtPayload
 }
 
 export function verifyRefreshToken(token: string): JwtPayload {
-  return jwt.verify(token, REFRESH_SECRET) as JwtPayload
+  return jwt.verify(token, REFRESH_SECRET, { algorithms: ['HS256'] }) as JwtPayload
 }
 
 export function hashToken(token: string): string {

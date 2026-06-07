@@ -37,9 +37,15 @@ const config: Config = {
           '0%, 16%, 32%, 100%': { transform: 'translateY(0) scale(1)' },
           '8%, 24%': { transform: 'translateY(-110%) scale(1.2)' },
         },
+        // Twinkle for the "fixed" sparkle marker.
+        sparkle: {
+          '0%, 100%': { transform: 'scale(1)', opacity: '1' },
+          '50%': { transform: 'scale(1.3)', opacity: '0.7' },
+        },
       },
       animation: {
         'badge-bounce': 'badge-bounce 3s ease-in-out infinite',
+        sparkle: 'sparkle 1.8s ease-in-out infinite',
       },
     },
   },

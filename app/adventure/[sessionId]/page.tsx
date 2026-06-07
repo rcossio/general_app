@@ -14,6 +14,8 @@ import { usePlayerPosition } from '@/modules/adventure/lib/usePlayerPosition'
 import { distanceMeters } from '@/modules/adventure/lib/haversine'
 import { ArrowLeft, Trophy, RefreshCw, Settings, RotateCcw, Crosshair, X, Backpack, Share2, Copy, Check, Trash2, LocateFixed } from 'lucide-react'
 import type { MapLocation } from '@/modules/adventure/components/AdventureMap'
+import { resolveI18n, type I18nString } from '@/lib/i18n'
+import { isAdminRole } from '@/lib/roles'
 
 type ResolvedLocation = MapLocation & {
   imageUrl: string | null
@@ -35,14 +37,6 @@ function MapPlaceholder() {
       <div className="animate-pulse text-brand-gray text-sm">…</div>
     </div>
   )
-}
-
-type I18nString = string | Record<string, string>
-
-function resolveI18n(value: I18nString | null | undefined, locale: string): string {
-  if (!value) return ''
-  if (typeof value === 'string') return value
-  return value[locale] ?? Object.values(value)[0] ?? ''
 }
 
 interface ApiLocationChoice {
@@ -170,9 +164,20 @@ function GameMap({ sessionId }: { sessionId: string }) {
     setSeenLoaded(true)
   }, [state, seenLoaded, sessionId])
 
+  // Last session version seen, so polls can be answered with 304 (no body) when
+  // nothing changed — see the GET handler's X-Session-Version logic.
+  const sessionVersionRef = useRef<string | null>(null)
   const loadState = useCallback(
     async (sid: string) => {
-      const res = await fetchWithAuth(`/api/adventure/sessions/${sid}`)
+      const headers: Record<string, string> = {}
+      if (sessionVersionRef.current) headers['X-Session-Version'] = sessionVersionRef.current
+      const res = await fetchWithAuth(`/api/adventure/sessions/${sid}`, { headers })
+      if (res.status === 304) {
+        setLoading(false)
+        return
+      }
+      const version = res.headers.get('X-Session-Version')
+      if (version) sessionVersionRef.current = version
       const body = await res.json()
       if (body.data) setState(body.data)
       setLoading(false)
@@ -190,10 +195,10 @@ function GameMap({ sessionId }: { sessionId: string }) {
   }, [sessionId, loadState])
 
   const isSpectator = state?.isSpectator ?? false
-  const isAdmin = user?.roles?.some((r: string) => ['master_admin', 'admin'].includes(r)) ?? false
+  const isAdmin = isAdminRole(user?.roles)
   const canUseFakeGps = isAdmin || (user?.permissions?.includes('adventure:tester') ?? false)
 
-  // Spectators poll every 5s to stay in sync with the owner
+  // Spectators poll every 10s to stay in sync with the owner (304 when unchanged)
   useEffect(() => {
     if (!isSpectator) return
     const interval = setInterval(() => loadState(sessionId), 10000)
@@ -375,7 +380,7 @@ function GameMap({ sessionId }: { sessionId: string }) {
     if (autoVisitedRef.current.has(key)) return
     autoVisitedRef.current.add(key)
     doVisit(selectedLocation.id, playerPos.lat, playerPos.lng)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- auto-visit only when the selected location/range changes; doVisit & playerPos are excluded so it doesn't re-fire on every GPS tick
   }, [selectedLocation?.id, selectedLocation?.status, withinRange])
 
   // Keep selectedLocation in sync with resolved state after loadState
@@ -385,7 +390,7 @@ function GameMap({ sessionId }: { sessionId: string }) {
     if (updated) {
       setSelectedLocation(updated)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- resync the open sheet only when server state changes; reading selectedLocation here would loop
   }, [state])
 
   // Auto-open sheet for event locations when the player enters their radius
@@ -402,7 +407,7 @@ function GameMap({ sessionId }: { sessionId: string }) {
       setSelectedLocation(loc)
       break
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- auto-open events on position/state change only
   }, [playerPos, state])
 
   // Persist pending location to localStorage so the sheet re-opens after app restart
@@ -426,7 +431,7 @@ function GameMap({ sessionId }: { sessionId: string }) {
     } else {
       localStorage.removeItem(pendingKey)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- restore the pending location only when server state (locations) changes
   }, [state])
 
   if (loading) {

@@ -58,7 +58,12 @@ export async function POST(request: NextRequest) {
     })
 
     const resetUrl = `${env.NEXT_PUBLIC_APP_URL}/reset-password?token=${rawToken}`
-    await sendPasswordResetEmail(user.email, resetUrl)
+    // Send off the response path: awaiting the email makes a real account's
+    // response measurably slower than a non-existent one, which leaks whether
+    // an email is registered (timing-based enumeration).
+    void sendPasswordResetEmail(user.email, resetUrl).catch((e) => {
+      console.error('Failed to send password reset email:', e)
+    })
 
     return NextResponse.json({ data: { sent: true } })
   } catch {

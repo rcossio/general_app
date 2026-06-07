@@ -292,6 +292,17 @@ systemctl reload nginx
 
 **Note:** `nginx.conf` in the repo is a template with `yourdomain.com` placeholders. The live config at `/etc/nginx/sites-available/app` is what actually runs and will be modified by Certbot — do not copy from the repo over it after SSL is set up.
 
+**Rate limiting (in the template, so it is portable):** `nginx.conf` defines two `limit_req_zone`s and applies them:
+
+| Zone | Rate | Applied to | Burst |
+|---|---|---|---|
+| `auth` | 10r/m (template) / 30r/m (live) | `/api/auth/` | 5 / 20 |
+| `api` | 60r/m | `/api/community/`, `/api/upload/` | 20 / 10 |
+
+`/api/community/` covers the public notice list (which is also browser-cached via `Cache-Control`) plus create/fix/delete; `/api/upload/` covers presigned-URL generation. These live in the repo template, so a **fresh** VPS gets them from the Step 14 copy automatically.
+
+**Updating rate limits on an EXISTING server:** because Certbot has already rewritten the live file, you cannot re-copy the template over it. Apply the same edit by hand to `/etc/nginx/sites-available/app` (add/adjust the `limit_req_zone` line at the top and the matching `location … { limit_req … }` blocks), then `nginx -t && systemctl reload nginx`. Keep the repo template in sync so the next fresh install stays correct.
+
 ---
 
 ### Step 15 — SSL with Certbot
@@ -318,6 +329,18 @@ Log in with those credentials after the first deploy.
 ---
 
 ## Redeploying After Code Changes
+
+> **This VPS is both the testing and the production environment** — it has become
+> production organically. Deploys are done **in place**: the server's working
+> directory sits on the active feature branch and the app is built from it (there
+> is no `git pull` step in the deploy). So whatever has been built + reloaded here
+> is what's live, regardless of what is merged to `main`.
+>
+> Consequence: when a change adds a **DB migration**, a **new dependency**, or
+> **new seeded permissions**, those steps must be run on the server as part of the
+> deploy (see the commands below). They are NOT optional just because the code
+> built — e.g. the Community module needed `npx prisma migrate deploy`,
+> `npx prisma db seed`, and `npm install` (for `heic2any`) before it worked.
 
 There is no deploy script. Run these commands in order on the server:
 

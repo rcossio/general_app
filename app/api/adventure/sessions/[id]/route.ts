@@ -1,57 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createHash } from 'crypto'
 import { requirePermission, isNextResponse } from '@/lib/permissions'
 import { prisma } from '@/lib/prisma'
 import { evaluate, type Condition } from '@/modules/adventure/lib/condition'
+import { resolveNarrative, resolveValueIndex, type LocationValue } from '@/modules/adventure/lib/narrative'
 
 type Params = { params: Promise<{ id: string }> }
-
-type Choice = {
-  id: string
-  label: Record<string, string>
-  outcome: Record<string, string>
-  grants: { flag: string }[]
-}
-
-type PasswordData = {
-  value: string
-  grants: { flag: string }[]
-}
-
-type LocationValue = {
-  when: Condition
-  content: Record<string, string>
-  completesChapter?: boolean
-  choices?: Choice[]
-  password?: PasswordData
-  imageUrl?: string | null
-}
-
-function resolveNarrative(
-  values: LocationValue[],
-  flags: Set<string>
-): { content: Record<string, string>; completesChapter: boolean; choices: { id: string; label: Record<string, string> }[] | null; hasPassword: boolean; imageUrl: string | null } {
-  for (const v of values) {
-    if (evaluate(v.when as Condition, flags)) {
-      return {
-        content: v.content,
-        completesChapter: v.completesChapter ?? false,
-        choices: v.choices?.map((c) => ({ id: c.id, label: c.label })) ?? null,
-        hasPassword: !!v.password,
-        imageUrl: v.imageUrl ?? null,
-      }
-    }
-  }
-  return { content: {}, completesChapter: false, choices: null, hasPassword: false, imageUrl: null }
-}
-
-// Index of the first value whose `when` matches the flags, or -1 if none.
-// Used to detect whether a closed location's resolved state has changed.
-function resolveValueIndex(values: LocationValue[], flags: Set<string>): number {
-  for (let i = 0; i < values.length; i++) {
-    if (evaluate(values[i].when as Condition, flags)) return i
-  }
-  return -1
-}
 
 export async function GET(request: NextRequest, { params }: Params) {
   const result = await requirePermission(request, 'adventure', 'play')
@@ -78,6 +32,21 @@ export async function GET(request: NextRequest, { params }: Params) {
           items: true,
           locations: {
             orderBy: { order: 'asc' },
+            // Only the fields this handler reads — avoids re-fetching grants/
+            // revokes and other columns on every (10s) spectator poll.
+            select: {
+              id: true,
+              externalId: true,
+              name: true,
+              lat: true,
+              lng: true,
+              radiusM: true,
+              type: true,
+              imageUrl: true,
+              visibleWhen: true,
+              values: true,
+              initialLocation: true,
+            },
           },
         },
       },
@@ -141,27 +110,38 @@ export async function GET(request: NextRequest, { params }: Params) {
     }
   })
 
-  return NextResponse.json({
-    data: {
-      session: {
-        id: session.id,
-        gameId: session.gameId,
-        startedAt: session.startedAt,
-        completedAt: session.completedAt,
-        flags: Array.from(flagSet),
-        visitedLocationIds: Array.from(visitedIds),
-      },
-      game: {
-        id: session.game.id,
-        title: session.game.title,
-        chapter: session.game.chapter,
-        nextGameId: session.game.nextGameId,
-        items: session.game.items,
-      },
-      locations,
-      isSpectator,
+  const data = {
+    session: {
+      id: session.id,
+      gameId: session.gameId,
+      startedAt: session.startedAt,
+      completedAt: session.completedAt,
+      flags: Array.from(flagSet),
+      visitedLocationIds: Array.from(visitedIds),
     },
-  })
+    game: {
+      id: session.game.id,
+      title: session.game.title,
+      chapter: session.game.chapter,
+      nextGameId: session.game.nextGameId,
+      items: session.game.items,
+    },
+    locations,
+    isSpectator,
+  }
+
+  // Versioned response: hash the fully-resolved payload. Spectators poll this
+  // every 10s and the state is usually unchanged, so we let the client send the
+  // last version (X-Session-Version) and return 304 when it matches — skipping
+  // the (large, multilingual JSONB) body, its transfer, and the client re-render.
+  // A custom header is used instead of ETag to avoid Nginx's gzip/ETag handling.
+  // (The DB read still happens; eliminating it would need a version column or SSE.)
+  const version = createHash('sha1').update(JSON.stringify(data)).digest('hex')
+  if (request.headers.get('x-session-version') === version) {
+    return new NextResponse(null, { status: 304, headers: { 'X-Session-Version': version } })
+  }
+
+  return NextResponse.json({ data }, { headers: { 'X-Session-Version': version } })
 }
 
 export async function DELETE(request: NextRequest, { params }: Params) {
