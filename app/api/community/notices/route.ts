@@ -4,8 +4,8 @@ import { getUserFromRequest } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { getPublicUrl } from '@/lib/storage'
 import { createNoticeSchema, isValidPhotoKey } from '@/modules/community/lib/schemas'
+import { isAdminRole } from '@/lib/roles'
 
-const BYPASS_ROLES = ['master_admin', 'admin']
 const LIST_LIMIT = 1000
 const DAY_MS = 24 * 60 * 60 * 1000
 const WEEK_MS = 7 * DAY_MS
@@ -44,7 +44,14 @@ export async function GET(request: NextRequest) {
   // Never expose userId to clients — only a boolean for the owner.
   const data = notices.map(({ userId, ...n }) => ({ ...n, isOwn: !!user && userId === user.sub }))
 
-  return NextResponse.json({ data: { notices: data } })
+  // The anonymous response is identical for everyone and changes slowly, so let
+  // browsers/shared caches reuse it briefly. Authed responses carry per-user
+  // `isOwn`, so they must never be shared — mark them private + non-cacheable.
+  const cacheControl = user
+    ? 'private, no-store'
+    : 'public, max-age=30, stale-while-revalidate=60'
+
+  return NextResponse.json({ data: { notices: data } }, { headers: { 'Cache-Control': cacheControl } })
 }
 
 // POST — create a notice (auth + rate limited: 1/day, 3/week per user).
@@ -52,7 +59,7 @@ export async function POST(request: NextRequest) {
   const result = await requirePermission(request, 'community', 'create')
   if (isNextResponse(result)) return result
 
-  const isAdmin = result.user.roles.some((r) => BYPASS_ROLES.includes(r))
+  const isAdmin = isAdminRole(result.user.roles)
 
   if (!isAdmin) {
     const now = Date.now()

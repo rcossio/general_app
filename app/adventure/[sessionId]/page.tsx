@@ -15,6 +15,7 @@ import { distanceMeters } from '@/modules/adventure/lib/haversine'
 import { ArrowLeft, Trophy, RefreshCw, Settings, RotateCcw, Crosshair, X, Backpack, Share2, Copy, Check, Trash2, LocateFixed } from 'lucide-react'
 import type { MapLocation } from '@/modules/adventure/components/AdventureMap'
 import { resolveI18n, type I18nString } from '@/lib/i18n'
+import { isAdminRole } from '@/lib/roles'
 
 type ResolvedLocation = MapLocation & {
   imageUrl: string | null
@@ -163,9 +164,20 @@ function GameMap({ sessionId }: { sessionId: string }) {
     setSeenLoaded(true)
   }, [state, seenLoaded, sessionId])
 
+  // Last session version seen, so polls can be answered with 304 (no body) when
+  // nothing changed — see the GET handler's X-Session-Version logic.
+  const sessionVersionRef = useRef<string | null>(null)
   const loadState = useCallback(
     async (sid: string) => {
-      const res = await fetchWithAuth(`/api/adventure/sessions/${sid}`)
+      const headers: Record<string, string> = {}
+      if (sessionVersionRef.current) headers['X-Session-Version'] = sessionVersionRef.current
+      const res = await fetchWithAuth(`/api/adventure/sessions/${sid}`, { headers })
+      if (res.status === 304) {
+        setLoading(false)
+        return
+      }
+      const version = res.headers.get('X-Session-Version')
+      if (version) sessionVersionRef.current = version
       const body = await res.json()
       if (body.data) setState(body.data)
       setLoading(false)
@@ -183,10 +195,10 @@ function GameMap({ sessionId }: { sessionId: string }) {
   }, [sessionId, loadState])
 
   const isSpectator = state?.isSpectator ?? false
-  const isAdmin = user?.roles?.some((r: string) => ['master_admin', 'admin'].includes(r)) ?? false
+  const isAdmin = isAdminRole(user?.roles)
   const canUseFakeGps = isAdmin || (user?.permissions?.includes('adventure:tester') ?? false)
 
-  // Spectators poll every 5s to stay in sync with the owner
+  // Spectators poll every 10s to stay in sync with the owner (304 when unchanged)
   useEffect(() => {
     if (!isSpectator) return
     const interval = setInterval(() => loadState(sessionId), 10000)

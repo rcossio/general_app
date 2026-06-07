@@ -39,7 +39,7 @@ export async function POST(request: NextRequest, { params }: Params) {
           select: {
             nextGameId: true,
             locations: {
-              select: { id: true, visibleWhen: true, values: true, imageUrl: true },
+              select: { id: true, visibleWhen: true, values: true, imageUrl: true, grants: true, revokes: true },
               orderBy: { order: 'asc' },
             },
           },
@@ -63,17 +63,6 @@ export async function POST(request: NextRequest, { params }: Params) {
       )
     }
 
-    const fullLocation = await prisma.gameLocation.findFirst({
-      where: { id: locationId, gameId: session.gameId },
-    })
-
-    if (!fullLocation) {
-      return NextResponse.json(
-        { error: 'Location not found', code: 'NOT_FOUND' },
-        { status: 404 }
-      )
-    }
-
     const visit = await prisma.locationVisit.findUnique({
       where: { sessionId_locationId: { sessionId, locationId } },
     })
@@ -86,18 +75,18 @@ export async function POST(request: NextRequest, { params }: Params) {
     }
 
     const oldFlagSet = new Set(session.flags.map((f) => f.flag))
-    const values = fullLocation.values as LocationValue[]
+    const values = location.values as LocationValue[]
     const activeValue = resolveActiveValue(values, oldFlagSet)
 
     // Grants: location-level (unconditional) + active value-level (conditional)
-    const locationGrants = (fullLocation.grants as GrantEntry[]) ?? []
+    const locationGrants = (location.grants as GrantEntry[]) ?? []
     const valueGrants = activeValue?.grants ?? []
     const newFlags = [...locationGrants, ...valueGrants]
       .map((g) => g.flag)
       .filter((f) => !oldFlagSet.has(f))
 
     // Revokes: location-level (unconditional) + active value-level (applied last so they can remove callback flags)
-    const locationRevokes = (fullLocation.revokes as GrantEntry[]) ?? []
+    const locationRevokes = (location.revokes as GrantEntry[]) ?? []
     const valueRevokes = activeValue?.revokes ?? []
     const revokedFlags = [...locationRevokes, ...valueRevokes].map((r) => r.flag)
 

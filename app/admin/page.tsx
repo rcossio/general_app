@@ -7,6 +7,7 @@ import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
 import { useRouter } from 'next/navigation'
 import { Search, ChevronLeft, ChevronRight, ChevronDown, Trash2, X } from 'lucide-react'
 import { activeModules } from '@/config/modules'
+import { isAdminRole } from '@/lib/roles'
 
 interface AdminUser {
   id: string
@@ -16,7 +17,7 @@ interface AdminUser {
   directPermissions: string[]
 }
 
-const ROLES = ['user', 'moderator', 'admin', 'master_admin', 'bot_user']
+const ROLES = ['user', 'admin', 'master_admin', 'bot_user']
 
 // All grantable permissions from active modules (e.g. "adventure:tester")
 const ALL_PERMISSIONS = activeModules.flatMap((m) => m.permissions)
@@ -42,7 +43,7 @@ function AdminGuard() {
   const { user } = useAuth()
   const router = useRouter()
 
-  const isAdmin = user?.roles.some((r) => ['master_admin', 'admin'].includes(r))
+  const isAdmin = isAdminRole(user?.roles)
 
   useEffect(() => {
     if (user && !isAdmin) router.replace('/dashboard')

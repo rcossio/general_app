@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createHash } from 'crypto'
 import { requirePermission, isNextResponse } from '@/lib/permissions'
 import { prisma } from '@/lib/prisma'
 import { evaluate, type Condition } from '@/modules/adventure/lib/condition'
@@ -109,27 +110,38 @@ export async function GET(request: NextRequest, { params }: Params) {
     }
   })
 
-  return NextResponse.json({
-    data: {
-      session: {
-        id: session.id,
-        gameId: session.gameId,
-        startedAt: session.startedAt,
-        completedAt: session.completedAt,
-        flags: Array.from(flagSet),
-        visitedLocationIds: Array.from(visitedIds),
-      },
-      game: {
-        id: session.game.id,
-        title: session.game.title,
-        chapter: session.game.chapter,
-        nextGameId: session.game.nextGameId,
-        items: session.game.items,
-      },
-      locations,
-      isSpectator,
+  const data = {
+    session: {
+      id: session.id,
+      gameId: session.gameId,
+      startedAt: session.startedAt,
+      completedAt: session.completedAt,
+      flags: Array.from(flagSet),
+      visitedLocationIds: Array.from(visitedIds),
     },
-  })
+    game: {
+      id: session.game.id,
+      title: session.game.title,
+      chapter: session.game.chapter,
+      nextGameId: session.game.nextGameId,
+      items: session.game.items,
+    },
+    locations,
+    isSpectator,
+  }
+
+  // Versioned response: hash the fully-resolved payload. Spectators poll this
+  // every 10s and the state is usually unchanged, so we let the client send the
+  // last version (X-Session-Version) and return 304 when it matches — skipping
+  // the (large, multilingual JSONB) body, its transfer, and the client re-render.
+  // A custom header is used instead of ETag to avoid Nginx's gzip/ETag handling.
+  // (The DB read still happens; eliminating it would need a version column or SSE.)
+  const version = createHash('sha1').update(JSON.stringify(data)).digest('hex')
+  if (request.headers.get('x-session-version') === version) {
+    return new NextResponse(null, { status: 304, headers: { 'X-Session-Version': version } })
+  }
+
+  return NextResponse.json({ data }, { headers: { 'X-Session-Version': version } })
 }
 
 export async function DELETE(request: NextRequest, { params }: Params) {

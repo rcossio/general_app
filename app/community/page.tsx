@@ -13,6 +13,7 @@ import { TimeSimSheet } from '@/modules/community/components/TimeSimSheet'
 import { ReportFormSheet } from '@/modules/community/components/ReportFormSheet'
 import { NoticeDetailSheet } from '@/modules/community/components/NoticeDetailSheet'
 import { useCommunityNotices } from '@/modules/community/lib/useCommunityNotices'
+import { isAdminRole } from '@/lib/roles'
 
 const DEFAULT_CENTER: [number, number] = [45.0118, 8.6216] // Valenza
 
@@ -27,7 +28,7 @@ export default function CommunityPage() {
   const { user, fetchWithAuth } = useAuth()
   const { setHideChrome } = useChrome()
 
-  const { notices, quota, createNotice, deleteNotice, markFixed } = useCommunityNotices()
+  const { notices, quota, loadError, reloadNotices, createNotice, deleteNotice, markFixed } = useCommunityNotices()
   const [playerPos, setPlayerPos] = useState<{ lat: number; lng: number } | null>(null)
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null)
   const handleCenterChange = useCallback((lat: number, lng: number) => setMapCenter({ lat, lng }), [])
@@ -55,7 +56,7 @@ export default function CommunityPage() {
   const [fixingSubmit, setFixingSubmit] = useState(false)
   const [fixError, setFixError] = useState<string | null>(null)
 
-  const isAdmin = user?.roles?.some((r) => ['master_admin', 'admin'].includes(r)) ?? false
+  const isAdmin = isAdminRole(user?.roles)
   const canSimulate = isAdmin || (user?.permissions?.includes('community:tester') ?? false)
   const now = simEnabled ? Date.now() + simDays * 86_400_000 : Date.now()
 
@@ -234,6 +235,14 @@ export default function CommunityPage() {
         </button>
         <span className="font-rubik font-bold">{t('community.title')}</span>
         <div className="flex items-center gap-1">
+          {loadError && (
+            <button
+              onClick={() => reloadNotices()}
+              className="text-xs font-medium px-2 py-1 rounded-full bg-white/20 hover:bg-white/30"
+            >
+              {t('community.retry')}
+            </button>
+          )}
           {canSimulate && (
             <button
               onClick={() => setSettingsOpen(true)}
@@ -254,6 +263,13 @@ export default function CommunityPage() {
           )}
         </div>
       </div>
+
+      {/* Notice list failed to load — surface it instead of a silently empty map */}
+      {loadError && (
+        <div className="px-4 py-2 bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300 text-xs text-center border-b border-red-200 dark:border-red-800 shrink-0">
+          {t('community.loadError')}
+        </div>
+      )}
 
       {/* Settings sheet (gear) — tester time simulation lives here, opt-in */}
       {canSimulate && settingsOpen && (

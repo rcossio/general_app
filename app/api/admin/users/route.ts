@@ -1,15 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAuth, isNextResponse } from '@/lib/permissions'
+import { requireAdmin, isNextResponse } from '@/lib/permissions'
 import { prisma } from '@/lib/prisma'
 
 export async function GET(request: NextRequest) {
-  const result = await requireAuth(request)
+  const result = await requireAdmin(request)
   if (isNextResponse(result)) return result
-
-  const isAdmin = result.user.roles.some((r) => ['master_admin', 'admin'].includes(r))
-  if (!isAdmin) {
-    return NextResponse.json({ error: 'Forbidden', code: 'PERMISSION_DENIED' }, { status: 403 })
-  }
 
   try {
     const { searchParams } = new URL(request.url)

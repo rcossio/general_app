@@ -1,18 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAuth, isNextResponse } from '@/lib/permissions'
+import { requireAdmin, isNextResponse } from '@/lib/permissions'
 import { prisma } from '@/lib/prisma'
 import { audit } from '@/lib/audit'
 
 type Params = { params: Promise<{ id: string }> }
 
 export async function DELETE(request: NextRequest, { params }: Params) {
-  const result = await requireAuth(request)
+  const result = await requireAdmin(request)
   if (isNextResponse(result)) return result
-
-  const isAdmin = result.user.roles.some((r) => ['master_admin', 'admin'].includes(r))
-  if (!isAdmin) {
-    return NextResponse.json({ error: 'Forbidden', code: 'PERMISSION_DENIED' }, { status: 403 })
-  }
 
   const { id } = await params
 

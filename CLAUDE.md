@@ -109,12 +109,10 @@ Do not create new top-level folders without a clear reason. Check what already e
 
 Features are pluggable. Each module has a manifest (`modules/<name>/manifest.ts`) defining nav items, permissions, and API prefix. Active modules are registered in `config/modules.ts`.
 
-- **Adventure** and **Community** are the active modules.
-- **Life Tracker** is disabled: import commented in `config/modules.ts`, folders prefixed with `_` in `app/`, `app/api/`, `__tests__/`. DB tables intact.
-- **Workout** is disabled: import commented in `config/modules.ts`, folders prefixed with `_`. DB tables intact.
-- **Events** is disabled: import commented in `config/modules.ts`.
+- **Adventure** and **Community** are the active modules. A module is "active" iff it is imported into the `activeModules` array in `config/modules.ts` with `isActive: true` (the array is filtered by `isActive`).
+- **Life Tracker**, **Workout**, and **Events** were disabled and then fully removed: their `app/`, `app/api/`, `__tests__/` folders were deleted and their DB tables dropped (migration `drop_disabled_module_tables`). They are no longer present in any form.
 
-To disable a module: comment out its import in `config/modules.ts` and prefix its folders with `_` in `app/`, `app/api/`, and `__tests__/`. Its nav item disappears and RBAC blocks its routes automatically. Tables stay intact. To re-enable: reverse both steps and run `npx prisma migrate dev`.
+To disable a module: set `isActive: false` in its `modules/<name>/manifest.ts` (or remove it from the `activeModules` array). Its nav item disappears and RBAC blocks its routes automatically because the permissions are no longer seeded. Its `app/` and `app/api/` route folders keep working unless you also delete them — so for a clean disable, delete the route folders too. DB tables stay intact until you drop them with a migration. To fully remove a module, delete its `modules/<name>/`, `app/<name>/`, `app/api/<name>/` folders and drop its tables.
 
 To add a new module:
 1. Create `modules/<name>/manifest.ts` and `modules/<name>/lib/schemas.ts`

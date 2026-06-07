@@ -3,8 +3,8 @@ import { requireAuth, isNextResponse } from '@/lib/permissions'
 import { prisma } from '@/lib/prisma'
 import { getPublicUrl } from '@/lib/storage'
 import { markFixedSchema, isValidPhotoKey } from '@/modules/community/lib/schemas'
+import { isAdminRole } from '@/lib/roles'
 
-const BYPASS_ROLES = ['master_admin', 'admin']
 type Params = { params: Promise<{ id: string }> }
 
 // DELETE — owner removes their own notice; admins can remove any.
@@ -18,7 +18,7 @@ export async function DELETE(request: NextRequest, { params }: Params) {
     return NextResponse.json({ error: 'Not found', code: 'NOT_FOUND' }, { status: 404 })
   }
 
-  const isAdmin = result.user.roles.some((r) => BYPASS_ROLES.includes(r))
+  const isAdmin = isAdminRole(result.user.roles)
   if (notice.userId !== result.user.sub && !isAdmin) {
     return NextResponse.json({ error: 'Forbidden', code: 'PERMISSION_DENIED' }, { status: 403 })
   }

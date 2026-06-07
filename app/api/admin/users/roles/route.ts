@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAuth, isNextResponse } from '@/lib/permissions'
+import { requireAdmin, isNextResponse, invalidatePermissionCache } from '@/lib/permissions'
 import { prisma } from '@/lib/prisma'
 import { audit } from '@/lib/audit'
 import { z } from 'zod'
@@ -10,13 +10,8 @@ const assignSchema = z.object({
 })
 
 export async function POST(request: NextRequest) {
-  const result = await requireAuth(request)
+  const result = await requireAdmin(request)
   if (isNextResponse(result)) return result
-
-  const isAdmin = result.user.roles.some((r) => ['master_admin', 'admin'].includes(r))
-  if (!isAdmin) {
-    return NextResponse.json({ error: 'Forbidden', code: 'PERMISSION_DENIED' }, { status: 403 })
-  }
 
   try {
     const body = await request.json()
@@ -29,6 +24,16 @@ export async function POST(request: NextRequest) {
     }
 
     const { userId, role } = parsed.data
+
+    // Only a master_admin may grant the master_admin role — otherwise a plain
+    // admin could escalate themselves or a peer to the top tier.
+    if (role === 'master_admin' && !result.user.roles.includes('master_admin')) {
+      return NextResponse.json(
+        { error: 'Only a master_admin can assign the master_admin role', code: 'PERMISSION_DENIED' },
+        { status: 403 }
+      )
+    }
+
     const roleRecord = await prisma.role.findUnique({ where: { slug: role } })
     if (!roleRecord) {
       return NextResponse.json({ error: 'Role not found', code: 'NOT_FOUND' }, { status: 404 })
@@ -40,6 +45,7 @@ export async function POST(request: NextRequest) {
       create: { userId, roleId: roleRecord.id },
     })
 
+    invalidatePermissionCache(userId)
     audit('role_assigned', { adminId: result.user.sub, targetUserId: userId, role })
 
     return NextResponse.json({ data: { success: true } })

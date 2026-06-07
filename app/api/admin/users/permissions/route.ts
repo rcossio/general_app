@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAuth, isNextResponse } from '@/lib/permissions'
+import { requireAdmin, isNextResponse, invalidatePermissionCache } from '@/lib/permissions'
 import { prisma } from '@/lib/prisma'
 import { audit } from '@/lib/audit'
 import { z } from 'zod'
@@ -11,13 +11,8 @@ const schema = z.object({
 
 // POST — grant a direct permission to a user
 export async function POST(request: NextRequest) {
-  const result = await requireAuth(request)
+  const result = await requireAdmin(request)
   if (isNextResponse(result)) return result
-
-  const isAdmin = result.user.roles.some((r) => ['master_admin', 'admin'].includes(r))
-  if (!isAdmin) {
-    return NextResponse.json({ error: 'Forbidden', code: 'PERMISSION_DENIED' }, { status: 403 })
-  }
 
   try {
     const body = await request.json()
@@ -45,6 +40,7 @@ export async function POST(request: NextRequest) {
       create: { userId, permissionId: perm.id },
     })
 
+    invalidatePermissionCache(userId)
     audit('permission_granted', { adminId: result.user.sub, targetUserId: userId, permission: permStr })
 
     return NextResponse.json({ data: { granted: true } })
@@ -55,13 +51,8 @@ export async function POST(request: NextRequest) {
 
 // DELETE — revoke a direct permission from a user
 export async function DELETE(request: NextRequest) {
-  const result = await requireAuth(request)
+  const result = await requireAdmin(request)
   if (isNextResponse(result)) return result
-
-  const isAdmin = result.user.roles.some((r) => ['master_admin', 'admin'].includes(r))
-  if (!isAdmin) {
-    return NextResponse.json({ error: 'Forbidden', code: 'PERMISSION_DENIED' }, { status: 403 })
-  }
 
   try {
     const body = await request.json()
@@ -87,6 +78,7 @@ export async function DELETE(request: NextRequest) {
       where: { userId, permissionId: perm.id },
     })
 
+    invalidatePermissionCache(userId)
     audit('permission_revoked', { adminId: result.user.sub, targetUserId: userId, permission: permStr })
 
     return NextResponse.json({ data: { revoked: true } })
