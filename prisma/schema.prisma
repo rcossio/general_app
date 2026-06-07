@@ -251,6 +251,11 @@ model LocationVisit {
 // SECTION: Community module (municipal notices)
 // ============================================================
 
+enum CommunityNoticeStatus {
+  open
+  fixed
+}
+
 model CommunityNotice {
   id         String    @id @default(cuid())
   userId     String    @map("user_id")
@@ -259,7 +264,7 @@ model CommunityNotice {
   lng        Float
   note       String?   @db.VarChar(280)
   photoUrl   String?   @map("photo_url")
-  status     String    @default("open") // open | fixed
+  status     CommunityNoticeStatus @default(open)
   createdAt  DateTime  @default(now()) @map("created_at")
   updatedAt  DateTime  @updatedAt @map("updated_at")
   resolvedAt DateTime? @map("resolved_at")
