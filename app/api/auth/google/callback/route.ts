@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { signAccessToken, signRefreshToken, storeRefreshToken } from '@/lib/auth'
 import { audit } from '@/lib/audit'
-import { sendNewUserNotification } from '@/lib/email'
 import { randomBytes } from 'crypto'
 import { env } from '@/lib/env'
 
@@ -78,15 +77,8 @@ export async function GET(request: NextRequest) {
         select: { id: true, email: true, name: true, userRoles: { select: { role: { select: { slug: true } } } } },
       })
       isNewUser = true
-
-      // Notify the operator (best-effort, off the response path).
-      const created = user
-      prisma.user
-        .count({ where: { deletedAt: null } })
-        .then((totalUsers) =>
-          sendNewUserNotification({ name: created.name, email: created.email, provider: 'google', totalUsers })
-        )
-        .catch(() => {})
+      // New-user notifications are batched into a once-a-day digest job
+      // (scripts/notify-new-users-digest.ts), not sent per signup.
     }
 
     const roles = user.userRoles.map((ur) => ur.role.slug)

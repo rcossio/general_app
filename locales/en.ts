@@ -259,6 +259,7 @@ const en = {
     photoRequired: 'Add a photo (required)',
     photoInvalid: 'Unsupported format. Use JPG, PNG, WebP or HEIC.',
     photoTooLarge: 'Image too large (max 25 MB).',
+    photoDecode: "Couldn't process that image. Try another photo.",
     send: 'Send report',
     sending: 'Sending…',
     submitError: 'Could not send. Please try again.',

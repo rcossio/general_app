@@ -30,18 +30,9 @@ function escapeHtml(s: string): string {
     .replace(/"/g, '&quot;')
 }
 
-// Notifies the operator (NOTIFY_EMAIL, falling back to ADMIN_EMAIL) whenever a
-// new user is created. Best-effort: silently skips if email isn't configured.
-export async function sendNewUserNotification(params: {
-  name: string
-  email: string
-  provider: 'google' | 'email'
-  totalUsers?: number
-}) {
-  if (!resend || !env.RESEND_FROM_EMAIL) return
-
-  // Recipients: everyone holding the users_admin role; fall back to the
-  // NOTIFY_EMAIL / ADMIN_EMAIL env if no one has the role yet.
+// Recipients for operator notifications: everyone holding the users_admin role,
+// falling back to NOTIFY_EMAIL / ADMIN_EMAIL if no one holds the role yet.
+async function getNotifyRecipients(): Promise<string[]> {
   let recipients: string[] = []
   try {
     const admins = await prisma.user.findMany({
@@ -56,23 +47,60 @@ export async function sendNewUserNotification(params: {
     const fallback = env.NOTIFY_EMAIL || env.ADMIN_EMAIL
     if (fallback) recipients = [fallback]
   }
-  if (recipients.length === 0) return
+  return recipients
+}
 
-  const { name, email, provider, totalUsers } = params
-  const method = provider === 'google' ? 'Google OAuth' : 'Email + contraseña'
-  const serverTime = new Date().toString()
+export interface DigestUser {
+  name: string
+  email: string
+  provider: 'google' | 'email'
+  createdAt: Date
+}
+
+// Once-a-day summary of new sign-ups. Replaces the old per-signup email so we
+// stay within the Resend daily quota. Sent by scripts/notify-new-users-digest.ts.
+// Returns whether an email was actually sent and to how many recipients.
+export async function sendNewUsersDigestEmail(
+  users: DigestUser[],
+  totalUsers: number
+): Promise<{ sent: boolean; recipients: number }> {
+  if (!resend || !env.RESEND_FROM_EMAIL) return { sent: false, recipients: 0 }
+  if (users.length === 0) return { sent: false, recipients: 0 }
+
+  const recipients = await getNotifyRecipients()
+  if (recipients.length === 0) return { sent: false, recipients: 0 }
+
+  const rows = users
+    .map(
+      (u) => `
+      <tr>
+        <td style="padding:6px 10px;border-bottom:1px solid #eee;">${escapeHtml(u.name)}</td>
+        <td style="padding:6px 10px;border-bottom:1px solid #eee;">${escapeHtml(u.email)}</td>
+        <td style="padding:6px 10px;border-bottom:1px solid #eee;">${u.provider === 'google' ? 'Google' : 'Email'}</td>
+        <td style="padding:6px 10px;border-bottom:1px solid #eee;color:#666;">${escapeHtml(u.createdAt.toISOString())}</td>
+      </tr>`
+    )
+    .join('')
 
   await resend.emails.send({
     from: env.RESEND_FROM_EMAIL,
     to: recipients,
-    subject: `Nuevo usuario en Vysi: ${name}`,
+    subject: `Vysi — ${users.length} usuario(s) nuevo(s) en las últimas 24 h`,
     html: `
-      <h2>Nuevo usuario 🎉</h2>
-      <p><strong>Nombre:</strong> ${escapeHtml(name)}</p>
-      <p><strong>Email:</strong> ${escapeHtml(email)}</p>
-      <p><strong>Método de registro:</strong> ${method}</p>
-      <p><strong>Hora del servidor:</strong> ${escapeHtml(serverTime)}</p>
-      ${totalUsers != null ? `<p><strong>Usuarios totales:</strong> ${totalUsers}</p>` : ''}
+      <h2>Resumen diario de nuevos usuarios 🎉</h2>
+      <p>${users.length} alta(s) en las últimas 24 h · ${totalUsers} usuarios en total.</p>
+      <table style="border-collapse:collapse;font-size:14px;margin-top:8px;">
+        <thead>
+          <tr>
+            <th style="text-align:left;padding:6px 10px;border-bottom:2px solid #ccc;">Nombre</th>
+            <th style="text-align:left;padding:6px 10px;border-bottom:2px solid #ccc;">Email</th>
+            <th style="text-align:left;padding:6px 10px;border-bottom:2px solid #ccc;">Método</th>
+            <th style="text-align:left;padding:6px 10px;border-bottom:2px solid #ccc;">Alta (UTC)</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
     `,
   })
+  return { sent: true, recipients: recipients.length }
 }

@@ -261,6 +261,7 @@ const es: Translations = {
     photoRequired: 'Agregar foto (obligatoria)',
     photoInvalid: 'Formato no soportado. Usá JPG, PNG, WebP o HEIC.',
     photoTooLarge: 'La imagen es muy grande (máx 25 MB).',
+    photoDecode: 'No se pudo procesar la imagen. Probá con otra foto.',
     send: 'Enviar reporte',
     sending: 'Enviando…',
     submitError: 'No se pudo enviar. Probá de nuevo.',

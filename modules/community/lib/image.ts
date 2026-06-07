@@ -4,7 +4,6 @@
 //     Firefox/Android can't decode HEIC in <canvas>)
 //  3. downscale + re-encode to a small JPEG before uploading to R2
 
-export const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif']
 const ALLOWED_EXT = ['jpg', 'jpeg', 'png', 'webp', 'heic', 'heif']
 export const MAX_INPUT_BYTES = 25 * 1024 * 1024 // 25 MB
 
@@ -14,18 +13,41 @@ function ext(file: File): string {
   return file.name.toLowerCase().split('.').pop() ?? ''
 }
 
-// Validate by MIME type, falling back to extension (HEIC often reports no type).
+// Reject only on a *conclusive* non-image signal. Android pickers (Google
+// Photos especially) often hand back real JPEGs with an empty/generic MIME
+// type and no file extension — those must not be rejected here. When we can't
+// tell, we let the decode step below be the real arbiter of "usable image".
 export function validateImageFile(file: File): ImageError | null {
-  const okType = ALLOWED_IMAGE_TYPES.includes(file.type.toLowerCase())
-  const okExt = ALLOWED_EXT.includes(ext(file))
-  if (!okType && !okExt) return 'format'
   if (file.size > MAX_INPUT_BYTES) return 'too_large'
+  const type = file.type.toLowerCase()
+  const conclusivelyNotImage =
+    type !== '' && !type.startsWith('image/') && !ALLOWED_EXT.includes(ext(file))
+  if (conclusivelyNotImage) return 'format'
   return null
 }
 
 function isHeic(file: File): boolean {
   const t = file.type.toLowerCase()
   return t === 'image/heic' || t === 'image/heif' || ext(file) === 'heic' || ext(file) === 'heif'
+}
+
+// Load a blob into an <img> element. This is more broadly compatible than
+// createImageBitmap (which fails on some Android/iOS browsers and certain
+// JPEGs) and mirrors the proven avatar-upload path in app/profile/page.tsx.
+function loadImage(blob: Blob): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    const url = URL.createObjectURL(blob)
+    img.onload = () => {
+      URL.revokeObjectURL(url)
+      resolve(img)
+    }
+    img.onerror = () => {
+      URL.revokeObjectURL(url)
+      reject('decode' as ImageError)
+    }
+    img.src = url
+  })
 }
 
 // Returns a small JPEG Blob ready to upload, or throws an ImageError string.
@@ -35,25 +57,23 @@ export async function prepareImageForUpload(file: File, maxDim = 1280, quality =
 
   let source: Blob = file
   if (isHeic(file)) {
-    const heic2any = (await import('heic2any')).default
-    const out = await heic2any({ blob: file, toType: 'image/jpeg', quality })
-    source = Array.isArray(out) ? out[0] : out
+    try {
+      const heic2any = (await import('heic2any')).default
+      const out = await heic2any({ blob: file, toType: 'image/jpeg', quality })
+      source = Array.isArray(out) ? out[0] : out
+    } catch {
+      throw 'decode' as ImageError
+    }
   }
 
-  let bitmap: ImageBitmap
-  try {
-    bitmap = await createImageBitmap(source)
-  } catch {
-    throw 'decode' as ImageError
-  }
-
-  const scale = Math.min(1, maxDim / Math.max(bitmap.width, bitmap.height))
-  const w = Math.round(bitmap.width * scale)
-  const h = Math.round(bitmap.height * scale)
+  const img = await loadImage(source)
+  const scale = Math.min(1, maxDim / Math.max(img.width, img.height))
+  const w = Math.round(img.width * scale)
+  const h = Math.round(img.height * scale)
   const canvas = document.createElement('canvas')
   canvas.width = w
   canvas.height = h
-  canvas.getContext('2d')!.drawImage(bitmap, 0, 0, w, h)
+  canvas.getContext('2d')!.drawImage(img, 0, 0, w, h)
 
   return new Promise<Blob>((resolve, reject) =>
     canvas.toBlob((b) => (b ? resolve(b) : reject('decode' as ImageError)), 'image/jpeg', quality)

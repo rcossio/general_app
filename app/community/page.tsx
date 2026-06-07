@@ -130,7 +130,11 @@ export default function CommunityPage() {
   }
 
   const imageErrorMsg = (err: ImageError) =>
-    err === 'too_large' ? t('community.photoTooLarge') : t('community.photoInvalid')
+    err === 'too_large'
+      ? t('community.photoTooLarge')
+      : err === 'decode'
+        ? t('community.photoDecode')
+        : t('community.photoInvalid')
 
   const onPickPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]

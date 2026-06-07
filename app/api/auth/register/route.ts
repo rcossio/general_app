@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { audit } from '@/lib/audit'
-import { sendNewUserNotification } from '@/lib/email'
 import {
   hashPassword,
   signAccessToken,
@@ -52,13 +51,8 @@ export async function POST(request: NextRequest) {
 
     audit('user_registered', { userId: user.id, email })
 
-    // Notify the operator (best-effort, off the response path).
-    prisma.user
-      .count({ where: { deletedAt: null } })
-      .then((totalUsers) =>
-        sendNewUserNotification({ name: user.name, email: user.email, provider: 'email', totalUsers })
-      )
-      .catch(() => {})
+    // New-user notifications are no longer sent per signup — a once-a-day digest
+    // job reports new users instead (see scripts/notify-new-users-digest.ts).
 
     const payload = { sub: user.id, email: user.email, roles: ['user'] }
     const accessToken = signAccessToken(payload)
@@ -72,7 +66,7 @@ export async function POST(request: NextRequest) {
     response.cookies.set('refresh_token', refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: 'lax',
       maxAge: 30 * 24 * 60 * 60,
       path: '/',
     })

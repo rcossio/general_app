@@ -14,7 +14,10 @@ const communityManifest: ModuleManifest = {
   // time-simulation slider for non-admin testers.
   permissions: ['community:create', 'community:moderate', 'community:tester'],
   apiPrefix: '/api/community',
-  testEndpoint: '/api/community/notices',
+  // RBAC tests fetch testEndpoint with GET expecting 401 (no token) / 200 (any
+  // authed user). The notices list is intentionally public, so point at the
+  // auth-gated quota endpoint instead — that's what exercises the module's RBAC.
+  testEndpoint: '/api/community/notices/quota',
 }
 
 export default communityManifest
