@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useLocale } from '@/contexts/LocaleContext'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
 import { Map, CheckCircle, ChevronRight, BookOpen, Users } from 'lucide-react'
+import { resolveI18n } from '@/lib/i18n'
 
 interface GameSession {
   id: string
@@ -20,10 +21,6 @@ interface Game {
   chapter: number
   nextGameId: string | null
   session: GameSession | null
-}
-
-function resolveI18n(value: Record<string, string>, locale: string): string {
-  return value[locale] ?? Object.values(value)[0] ?? ''
 }
 
 export default function AdventurePage() {
@@ -51,7 +48,7 @@ function AdventureList() {
       .then((r) => r.json())
       .then((b) => setGames(b.data ?? []))
       .finally(() => setLoading(false))
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps -- run once on mount; fetchWithAuth identity is stable
 
   const handleJoin = async () => {
     if (!joinCode.trim()) return

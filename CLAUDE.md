@@ -109,7 +109,7 @@ Do not create new top-level folders without a clear reason. Check what already e
 
 Features are pluggable. Each module has a manifest (`modules/<name>/manifest.ts`) defining nav items, permissions, and API prefix. Active modules are registered in `config/modules.ts`.
 
-- **Adventure** is the only active module.
+- **Adventure** and **Community** are the active modules.
 - **Life Tracker** is disabled: import commented in `config/modules.ts`, folders prefixed with `_` in `app/`, `app/api/`, `__tests__/`. DB tables intact.
 - **Workout** is disabled: import commented in `config/modules.ts`, folders prefixed with `_`. DB tables intact.
 - **Events** is disabled: import commented in `config/modules.ts`.

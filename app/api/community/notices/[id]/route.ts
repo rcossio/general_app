@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth, isNextResponse } from '@/lib/permissions'
 import { prisma } from '@/lib/prisma'
 import { getPublicUrl } from '@/lib/storage'
-import { markFixedSchema } from '@/modules/community/lib/schemas'
+import { markFixedSchema, isValidPhotoKey } from '@/modules/community/lib/schemas'
 
 const BYPASS_ROLES = ['master_admin', 'admin']
 type Params = { params: Promise<{ id: string }> }
@@ -44,7 +44,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     return NextResponse.json({ error: 'Validation error', code: 'VALIDATION_ERROR' }, { status: 400 })
   }
   const { beforePhotoKey, afterPhotoKey } = parsed.data
-  if (!beforePhotoKey.startsWith('community/') || !afterPhotoKey.startsWith('community/')) {
+  if (!isValidPhotoKey(beforePhotoKey) || !isValidPhotoKey(afterPhotoKey)) {
     return NextResponse.json({ error: 'Invalid photo key', code: 'BAD_REQUEST' }, { status: 400 })
   }
 

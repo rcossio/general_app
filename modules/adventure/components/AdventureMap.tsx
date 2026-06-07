@@ -148,7 +148,7 @@ function PlayerTracker({
     if (recenterSignal && position) {
       map.setView([position.lat, position.lng], map.getZoom())
     }
-  }, [recenterSignal]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [recenterSignal]) // eslint-disable-line react-hooks/exhaustive-deps -- recenter only when the signal fires; position & map are intentionally excluded so panning isn't overridden on every GPS update
 
   // Dead-zone follow: pan only when the marker leaves the centered 60% box, so
   // small GPS jitter is absorbed and the player is kept on-screen as they walk.

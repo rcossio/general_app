@@ -95,7 +95,7 @@ function CenterTracker({ onChange }: { onChange?: (lat: number, lng: number) => 
   useEffect(() => {
     const c = map.getCenter()
     onChange?.(c.lat, c.lng)
-  }, [map]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [map]) // eslint-disable-line react-hooks/exhaustive-deps -- report the initial center once the map is ready; onChange is intentionally excluded
   return null
 }
 

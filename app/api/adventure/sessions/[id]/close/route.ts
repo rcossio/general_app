@@ -3,70 +3,15 @@ import { requirePermission, isNextResponse } from '@/lib/permissions'
 import { prisma } from '@/lib/prisma'
 import { closeLocationSchema } from '@/modules/adventure/lib/schemas'
 import { evaluate, type Condition } from '@/modules/adventure/lib/condition'
+import {
+  resolveActiveValue,
+  resolveValueIndex,
+  resolveNarrative,
+  type LocationValue,
+  type GrantEntry,
+} from '@/modules/adventure/lib/narrative'
 
 type Params = { params: Promise<{ id: string }> }
-
-type GrantEntry = { flag: string }
-
-type Choice = {
-  id: string
-  label: Record<string, string>
-  outcome: Record<string, string>
-  grants: GrantEntry[]
-}
-
-type PasswordData = {
-  value: string
-  grants: GrantEntry[]
-}
-
-type LocationValue = {
-  when: Condition
-  content: Record<string, string>
-  completesChapter?: boolean
-  choices?: Choice[]
-  password?: PasswordData
-  grants?: GrantEntry[]
-  revokes?: GrantEntry[]
-  imageUrl?: string | null
-}
-
-function resolveActiveValue(
-  values: LocationValue[],
-  flags: Set<string>
-): LocationValue | null {
-  for (const v of values) {
-    if (evaluate(v.when as Condition, flags)) return v
-  }
-  return null
-}
-
-// Index of the first value whose `when` matches the flags, or -1 if none.
-// Identifies which state a location is resolved to, for change detection.
-function resolveValueIndex(values: LocationValue[], flags: Set<string>): number {
-  for (let i = 0; i < values.length; i++) {
-    if (evaluate(values[i].when as Condition, flags)) return i
-  }
-  return -1
-}
-
-function resolveNarrative(
-  values: LocationValue[],
-  flags: Set<string>
-): { content: Record<string, string>; completesChapter: boolean; choices: { id: string; label: Record<string, string> }[] | null; hasPassword: boolean; imageUrl: string | null } {
-  for (const v of values) {
-    if (evaluate(v.when as Condition, flags)) {
-      return {
-        content: v.content,
-        completesChapter: v.completesChapter ?? false,
-        choices: v.choices?.map((c) => ({ id: c.id, label: c.label })) ?? null,
-        hasPassword: !!v.password,
-        imageUrl: v.imageUrl ?? null,
-      }
-    }
-  }
-  return { content: {}, completesChapter: false, choices: null, hasPassword: false, imageUrl: null }
-}
 
 export async function POST(request: NextRequest, { params }: Params) {
   const result = await requirePermission(request, 'adventure', 'play')

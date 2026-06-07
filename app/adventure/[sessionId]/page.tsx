@@ -14,6 +14,7 @@ import { usePlayerPosition } from '@/modules/adventure/lib/usePlayerPosition'
 import { distanceMeters } from '@/modules/adventure/lib/haversine'
 import { ArrowLeft, Trophy, RefreshCw, Settings, RotateCcw, Crosshair, X, Backpack, Share2, Copy, Check, Trash2, LocateFixed } from 'lucide-react'
 import type { MapLocation } from '@/modules/adventure/components/AdventureMap'
+import { resolveI18n, type I18nString } from '@/lib/i18n'
 
 type ResolvedLocation = MapLocation & {
   imageUrl: string | null
@@ -35,14 +36,6 @@ function MapPlaceholder() {
       <div className="animate-pulse text-brand-gray text-sm">…</div>
     </div>
   )
-}
-
-type I18nString = string | Record<string, string>
-
-function resolveI18n(value: I18nString | null | undefined, locale: string): string {
-  if (!value) return ''
-  if (typeof value === 'string') return value
-  return value[locale] ?? Object.values(value)[0] ?? ''
 }
 
 interface ApiLocationChoice {
@@ -375,7 +368,7 @@ function GameMap({ sessionId }: { sessionId: string }) {
     if (autoVisitedRef.current.has(key)) return
     autoVisitedRef.current.add(key)
     doVisit(selectedLocation.id, playerPos.lat, playerPos.lng)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- auto-visit only when the selected location/range changes; doVisit & playerPos are excluded so it doesn't re-fire on every GPS tick
   }, [selectedLocation?.id, selectedLocation?.status, withinRange])
 
   // Keep selectedLocation in sync with resolved state after loadState
@@ -385,7 +378,7 @@ function GameMap({ sessionId }: { sessionId: string }) {
     if (updated) {
       setSelectedLocation(updated)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- resync the open sheet only when server state changes; reading selectedLocation here would loop
   }, [state])
 
   // Auto-open sheet for event locations when the player enters their radius
@@ -402,7 +395,7 @@ function GameMap({ sessionId }: { sessionId: string }) {
       setSelectedLocation(loc)
       break
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- auto-open events on position/state change only
   }, [playerPos, state])
 
   // Persist pending location to localStorage so the sheet re-opens after app restart
@@ -426,7 +419,7 @@ function GameMap({ sessionId }: { sessionId: string }) {
     } else {
       localStorage.removeItem(pendingKey)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- restore the pending location only when server state (locations) changes
   }, [state])
 
   if (loading) {

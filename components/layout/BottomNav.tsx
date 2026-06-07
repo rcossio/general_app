@@ -9,8 +9,6 @@ import { useLocale } from '@/contexts/LocaleContext'
 import { useChrome } from '@/contexts/ChromeContext'
 
 const MODULE_NAV_KEYS: Record<string, string> = {
-  workout: 'nav.workout',
-  'life-tracker': 'nav.lifeTracker',
   adventure: 'nav.adventure',
   community: 'nav.community',
 }

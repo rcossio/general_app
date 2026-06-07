@@ -4,43 +4,9 @@ import { prisma } from '@/lib/prisma'
 import { visitLocationSchema } from '@/modules/adventure/lib/schemas'
 import { evaluate, type Condition } from '@/modules/adventure/lib/condition'
 import { distanceMeters } from '@/modules/adventure/lib/haversine'
+import { resolveActiveValue, type LocationValue, type Choice } from '@/modules/adventure/lib/narrative'
 
 type Params = { params: Promise<{ id: string }> }
-
-type GrantEntry = { flag: string }
-
-type Choice = {
-  id: string
-  label: Record<string, string>
-  outcome: Record<string, string>
-  grants: GrantEntry[]
-}
-
-type PasswordData = {
-  value: string
-  grants: GrantEntry[]
-}
-
-type LocationValue = {
-  when: Condition
-  content: Record<string, string>
-  completesChapter?: boolean
-  choices?: Choice[]
-  password?: PasswordData
-  grants?: GrantEntry[]
-  revokes?: GrantEntry[]
-  imageUrl?: string | null
-}
-
-function resolveActiveValue(
-  values: LocationValue[],
-  flags: Set<string>
-): LocationValue | null {
-  for (const v of values) {
-    if (evaluate(v.when as Condition, flags)) return v
-  }
-  return null
-}
 
 export async function POST(request: NextRequest, { params }: Params) {
   const result = await requirePermission(request, 'adventure', 'play')

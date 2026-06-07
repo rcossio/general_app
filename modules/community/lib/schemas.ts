@@ -22,3 +22,12 @@ export const markFixedSchema = z.object({
 })
 
 export type CreateNoticeInput = z.infer<typeof createNoticeSchema>
+
+// Photo keys are minted only by the upload-url endpoint as `community/<uuid>.jpg`.
+// Validate that exact shape (not just the prefix) so a submitted key can't point
+// outside the expected namespace.
+const PHOTO_KEY_RE = /^community\/[0-9a-f-]+\.jpg$/
+
+export function isValidPhotoKey(key: string): boolean {
+  return PHOTO_KEY_RE.test(key)
+}

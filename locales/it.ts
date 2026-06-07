@@ -259,7 +259,7 @@ const it: Translations = {
     noteOptional: 'Nota (facoltativa)',
     addPhoto: 'Aggiungi foto',
     photoRequired: 'Aggiungi una foto (obbligatoria)',
-    photoInvalid: 'Formato non supportato. Usa JPG, PNG, WebP o HEIC.',
+    photoInvalid: 'Formato non supportato. Usa JPG o PNG.',
     photoTooLarge: 'Immagine troppo grande (max 25 MB).',
     photoDecode: 'Impossibile elaborare questa immagine. Prova con un’altra foto.',
     send: 'Invia segnalazione',

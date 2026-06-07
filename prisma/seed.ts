@@ -352,34 +352,8 @@ async function seedBotUsers(userRoleId: string) {
     })
 
     await prisma.userRole.create({ data: { userId: botAccount.id, roleId: userRole.id } })
-
-    for (const r of bot.routines) {
-      const routine = await prisma.workoutRoutine.create({
-        data: { userId: botAccount.id, name: r.name, description: r.description, isPublic: true },
-      })
-      for (const d of r.days) {
-        const day = await prisma.workoutDay.create({
-          data: { routineId: routine.id, dayOfWeek: d.dayOfWeek, name: d.name },
-        })
-        for (const ex of d.exercises) {
-          await prisma.workoutExercise.create({ data: { dayId: day.id, ...ex } })
-        }
-      }
-    }
-
-    for (const e of bot.entries) {
-      await prisma.trackerEntry.create({
-        data: {
-          userId: botAccount.id,
-          type: e.type,
-          title: e.title,
-          content: 'content' in e ? e.content : undefined,
-          score: e.score,
-          tags: e.tags,
-          isPublic: true,
-        },
-      })
-    }
+    // Bots are seeded as plain users. The Life Tracker / Workout demo content
+    // they used to carry was dropped along with those disabled modules.
   }
 }
 

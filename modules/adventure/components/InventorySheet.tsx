@@ -3,14 +3,7 @@
 import { useState } from 'react'
 import { ArrowLeft } from 'lucide-react'
 import { useLocale } from '@/contexts/LocaleContext'
-
-type I18nString = string | Record<string, string>
-
-function resolveI18n(value: I18nString | null | undefined, locale: string): string {
-  if (!value) return ''
-  if (typeof value === 'string') return value
-  return value[locale] ?? Object.values(value)[0] ?? ''
-}
+import { resolveI18n, type I18nString } from '@/lib/i18n'
 
 export interface GameItem {
   id: string

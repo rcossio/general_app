@@ -3,7 +3,7 @@ import { requirePermission, isNextResponse } from '@/lib/permissions'
 import { getUserFromRequest } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { getPublicUrl } from '@/lib/storage'
-import { createNoticeSchema } from '@/modules/community/lib/schemas'
+import { createNoticeSchema, isValidPhotoKey } from '@/modules/community/lib/schemas'
 
 const BYPASS_ROLES = ['master_admin', 'admin']
 const LIST_LIMIT = 1000
@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
   }
 
   const { category, lat, lng, note, photoKey } = parsed.data
-  if (!photoKey.startsWith('community/')) {
+  if (!isValidPhotoKey(photoKey)) {
     return NextResponse.json({ error: 'Invalid photo key', code: 'BAD_REQUEST' }, { status: 400 })
   }
   const photoUrl = getPublicUrl(photoKey)
