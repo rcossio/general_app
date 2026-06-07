@@ -3,12 +3,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
-import * as Icons from 'lucide-react'
-import { ArrowLeft, Plus, X, Camera, Trash2, Sparkles } from 'lucide-react'
+import { ArrowLeft, Plus, X, Camera, Trash2, Sparkles, Settings } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useLocale } from '@/contexts/LocaleContext'
 import { useChrome } from '@/contexts/ChromeContext'
 import { NOTICE_CATEGORIES, getCategory } from '@/modules/community/lib/categories'
+import { getIconComponent } from '@/modules/community/lib/icon'
+import { prepareImageForUpload, validateImageFile, type ImageError } from '@/modules/community/lib/image'
 import type { NoticeView } from '@/modules/community/components/CommunityMap'
 
 const DEFAULT_CENTER: [number, number] = [45.0118, 8.6216] // Valenza
@@ -26,26 +27,6 @@ interface Quota {
   canPost: boolean
 }
 
-type IconCmp = React.ComponentType<{ className?: string }>
-function lucide(name: string): IconCmp {
-  return (Icons as unknown as Record<string, IconCmp>)[name] ?? Icons.CircleAlert
-}
-
-// Downscale + re-encode to JPEG (broad browser support, incl. iOS) before upload.
-async function toJpeg(file: File, maxDim = 1280, quality = 0.8): Promise<Blob> {
-  const bitmap = await createImageBitmap(file)
-  const scale = Math.min(1, maxDim / Math.max(bitmap.width, bitmap.height))
-  const w = Math.round(bitmap.width * scale)
-  const h = Math.round(bitmap.height * scale)
-  const canvas = document.createElement('canvas')
-  canvas.width = w
-  canvas.height = h
-  canvas.getContext('2d')!.drawImage(bitmap, 0, 0, w, h)
-  return new Promise((resolve, reject) =>
-    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('encode failed'))), 'image/jpeg', quality)
-  )
-}
-
 export default function CommunityPage() {
   const router = useRouter()
   const { t } = useLocale()
@@ -58,6 +39,11 @@ export default function CommunityPage() {
   const handleCenterChange = useCallback((lat: number, lng: number) => setMapCenter({ lat, lng }), [])
   const [selected, setSelected] = useState<NoticeView | null>(null)
   const [quota, setQuota] = useState<Quota | null>(null)
+
+  // Settings menu (gear) — holds the opt-in tester time simulation (and future settings)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [simEnabled, setSimEnabled] = useState(false)
+  const [simDays, setSimDays] = useState(0)
 
   // Report flow — two steps: 'place' (pin the location) then 'form' (pick the problem)
   const [reportStep, setReportStep] = useState<'place' | 'form' | null>(null)
@@ -77,6 +63,8 @@ export default function CommunityPage() {
   const [fixError, setFixError] = useState<string | null>(null)
 
   const isAdmin = user?.roles?.some((r) => ['master_admin', 'admin'].includes(r)) ?? false
+  const canSimulate = isAdmin || (user?.permissions?.includes('community:tester') ?? false)
+  const now = simEnabled ? Date.now() + simDays * 86_400_000 : Date.now()
 
   useEffect(() => {
     setHideChrome(true)
@@ -141,10 +129,20 @@ export default function CommunityPage() {
     setPhoto(null)
   }
 
+  const imageErrorMsg = (err: ImageError) =>
+    err === 'too_large' ? t('community.photoTooLarge') : t('community.photoInvalid')
+
   const onPickPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
+    const err = validateImageFile(file)
+    if (err) {
+      setErrorMsg(imageErrorMsg(err))
+      e.target.value = ''
+      return
+    }
     if (photo) URL.revokeObjectURL(photo.preview)
+    setErrorMsg(null)
     setPhoto({ file, preview: URL.createObjectURL(file) })
   }
 
@@ -155,7 +153,7 @@ export default function CommunityPage() {
     try {
       let photoKey: string | undefined
       if (photo) {
-        const blob = await toJpeg(photo.file)
+        const blob = await prepareImageForUpload(photo.file)
         const urlRes = await fetchWithAuth('/api/community/notices/upload-url', { method: 'POST' })
         if (!urlRes.ok) throw new Error('upload-url')
         const { uploadUrl, key } = (await urlRes.json()).data
@@ -179,8 +177,8 @@ export default function CommunityPage() {
       setNotices((prev) => [body.data.notice as NoticeView, ...prev])
       cancelReport()
       loadQuota()
-    } catch {
-      setErrorMsg(t('community.submitError'))
+    } catch (e) {
+      setErrorMsg(typeof e === 'string' ? imageErrorMsg(e as ImageError) : t('community.submitError'))
     } finally {
       setSubmitting(false)
     }
@@ -198,6 +196,13 @@ export default function CommunityPage() {
   const pickFixPhoto = (which: 'before' | 'after') => (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
+    const err = validateImageFile(file)
+    if (err) {
+      setFixError(imageErrorMsg(err))
+      e.target.value = ''
+      return
+    }
+    setFixError(null)
     const set = which === 'before' ? setFixBefore : setFixAfter
     set((prev) => {
       if (prev) URL.revokeObjectURL(prev.preview)
@@ -220,7 +225,7 @@ export default function CommunityPage() {
   }
 
   const uploadPhoto = async (file: File): Promise<string> => {
-    const blob = await toJpeg(file)
+    const blob = await prepareImageForUpload(file)
     const urlRes = await fetchWithAuth('/api/community/notices/upload-url', { method: 'POST' })
     if (!urlRes.ok) throw new Error('upload-url')
     const { uploadUrl, key } = (await urlRes.json()).data
@@ -245,8 +250,8 @@ export default function CommunityPage() {
       const updated = (await res.json()).data.notice as NoticeView
       setNotices((prev) => prev.map((x) => (x.id === selected.id ? { ...x, ...updated } : x)))
       closeDetail()
-    } catch {
-      setFixError(t('community.fixError'))
+    } catch (e) {
+      setFixError(typeof e === 'string' ? imageErrorMsg(e as ImageError) : t('community.fixError'))
     } finally {
       setFixingSubmit(false)
     }
@@ -268,16 +273,69 @@ export default function CommunityPage() {
           <ArrowLeft className="h-5 w-5" strokeWidth={2.5} />
         </button>
         <span className="font-rubik font-bold">{t('community.title')}</span>
-        {user ? (
-          <span className="text-xs font-medium opacity-90 w-10 text-right">
-            {quota ? `${quota.usedToday}/${quota.dailyMax}` : ''}
-          </span>
-        ) : (
-          <button onClick={() => router.push('/login')} className="text-xs font-rubik font-bold px-2 py-1 rounded-lg hover:bg-white/10">
-            {t('auth.signIn')}
-          </button>
-        )}
+        <div className="flex items-center gap-1">
+          {canSimulate && (
+            <button
+              onClick={() => setSettingsOpen(true)}
+              aria-label="Ajustes"
+              className={`p-1.5 rounded-full hover:bg-white/10 ${simEnabled && simDays > 0 ? 'bg-white/20' : ''}`}
+            >
+              <Settings className="h-5 w-5" strokeWidth={2.5} />
+            </button>
+          )}
+          {user ? (
+            <span className="text-xs font-medium opacity-90 min-w-[28px] text-right">
+              {quota ? `${quota.usedToday}/${quota.dailyMax}` : ''}
+            </span>
+          ) : (
+            <button onClick={() => router.push('/login')} className="text-xs font-rubik font-bold px-2 py-1 rounded-lg hover:bg-white/10">
+              {t('auth.signIn')}
+            </button>
+          )}
+        </div>
       </div>
+
+      {/* Settings sheet (gear) — tester time simulation lives here, opt-in */}
+      {canSimulate && settingsOpen && (
+        <div className="absolute inset-0 z-[2000] flex items-end" onClick={() => setSettingsOpen(false)}>
+          <div className="w-full bg-surface rounded-t-2xl shadow-2xl border-t border-brand-border p-5 pb-8" onClick={(e) => e.stopPropagation()}>
+            <div className="w-10 h-1 bg-brand-border rounded-full mx-auto mb-4" />
+            <h2 className="font-rubik font-bold text-base mb-4">Ajustes</h2>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-rubik font-bold">Simulación de tiempo</p>
+                <p className="text-[11px] text-brand-gray">Tester · ver cómo envejecen los puntos</p>
+              </div>
+              <button
+                onClick={() => setSimEnabled((v) => !v)}
+                aria-label="Toggle simulación"
+                className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${simEnabled ? 'bg-brand-green' : 'bg-brand-border'}`}
+              >
+                <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform ${simEnabled ? 'translate-x-5' : ''}`} />
+              </button>
+            </div>
+            {simEnabled && (
+              <div className="mt-4">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs font-rubik font-bold">+{simDays} días</span>
+                  <button onClick={() => setSimDays(0)} className="text-xs text-brand-green font-rubik font-bold">Reset</button>
+                </div>
+                <input
+                  type="range"
+                  min={0}
+                  max={60}
+                  value={simDays}
+                  onChange={(e) => setSimDays(Number(e.target.value))}
+                  className="w-full accent-brand-green"
+                />
+                <p className="text-[10px] text-brand-gray mt-1">
+                  Los puntos envejecen (amarillo→rojo) y los ✨ desaparecen a los 14 días simulados. Solo visual.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Map */}
       <div className="flex-1 relative overflow-hidden z-0">
@@ -289,8 +347,19 @@ export default function CommunityPage() {
           onPlacementMove={(lat, lng) => setPlacement({ lat, lng })}
           placementDraggable={reportStep === 'place'}
           onCenterChange={handleCenterChange}
+          now={now}
           center={center}
         />
+
+        {/* Simulation-active indicator */}
+        {simEnabled && simDays > 0 && !reporting && (
+          <button
+            onClick={() => setSettingsOpen(true)}
+            className="absolute top-3 left-3 z-[1000] px-2.5 py-1 rounded-full bg-black/70 text-white text-[11px] font-rubik font-bold"
+          >
+            ⏱ +{simDays}d
+          </button>
+        )}
 
         {/* Report FAB */}
         {!reporting && !selected && (
@@ -331,7 +400,7 @@ export default function CommunityPage() {
             <div className="w-10 h-1 bg-brand-border rounded-full mx-auto mb-4" />
             {(() => {
               const cat = getCategory(selected.category)
-              const Icon = lucide(cat.icon)
+              const Icon = getIconComponent(cat.icon)
               const fixed = selected.status === 'fixed'
               return (
                 <div className="flex items-center gap-3 mb-3">
@@ -388,7 +457,7 @@ export default function CommunityPage() {
                         ) : (
                           <label className="flex items-center justify-center aspect-square rounded-xl border border-dashed border-brand-border text-brand-gray cursor-pointer hover:bg-brand-green-light">
                             <Camera className="h-6 w-6" />
-                            <input type="file" accept="image/*" capture="environment" className="hidden" onChange={pickFixPhoto(which)} />
+                            <input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" className="hidden" onChange={pickFixPhoto(which)} />
                           </label>
                         )}
                       </div>
@@ -445,7 +514,7 @@ export default function CommunityPage() {
             <p className="text-xs font-rubik font-bold text-brand-gray mb-2">{t('community.chooseCategory')}</p>
             <div className="grid grid-cols-3 gap-2 mb-4">
               {NOTICE_CATEGORIES.map((c) => {
-                const Icon = lucide(c.icon)
+                const Icon = getIconComponent(c.icon)
                 const active = category === c.key
                 return (
                   <button
@@ -481,7 +550,7 @@ export default function CommunityPage() {
               <label className="flex items-center justify-center gap-2 px-4 py-2.5 mb-3 rounded-xl border border-dashed border-brand-border text-brand-gray text-sm cursor-pointer hover:bg-brand-green-light">
                 <Camera className="h-4 w-4" />
                 {t('community.photoRequired')}
-                <input type="file" accept="image/*" capture="environment" className="hidden" onChange={onPickPhoto} />
+                <input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" className="hidden" onChange={onPickPhoto} />
               </label>
             )}
 

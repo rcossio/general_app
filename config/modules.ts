@@ -20,6 +20,6 @@ export interface ModuleManifest {
   testEndpoint: string
 }
 
-export const activeModules: ModuleManifest[] = [adventure, community].filter(
+export const activeModules: ModuleManifest[] = [community, adventure].filter(
   (m) => m.isActive
 )

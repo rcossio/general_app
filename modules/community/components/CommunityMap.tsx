@@ -8,7 +8,8 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { getInitialProvider, OSM_PROVIDER } from '@/lib/mapTiles'
 import { getCategory } from '../lib/categories'
-import { colorForAge } from '../lib/noticeColor'
+import { getIconComponent } from '../lib/icon'
+import { colorForAge, FIXED_WINDOW_DAYS } from '../lib/noticeColor'
 
 export interface NoticeView {
   id: string
@@ -25,20 +26,11 @@ export interface NoticeView {
   isOwn: boolean
 }
 
-type IconCmp = React.ComponentType<{ color?: string; size?: number; strokeWidth?: number }>
-
-function lucide(name: string): IconCmp {
-  return (
-    (Icons as unknown as Record<string, IconCmp>)[name] ??
-    (Icons as unknown as Record<string, IconCmp>).CircleAlert
-  )
-}
-
 // A circular badge coloured by age, with the white category icon inside.
-function noticeDivIcon(notice: NoticeView): L.DivIcon {
+function noticeDivIcon(notice: NoticeView, now: number): L.DivIcon {
   const cat = getCategory(notice.category)
-  const Icon = lucide(cat.icon)
-  const color = colorForAge(notice.createdAt)
+  const Icon = getIconComponent(cat.icon)
+  const color = colorForAge(notice.createdAt, now)
   const svg = renderToStaticMarkup(<Icon color="#ffffff" size={17} strokeWidth={2.5} />)
   return L.divIcon({
     className: '',
@@ -138,6 +130,7 @@ interface CommunityMapProps {
   onPlacementMove: (lat: number, lng: number) => void
   placementDraggable?: boolean
   onCenterChange?: (lat: number, lng: number) => void
+  now?: number // injectable "now" for the tester time-simulation slider
   center: [number, number]
 }
 
@@ -149,6 +142,7 @@ export default function CommunityMap({
   onPlacementMove,
   placementDraggable = true,
   onCenterChange,
+  now = Date.now(),
   center,
 }: CommunityMapProps) {
   return (
@@ -168,14 +162,24 @@ export default function CommunityMap({
 
       {/* Hide notice markers while placing a new pin to keep the view clean */}
       {!placement &&
-        notices.map((n) => (
-          <Marker
-            key={n.id}
-            position={[n.lat, n.lng]}
-            icon={n.status === 'fixed' ? fixedIcon : noticeDivIcon(n)}
-            eventHandlers={{ click: () => onSelect(n) }}
-          />
-        ))}
+        notices.map((n) => {
+          // Hide fixed (✨) markers past the linger window (using simulated now).
+          if (
+            n.status === 'fixed' &&
+            n.fixedAt &&
+            now - new Date(n.fixedAt).getTime() > FIXED_WINDOW_DAYS * 86_400_000
+          ) {
+            return null
+          }
+          return (
+            <Marker
+              key={n.id}
+              position={[n.lat, n.lng]}
+              icon={n.status === 'fixed' ? fixedIcon : noticeDivIcon(n, now)}
+              eventHandlers={{ click: () => onSelect(n) }}
+            />
+          )
+        })}
 
       {placement && (
         <Marker

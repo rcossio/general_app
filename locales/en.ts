@@ -257,6 +257,8 @@ const en = {
     noteOptional: 'Note (optional)',
     addPhoto: 'Add photo',
     photoRequired: 'Add a photo (required)',
+    photoInvalid: 'Unsupported format. Use JPG, PNG, WebP or HEIC.',
+    photoTooLarge: 'Image too large (max 25 MB).',
     send: 'Send report',
     sending: 'Sending…',
     submitError: 'Could not send. Please try again.',

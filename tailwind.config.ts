@@ -39,8 +39,8 @@ const config: Config = {
         },
         // Twinkle for the "fixed" sparkle marker.
         sparkle: {
-          '0%, 100%': { transform: 'scale(1) rotate(0deg)', opacity: '1' },
-          '50%': { transform: 'scale(1.3) rotate(8deg)', opacity: '0.7' },
+          '0%, 100%': { transform: 'scale(1)', opacity: '1' },
+          '50%': { transform: 'scale(1.3)', opacity: '0.7' },
         },
       },
       animation: {

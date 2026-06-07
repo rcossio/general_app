@@ -14,7 +14,7 @@ export interface NoticeCategory {
 export const NOTICE_CATEGORIES: NoticeCategory[] = [
   { key: 'green', icon: 'Sprout', labelKey: 'community.cat.green' },
   { key: 'litter', icon: 'Trash2', labelKey: 'community.cat.litter' },
-  { key: 'furniture', icon: 'Armchair', labelKey: 'community.cat.furniture' },
+  { key: 'furniture', icon: 'bench', labelKey: 'community.cat.furniture' },
   { key: 'other', icon: 'CircleAlert', labelKey: 'community.cat.other' },
 ]
 
