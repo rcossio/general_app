@@ -3,9 +3,10 @@ import community from '@/modules/community/manifest'
 import associations from '@/modules/associations/manifest'
 
 export interface ModuleNavItem {
-  label: string
+  label: string // English default / fallback
+  labelKey: string // i18n key resolved by the nav (see lib/navItems.ts)
   href: string
-  icon: string
+  icon: string // lucide-react icon name
 }
 
 export interface ModuleManifest {

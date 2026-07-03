@@ -6,6 +6,7 @@ const communityManifest: ModuleManifest = {
   isActive: true,
   navItem: {
     label: 'Community',
+    labelKey: 'nav.community',
     href: '/community',
     icon: 'TriangleAlert',
   },

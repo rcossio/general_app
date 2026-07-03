@@ -6,6 +6,7 @@ const associationsManifest: ModuleManifest = {
   isActive: true,
   navItem: {
     label: 'Associations',
+    labelKey: 'nav.associations',
     href: '/associations',
     icon: 'HeartHandshake',
   },
