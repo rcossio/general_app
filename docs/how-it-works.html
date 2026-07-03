@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>How This App Works — a guided tour</title>
+<style>
+  :root {
+    --green: #48b35c; --green-dark: #3a9148; --photinia: #e0655a;
+    --ink: #1f2430; --muted: #5b6472; --line: #e4e7ec; --bg: #ffffff;
+    --soft: #f6f8fa; --code-bg: #f2f4f7; --accent: #2563eb;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; color: var(--ink); background: var(--bg);
+    font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { display: grid; grid-template-columns: 260px 1fr; max-width: 1180px; margin: 0 auto; }
+  /* Sidebar TOC */
+  nav.toc {
+    position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto;
+    border-right: 1px solid var(--line); padding: 28px 20px; background: var(--soft);
+  }
+  nav.toc h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 0 0 12px; }
+  nav.toc ol { list-style: none; margin: 0; padding: 0; counter-reset: ch; }
+  nav.toc li { margin: 2px 0; }
+  nav.toc a {
+    display: block; padding: 6px 10px; border-radius: 8px; color: var(--ink);
+    text-decoration: none; font-size: 14px; font-weight: 500;
+  }
+  nav.toc a:hover { background: #e9edf2; }
+  nav.toc a::before { counter-increment: ch; content: counter(ch) ". "; color: var(--muted); font-weight: 600; }
+  nav.toc a.sub::before { content: ""; }
+  nav.toc a.sub { padding-left: 22px; font-size: 13px; color: var(--muted); }
+  main { padding: 40px 48px 120px; min-width: 0; }
+  header.hero { padding: 12px 0 28px; border-bottom: 1px solid var(--line); margin-bottom: 32px; }
+  header.hero h1 { font-size: 34px; margin: 0 0 8px; letter-spacing: -.02em; }
+  header.hero p { color: var(--muted); margin: 0; font-size: 17px; }
+  .pill { display:inline-block; background: var(--green); color:#fff; font-size:12px; font-weight:700; padding:3px 10px; border-radius:999px; letter-spacing:.03em; }
+  section { scroll-margin-top: 20px; padding-top: 26px; }
+  section > h2 {
+    font-size: 25px; letter-spacing: -.01em; margin: 8px 0 4px; padding-bottom: 8px;
+    border-bottom: 2px solid var(--green); display: inline-block;
+  }
+  h3 { font-size: 18px; margin: 26px 0 6px; }
+  p, li { color: #29303b; }
+  code { background: var(--code-bg); padding: 1.5px 6px; border-radius: 5px; font-size: 13.5px;
+    font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; color: #b03e2f; }
+  pre { background: #0f1729; color: #e6edf3; padding: 16px 18px; border-radius: 10px; overflow-x: auto; font-size: 13px; line-height: 1.55; }
+  pre code { background: none; color: inherit; padding: 0; }
+  .note, .warn, .mern {
+    border-radius: 10px; padding: 14px 16px; margin: 18px 0; font-size: 14.5px; border: 1px solid;
+  }
+  .note { background: #eef6ff; border-color: #cfe3ff; }
+  .warn { background: #fff6ec; border-color: #ffdcae; }
+  .mern { background: #f0fbf2; border-color: #bfe8c8; }
+  .note b, .warn b, .mern b { display:block; margin-bottom: 3px; }
+  .mern b::before { content: "🧭 MERN → Next.js  ·  "; }
+  .warn b::before { content: "⚠️  "; }
+  .note b::before { content: "💡  "; }
+  table { border-collapse: collapse; width: 100%; margin: 16px 0; font-size: 14px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { background: var(--soft); font-weight: 700; }
+  td code { white-space: nowrap; }
+  .filemap { font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 13px; background: var(--soft);
+    border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; white-space: pre; overflow-x: auto; }
+  .diagram { background: var(--soft); border: 1px solid var(--line); border-radius: 10px; padding: 18px;
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 12.5px; white-space: pre; overflow-x: auto; line-height: 1.5; }
+  .tag { font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 999px; color: #fff; }
+  .tag.get { background: #16a34a; } .tag.post { background: #2563eb; }
+  .tag.patch { background: #d97706; } .tag.del { background: #dc2626; }
+  footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); margin-top: 40px; padding-top: 18px; }
+  a { color: var(--accent); }
+  @media (max-width: 820px) {
+    .wrap { grid-template-columns: 1fr; }
+    nav.toc { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--line); }
+    main { padding: 24px 20px 80px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="toc">
+  <h2>Chapters</h2>
+  <ol>
+    <li><a href="#c1">What is this app?</a></li>
+    <li><a href="#c2">The stack (MERN → Next)</a></li>
+    <li><a href="#c3">A request, end to end</a></li>
+    <li><a href="#c4">Auth &amp; permissions</a></li>
+    <li><a href="#c5">Data &amp; Prisma</a></li>
+    <li><a href="#c6">The module system</a></li>
+    <li><a href="#c7">The frontend</a></li>
+    <li><a href="#c8">Run, test &amp; deploy</a></li>
+  </ol>
+  <h2 style="margin-top:22px">Appendix</h2>
+  <ol style="counter-reset:none">
+    <li><a class="sub" href="#gloss">Glossary</a></li>
+    <li><a class="sub" href="#where">Where things live</a></li>
+  </ol>
+</nav>
+
+<main>
+<header class="hero">
+  <span class="pill">Guided tour · for a junior MERN engineer</span>
+  <h1>How this app works</h1>
+  <p>A chapter-by-chapter walkthrough of the codebase — what it is, how a request flows through it, and where every important thing lives. Written to be read top to bottom, framed against the MERN stack you already know.</p>
+</header>
+
+<!-- ============================================================ -->
+<section id="c1">
+<h2>Chapter 1 — What is this app?</h2>
+<p>This is <b>“vysi”</b>, a mobile-first Progressive Web App for the town of <b>Valenza, Italy</b>. It’s a single codebase that hosts three small products (“modules”) behind one login:</p>
+<table>
+  <tr><th>Module</th><th>What the user does</th><th>Route</th></tr>
+  <tr><td><b>Adventure</b></td><td>Plays a GPS-based narrative game — walk to real locations, unlock story, make choices.</td><td><code>/adventure</code></td></tr>
+  <tr><td><b>Community</b></td><td>Reports neighborhood problems (litter, broken benches…) by dropping a photo pin on a map; volunteers mark them fixed.</td><td><code>/community</code></td></tr>
+  <tr><td><b>Associations</b></td><td>Browses a directory of local volunteer associations on a map + list, and contacts them.</td><td><code>/associations</code></td></tr>
+</table>
+<p>Everything else — login, registration, Google sign-in, profiles, an admin panel, internationalisation (English / Italian / Spanish), dark mode — is shared plumbing that all three modules sit on top of.</p>
+<div class="mern"><b>Mental model</b> Think of it as one Express + React app, except <b>Express and React live in the same project and the same files</b>. Next.js is the framework that fuses them: your “Express routes” are files under <code>app/api/**</code>, and your “React app” is files under <code>app/**</code>. There is no separate backend server to start.</div>
+<h3>The 30-second tour of the repo</h3>
+<div class="filemap">app/            → pages (React) AND api routes (backend) — the App Router
+  api/          → backend endpoints  (your "Express routes")
+  (auth)/       → login, forgot-password, reset-password pages
+  adventure/, community/, associations/, dashboard/, profile/, admin/
+components/     → shared React components (layout chrome lives in layout/)
+contexts/       → React Context providers (Auth, Locale, Theme, Chrome, Consent)
+modules/        → the 3 pluggable features (each: manifest + components + lib)
+lib/            → server-side utilities (auth, prisma, permissions, env, email, storage)
+config/         → modules.ts (the registry of active modules)
+locales/        → en.ts / it.ts / es.ts translation dictionaries
+prisma/         → schema.prisma (the DB model), migrations/, seed.ts
+__tests__/      → Vitest integration + unit tests</div>
+<div class="note"><b>The golden rule for reading this codebase</b> <code>CLAUDE.md</code> at the repo root is the authoritative spec — architecture, conventions, and deployment steps. When code and <code>CLAUDE.md</code> disagree, the doc wins. Read it early.</div>
+</section>
+
+<!-- ============================================================ -->
+<section id="c2">
+<h2>Chapter 2 — The stack, mapped from MERN</h2>
+<p>You know MongoDB + Express + React + Node. Here’s the one-to-one translation:</p>
+<table>
+  <tr><th>MERN piece</th><th>Here</th><th>Notes</th></tr>
+  <tr><td>Node runtime</td><td>Node (via Next.js)</td><td>Same runtime; Next.js runs it for you.</td></tr>
+  <tr><td>Express (routing/server)</td><td><b>Next.js App Router</b></td><td>Routes are <i>files</i>, not <code>app.get(...)</code> calls. <code>app/api/health/route.ts</code> ⇒ <code>GET /api/health</code>.</td></tr>
+  <tr><td>React (CRA/Vite SPA)</td><td><b>React via Next.js</b></td><td>Components can render on the <i>server</i> (SSR) or the <i>client</i>. More on this in Ch.&nbsp;7.</td></tr>
+  <tr><td>MongoDB + Mongoose</td><td><b>PostgreSQL + Prisma</b></td><td>Relational, not documents. Prisma is the typed ORM (like Mongoose but SQL + generated TypeScript types).</td></tr>
+  <tr><td>express.Router() modules</td><td>Folders under <code>app/api/</code></td><td>Folder path = URL path. <code>[id]</code> folder = a URL param.</td></tr>
+  <tr><td>middleware (<code>app.use</code>)</td><td>Helper functions you call at the top of a route</td><td>e.g. <code>requirePermission(request, 'community', 'create')</code>. Explicit, not global.</td></tr>
+  <tr><td>Joi / express-validator</td><td><b>Zod</b></td><td>Every input is parsed by a Zod schema.</td></tr>
+  <tr><td>nodemon</td><td><code>npm run dev</code></td><td>Hot reload on port 3000.</td></tr>
+  <tr><td>PM2 / nginx (you may know these)</td><td>PM2 + Nginx</td><td>Same idea — process manager + reverse proxy on a VPS. See Ch.&nbsp;8.</td></tr>
+</table>
+<p>Plus: <b>TypeScript</b> (strict, no <code>any</code>), <b>Tailwind CSS</b> for styling (utility classes in <code>className</code>), <b>Leaflet</b> for maps, and it’s a <b>PWA</b> (installable, has a service worker + manifest).</p>
+<div class="mern"><b>The biggest surprise</b> In MERN your frontend (port 3000) and backend (port 5000) are separate apps that talk over CORS. Here they’re <b>the same app on one port</b>. A page component and the API it calls are compiled together. No CORS, no separate deploy.</div>
+</section>
+
+<!-- ============================================================ -->
+<section id="c3">
+<h2>Chapter 3 — A request, end to end</h2>
+<p>Let’s trace “a logged-in user loads the Community map and reports a problem.” This shows every layer working together.</p>
+<div class="diagram">Browser (PWA)                Next.js server                 Postgres
+─────────────                ──────────────                 ────────
+1. GET /community    ──────▶ app/community/page.tsx
+   (React page)               renders shell + &lt;CommunityMap/&gt;
+                              (client component, 'use client')
+
+2. useCommunityNotices() ──▶ GET /api/community/notices ───▶ SELECT open notices
+   (hook, on mount)           (public, no token needed)      strip user_id, add isOwn
+                       ◀────── { data: { notices:[...] } }
+
+3. tap +Report, submit ────▶ POST /api/community/notices/upload-url
+   (needs auth)               requireAuth → presigned R2 URL
+                       ◀────── { uploadUrl, key }
+   PUT photo ──────────────▶ Cloudflare R2 (object storage)
+
+4. POST /api/community/notices  (Authorization: Bearer &lt;accessToken&gt;)
+                              requirePermission('community','create')
+                              rate-limit check (1/day, 3/week)
+                              Zod validate body ───────────▶ INSERT CommunityNotice
+                       ◀────── 201 { data: { notice } }
+5. hook prepends notice to state → map re-renders with the new pin</div>
+
+<h3>The shapes every endpoint uses</h3>
+<p>This contract is universal in the codebase — learn it once:</p>
+<pre><code>// success
+{ "data": { ...whatever } }              // HTTP 200 / 201
+
+// error
+{ "error": "human message", "code": "MACHINE_CODE" }   // 400/401/403/404/500</code></pre>
+<p>A typical route handler reads like this (simplified from a real one):</p>
+<pre><code>export async function POST(request: NextRequest) {
+  // 1. AUTH: returns a NextResponse (401/403) OR { user }
+  const result = await requirePermission(request, 'community', 'create')
+  if (isNextResponse(result)) return result
+
+  // 2. PARSE: never trust the body — Zod validates it
+  const parsed = createNoticeSchema.safeParse(await request.json())
+  if (!parsed.success)
+    return NextResponse.json({ error: '...', code: 'VALIDATION_ERROR' }, { status: 400 })
+
+  // 3. DO THE WORK: Prisma writes, filtered by the caller's id
+  const notice = await prisma.communityNotice.create({
+    data: { userId: result.user.sub, ...parsed.data },
+    select: { id: true, /* only the fields the client needs */ },
+  })
+
+  // 4. RESPOND in the standard shape
+  return NextResponse.json({ data: { notice } }, { status: 201 })
+}</code></pre>
+<div class="note"><b>Four steps, every time</b> auth → validate → work → respond. Once you’ve read one route you can read them all. Chapter 4 explains step 1; Chapter 5 explains step 3.</div>
+</section>
+
+<!-- ============================================================ -->
+<section id="c4">
+<h2>Chapter 4 — Auth &amp; permissions</h2>
+<p>Two questions get answered on every protected request: <b>“who are you?”</b> (authentication) and <b>“are you allowed?”</b> (authorization / RBAC).</p>
+
+<h3>Tokens: access vs refresh</h3>
+<table>
+  <tr><th>Token</th><th>Lifetime</th><th>Stored where</th><th>Purpose</th></tr>
+  <tr><td><b>Access</b> (JWT)</td><td>15 min</td><td>React memory only (never localStorage)</td><td>Sent as <code>Authorization: Bearer …</code> on API calls.</td></tr>
+  <tr><td><b>Refresh</b> (JWT)</td><td>30 days</td><td>httpOnly cookie; <b>hashed</b> in the DB</td><td>Mints a new access token when the old one expires.</td></tr>
+</table>
+<p>The magic that makes short-lived access tokens invisible to the user lives in <code>contexts/AuthContext.tsx</code> as <code>fetchWithAuth</code>:</p>
+<div class="diagram">fetchWithAuth('/api/...')
+  → send with Bearer accessToken
+  → 401?  ──▶ POST /api/auth/refresh (uses the httpOnly cookie)
+             → got new accessToken → retry the original request once
+  → still 401 → user is logged out</div>
+<p>Refresh tokens <b>rotate</b>: every call to <code>/api/auth/refresh</code> revokes the old token and issues a new one (see <code>app/api/auth/refresh/route.ts</code>). Password reset and account deletion revoke <i>all</i> refresh tokens, forcing re-login.</p>
+
+<h3>Login is “unified”</h3>
+<p>There is one entry point. <code>POST /api/auth/login</code> checks if the email exists:</p>
+<ul>
+  <li><b>Exists</b> → verify the password → issue tokens.</li>
+  <li><b>Doesn’t exist</b> → return <code>{ needsRegistration: true }</code>. The frontend then shows step 2 (name + privacy consent) inline, and submits to <code>POST /api/auth/register</code>. <b>No user row is created until consent is given</b> (a GDPR rule).</li>
+</ul>
+<p>Google OAuth (<code>app/api/auth/google/*</code>) follows the same idea: new OAuth users land on <code>/complete-profile</code> to accept the privacy terms; returning ones go straight to <code>/dashboard</code>.</p>
+
+<h3>RBAC: roles + direct permissions</h3>
+<p>Permissions are strings shaped <code>resource:action</code> (e.g. <code>adventure:play</code>, <code>community:create</code>, <code>associations:manage</code>). A user can get a permission two ways:</p>
+<ol>
+  <li><b>Role-based</b> — the permission is attached to a role, and the user has that role (<code>role_permissions</code> table).</li>
+  <li><b>Direct</b> — an admin grants the exact permission to one user (<code>user_permissions</code> table).</li>
+</ol>
+<p>The gatekeeper is <code>requirePermission(request, resource, action)</code> in <code>lib/permissions.ts</code>. It:</p>
+<ul>
+  <li>reads the JWT → <code>401</code> if missing/invalid;</li>
+  <li>lets <code>master_admin</code> and <code>admin</code> <b>bypass all checks</b>;</li>
+  <li>otherwise loads the user’s merged permission set (cached in-process for 60s) → <code>403</code> if the permission isn’t present.</li>
+</ul>
+<p>Sibling helpers: <code>requireAuth</code> (just “logged in?”) and <code>requireAdmin</code> (“is an admin?”). New module permissions default to <b>admin-only</b> until you add them to the <code>userAllowlist</code> in <code>prisma/seed.ts</code>.</p>
+<div class="warn"><b>The security boundary you must never remove</b> Permissions decide <i>which feature</i> you can touch. But every user-facing query is <b>also</b> filtered by <code>userId</code> (from the JWT’s <code>sub</code>). That <code>WHERE userId = me</code> is what stops user A from reading user B’s data. Deleting a permission check is bad; deleting the <code>userId</code> filter is a breach.</div>
+</section>
+
+<!-- ============================================================ -->
+<section id="c5">
+<h2>Chapter 5 — Data &amp; Prisma</h2>
+<p>The database is PostgreSQL. The schema is one file: <code>prisma/schema.prisma</code>. From it, Prisma generates a fully-typed client you import as <code>prisma</code> from <code>lib/prisma.ts</code>.</p>
+<div class="mern"><b>Prisma vs Mongoose</b> Instead of a Mongoose schema per collection, you write one <code>model</code> block per table in <code>schema.prisma</code>. Instead of <code>User.find()</code>, you write <code>prisma.user.findMany()</code> — and TypeScript knows the exact return shape. Relations are real foreign keys, not manual <code>populate()</code>.</div>
+<h3>The main tables</h3>
+<table>
+  <tr><th>Group</th><th>Models</th></tr>
+  <tr><td>Auth / RBAC</td><td><code>User</code>, <code>Role</code>, <code>Permission</code>, <code>UserRole</code>, <code>RolePermission</code>, <code>UserPermission</code>, <code>RefreshToken</code>, <code>PasswordResetToken</code></td></tr>
+  <tr><td>Adventure</td><td><code>Game</code>, <code>GameLocation</code>, <code>GameSession</code>, <code>SessionParticipant</code>, <code>SessionFlag</code>, <code>LocationVisit</code></td></tr>
+  <tr><td>Community</td><td><code>CommunityNotice</code> (+ <code>CommunityNoticeStatus</code> enum: <code>open</code> / <code>fixed</code>)</td></tr>
+  <tr><td>Associations</td><td><code>Association</code></td></tr>
+</table>
+<h3>House rules for data access</h3>
+<ul>
+  <li><b>IDs</b> are <code>cuid()</code> strings. Every foreign key has an explicit index.</li>
+  <li><b>Always use <code>select</code></b> — return only the columns the client needs, never whole rows. (This is also how sensitive fields like <code>user_id</code> get stripped from public responses.)</li>
+  <li><b>List endpoints</b> paginate (<code>?page=1&amp;limit=20</code>) and always filter on an indexed column.</li>
+  <li><b>Never expose <code>userId</code></b> to clients; compute a boolean like <code>isOwn</code> instead (see the Community list route).</li>
+</ul>
+<h3>Migrations &amp; seeding</h3>
+<p>Changing the schema is a two-step ritual:</p>
+<pre><code># 1. edit prisma/schema.prisma, then:
+npx prisma migrate dev --name add_something   # creates + applies a migration, regenerates the client
+
+# 2. seed reference data (idempotent — safe to re-run):
+npx prisma db seed</code></pre>
+<p><code>prisma/seed.ts</code> creates the roles, the permissions (read from the active modules!), the master admin, demo bot users, and the 37 Valenza associations. It’s written with <code>upsert</code> so running it twice never duplicates.</p>
+<div class="warn"><b>Prod migrations differ</b> On the server you run <code>npx prisma migrate deploy</code> (applies pending migrations, no shadow database), <b>not</b> <code>migrate dev</code>. See Ch.&nbsp;8.</div>
+</section>
+
+<!-- ============================================================ -->
+<section id="c6">
+<h2>Chapter 6 — The module system</h2>
+<p>The three products are <b>pluggable</b>. Each lives under <code>modules/&lt;name&gt;/</code> and declares itself with a <b>manifest</b>:</p>
+<pre><code>// modules/associations/manifest.ts
+const associationsManifest: ModuleManifest = {
+  id: 'associations',
+  name: 'Associations',
+  isActive: true,
+  navItem: { label: 'Associations', href: '/associations', icon: 'HeartHandshake' },
+  permissions: ['associations:manage'],   // seeded automatically
+  apiPrefix: '/api/associations',
+  testEndpoint: '/api/associations/manage', // used by the RBAC test sweep
+}</code></pre>
+<p>The registry <code>config/modules.ts</code> imports every manifest and exports <code>activeModules = [...].filter(m =&gt; m.isActive)</code>. That single array drives a lot:</p>
+<ul>
+  <li>the <b>nav</b> (Sidebar + BottomNav map over it to render links);</li>
+  <li>the <b>seeded permissions</b> (<code>seed.ts</code> reads <code>activeModules[].permissions</code>);</li>
+  <li>the <b>RBAC test</b> (<code>rbac.test.ts</code> hits each <code>testEndpoint</code>).</li>
+</ul>
+<p>To <b>disable</b> a module you flip <code>isActive:false</code> — its nav link disappears and its permissions stop being seeded (so RBAC blocks its routes). To <b>add</b> one you create a manifest, add Prisma models, register it, and add pages + API routes. (That’s exactly how the Associations module was built.)</p>
+<h3>How each module is laid out</h3>
+<div class="filemap">modules/&lt;name&gt;/
+  manifest.ts          → the declaration above
+  components/          → module-only React components (sheets, maps…)
+  lib/                 → module logic: schemas.ts (Zod), hooks, helpers
+app/&lt;name&gt;/page.tsx    → the page the user sees
+app/api/&lt;name&gt;/...     → the module's backend endpoints</div>
+<h3>What’s interesting inside each</h3>
+<ul>
+  <li><b>Adventure</b> — a little flag-based state machine. Visiting a location checks a <code>visibleWhen</code> condition, verifies your GPS is within <code>radiusM</code> metres (<code>haversine.ts</code>), then <i>grants/revokes flags</i> that unlock later locations. Choices and password-locked spots use a “callback flag” trick. There’s even read-only <b>spectator multiplayer</b> via a 6-char join code.</li>
+  <li><b>Community</b> — photo pins with a rate limit (1/day, 3/week per user), a public map anyone can read, and a “mark fixed” flow with before/after photos. Photos go to Cloudflare R2 via presigned URLs.</li>
+  <li><b>Associations</b> — a public read directory (map + searchable list); only admins can add/edit/delete. Picks one “preferred” contact per entry (website → Facebook → Instagram → email).</li>
+</ul>
+</section>
+
+<!-- ============================================================ -->
+<section id="c7">
+<h2>Chapter 7 — The frontend</h2>
+<h3>Server components vs client components</h3>
+<p>This is the concept that trips up every MERN dev. In a CRA/Vite SPA, <i>all</i> your React runs in the browser. In Next.js App Router, components render <b>on the server by default</b>, and only become interactive in the browser if the file starts with <code>'use client'</code>.</p>
+<table>
+  <tr><th></th><th>Server component (default)</th><th>Client component (<code>'use client'</code>)</th></tr>
+  <tr><td>Runs</td><td>On the server, at request time</td><td>Server (SSR) <i>then</i> hydrates in the browser</td></tr>
+  <tr><td>Can use</td><td>async/await, DB, secrets</td><td>hooks (<code>useState</code>, <code>useEffect</code>), events, browser APIs</td></tr>
+  <tr><td>Example</td><td><code>app/page.tsx</code> (landing)</td><td><code>app/community/page.tsx</code> (interactive map)</td></tr>
+</table>
+<div class="note"><b>Why the landing page is split</b> <code>app/page.tsx</code> is a tiny server component that renders <code>components/LandingPageClient.tsx</code>. This exists for SEO: an earlier all-client version showed Googlebot only a loading spinner. The rule now: <b>any public/indexable page must render its content without a “if (loading) return &lt;spinner&gt;” gate.</b></div>
+<h3>State that’s shared everywhere: Contexts</h3>
+<table>
+  <tr><th>Context</th><th>Gives you</th></tr>
+  <tr><td><code>AuthContext</code></td><td><code>user</code>, <code>login/logout/register</code>, and <b><code>fetchWithAuth</code></b> (the auto-refreshing fetch).</td></tr>
+  <tr><td><code>LocaleContext</code></td><td><code>t('some.key')</code> translation function + <code>locale</code> + <code>setLocale</code> (en/it/es).</td></tr>
+  <tr><td><code>ThemeContext</code></td><td>light / dark / system, persisted to localStorage.</td></tr>
+  <tr><td><code>ChromeContext</code></td><td><code>hideChrome</code> — full-screen pages (the map screens) hide the header/nav.</td></tr>
+  <tr><td><code>ConsentContext</code></td><td>cookie/analytics consent state.</td></tr>
+</table>
+<h3>The app “chrome” &amp; route protection</h3>
+<ul>
+  <li><code>components/layout/Sidebar.tsx</code> (desktop), <code>BottomNav.tsx</code> (mobile), <code>Header.tsx</code> (mobile top bar) — all read <code>activeModules</code> for their links and <code>hideChrome</code> to disappear on full-screen pages.</li>
+  <li><code>components/layout/ProtectedRoute.tsx</code> wraps private pages: it waits for auth to load, redirects to <code>/login</code> if you’re not signed in, and to <code>/complete-profile</code> if you haven’t accepted the privacy terms.</li>
+</ul>
+<h3>Internationalisation</h3>
+<p>No i18n library — just <code>locales/en.ts</code>, <code>it.ts</code>, <code>es.ts</code>. <code>en.ts</code> exports the authoritative <code>Translations</code> type, so if you add a key to English and forget the other two, <b>TypeScript won’t compile</b>. You call <code>const { t } = useLocale()</code> then <code>t('associations.title')</code>.</p>
+<div class="warn"><b>iOS Safari + Leaflet gotcha</b> On the map pages, overlays use <code>position: absolute</code> inside a <code>relative</code> parent — never <code>position: fixed</code> or React portals (Leaflet clips them on iOS). And never add a Leaflet <code>Tooltip</code> to markers — it breaks taps on iOS.</div>
+</section>
+
+<!-- ============================================================ -->
+<section id="c8">
+<h2>Chapter 8 — Run, test &amp; deploy</h2>
+<h3>Running locally</h3>
+<pre><code>npm run dev      # dev server on http://localhost:3000 (hot reload)
+npm run build    # production build
+npm run lint     # ESLint
+npx prisma studio  # visual DB browser</code></pre>
+<h3>Testing</h3>
+<p>Tests live in <code>__tests__/</code> and run with <b>Vitest</b>. Most are <b>integration</b> tests: they hit a <i>running</i> server and a real test DB (<code>TEST_DATABASE_URL</code>). A few (the adventure engine) are pure unit tests.</p>
+<pre><code># IMPORTANT: bypass Nginx's rate limiter or you'll get 503s
+NEXT_PUBLIC_APP_URL=http://localhost:3000 npm test</code></pre>
+<p>Helpers in <code>__tests__/helpers.ts</code> (<code>registerAndLogin</code>, <code>authHeaders</code>, <code>uniqueEmail</code>) make writing a test three lines long. The <code>rbac.test.ts</code> sweep automatically covers every module’s <code>testEndpoint</code> for the 401/200 boundary.</p>
+<h3>Deploying (VPS + PM2 + Nginx)</h3>
+<p>There is <b>no deploy script</b> — you run these in order on the server:</p>
+<pre><code>npm install                                # only if deps changed (NEVER npm ci — SIGBUS on low-RAM VPS)
+npx prisma migrate deploy                  # only if schema changed
+pm2 stop all                               # MUST stop before building
+npm run build
+pm2 reload ecosystem.config.js --update-env
+pm2 save</code></pre>
+<div class="warn"><b>Deploy pitfalls to remember</b>
+  <ul style="margin:6px 0 0">
+    <li><b>Stop PM2 before building</b> — a running app reading a half-written <code>.next/</code> crashes.</li>
+    <li><b>Stale chunks</b> — after a deploy, hard-refresh (Ctrl+Shift+R). An open PWA keeps running old JS until fully reloaded.</li>
+    <li><b>Cookies use <code>sameSite:'lax'</code></b>, not <code>strict</code> — otherwise Google OAuth’s redirect breaks the login.</li>
+  </ul>
+</div>
+<p><code>ecosystem.config.js</code> runs two things: the Next.js app in <b>2-worker cluster mode</b>, and a <code>digest-new-users</code> cron that emails a daily signup summary at 16:00 UTC. <code>nginx.conf</code> is the reverse proxy and rate-limiter in front of it.</p>
+</section>
+
+<!-- ============================================================ -->
+<section id="gloss">
+<h2>Appendix A — Glossary</h2>
+<table>
+  <tr><th>Term</th><th>Meaning here</th></tr>
+  <tr><td>App Router</td><td>Next.js’s file-based routing under <code>app/</code>. Folder path = URL. <code>route.ts</code> = API, <code>page.tsx</code> = page.</td></tr>
+  <tr><td>Server / Client component</td><td>Renders on the server (default) vs. interactive in the browser (<code>'use client'</code>).</td></tr>
+  <tr><td>RBAC</td><td>Role-Based Access Control — the <code>resource:action</code> permission system.</td></tr>
+  <tr><td>Manifest</td><td>A module’s self-description (<code>modules/&lt;name&gt;/manifest.ts</code>).</td></tr>
+  <tr><td>Presigned URL</td><td>A temporary, signed URL that lets the browser upload a file straight to R2 storage.</td></tr>
+  <tr><td>Flag (Adventure)</td><td>A boolean the game sets/clears to unlock locations and branch the story.</td></tr>
+  <tr><td>Chrome</td><td>The persistent UI frame: header, sidebar, bottom nav.</td></tr>
+  <tr><td>Idempotent</td><td>Safe to run repeatedly with the same result (e.g. the seed script).</td></tr>
+</table>
+</section>
+
+<section id="where">
+<h2>Appendix B — “Where do I change…?”</h2>
+<table>
+  <tr><th>I want to…</th><th>Go to</th></tr>
+  <tr><td>Add/adjust an API endpoint</td><td><code>app/api/&lt;area&gt;/route.ts</code></td></tr>
+  <tr><td>Change who can access something</td><td>the <code>requirePermission</code> call in the route + <code>prisma/seed.ts</code> allowlist</td></tr>
+  <tr><td>Add a DB field</td><td><code>prisma/schema.prisma</code> → <code>migrate dev</code></td></tr>
+  <tr><td>Change UI text / add a language key</td><td><code>locales/en.ts</code> (then it.ts + es.ts, or it won’t compile)</td></tr>
+  <tr><td>Add a nav item</td><td>the module’s <code>manifest.ts</code> <code>navItem</code></td></tr>
+  <tr><td>Touch login / tokens</td><td><code>lib/auth.ts</code> + <code>app/api/auth/*</code> + <code>contexts/AuthContext.tsx</code></td></tr>
+  <tr><td>Add a whole feature</td><td>a new folder under <code>modules/</code> (see Ch.&nbsp;6)</td></tr>
+</table>
+<footer>
+  Generated as a living tour of the codebase. If a file path here ever disagrees with the code, trust the code and <code>CLAUDE.md</code> — then fix this doc.
+</footer>
+</section>
+
+</main>
+</div>
+</body>
+</html>
