@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 import { activeModules } from '../config/modules'
+import { ASSOCIATIONS_SEED } from '../modules/associations/lib/seedData'
 
 const prisma = new PrismaClient()
 
@@ -110,7 +111,31 @@ async function main() {
   })
 
   await seedBotUsers(botUser.id)
+  await seedAssociations()
   console.log('Seed completed successfully')
+}
+
+// Curated Valenza associations directory. Upsert by name (unique) so the
+// seedData.ts file stays the source of truth — re-seeding refreshes the fields.
+// Note: this overwrites any admin edits to seeded entries on re-run.
+async function seedAssociations() {
+  for (const a of ASSOCIATIONS_SEED) {
+    const data = {
+      website: a.website ?? null,
+      facebook: a.facebook ?? null,
+      instagram: a.instagram ?? null,
+      email: a.email ?? null,
+      phone: a.phone ?? null,
+      address: a.address ?? null,
+      lat: a.lat ?? null,
+      lng: a.lng ?? null,
+    }
+    await prisma.association.upsert({
+      where: { name: a.name },
+      update: data,
+      create: { name: a.name, ...data },
+    })
+  }
 }
 
 // Bots are seeded as plain users with the bot_user role. They used to carry

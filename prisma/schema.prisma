@@ -282,3 +282,32 @@ model CommunityNotice {
   @@index([createdAt])
   @@map("community_notices")
 }
+
+// ============================================================
+// SECTION: Associations (Contact an association)
+// ============================================================
+
+// Curated directory of Valenza volunteer/civic associations. Read is public;
+// create/update/delete are admin-only (associations:manage). Seeded from
+// modules/associations/lib/seedData.ts — `name` is unique so the seed upserts
+// idempotently. Contact fields are all optional; the client shows a single
+// "preferred" contact (website > facebook > instagram > email — see
+// modules/associations/lib/contact.ts). Entries without lat/lng still appear in
+// the list, just not on the map.
+model Association {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  website     String?
+  facebook    String?
+  instagram   String?
+  email       String?
+  phone       String?
+  address     String?
+  lat         Float?
+  lng         Float?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("associations")
+}

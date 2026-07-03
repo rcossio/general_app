@@ -13,6 +13,7 @@ import { useChrome } from '@/contexts/ChromeContext'
 const MODULE_NAV_KEYS: Record<string, string> = {
   adventure: 'nav.adventure',
   community: 'nav.community',
+  associations: 'nav.associations',
 }
 
 export function Sidebar() {
