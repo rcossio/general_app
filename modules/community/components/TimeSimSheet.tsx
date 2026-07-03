@@ -1,6 +1,7 @@
 'use client'
 
 import type { Dispatch, SetStateAction } from 'react'
+import { BottomSheet } from '@/components/BottomSheet'
 
 interface TimeSimSheetProps {
   simEnabled: boolean
@@ -15,8 +16,7 @@ interface TimeSimSheetProps {
 // no data is changed.
 export function TimeSimSheet({ simEnabled, setSimEnabled, simDays, setSimDays, onClose }: TimeSimSheetProps) {
   return (
-    <div className="absolute inset-0 z-[2000] flex items-end" onClick={onClose}>
-      <div className="w-full bg-surface rounded-t-2xl shadow-2xl border-t border-brand-border p-5 pb-8" onClick={(e) => e.stopPropagation()}>
+    <BottomSheet onClose={onClose}>
         <div className="w-10 h-1 bg-brand-border rounded-full mx-auto mb-4" />
         <h2 className="font-rubik font-bold text-base mb-4">Ajustes</h2>
         <div className="flex items-center justify-between">
@@ -51,7 +51,6 @@ export function TimeSimSheet({ simEnabled, setSimEnabled, simDays, setSimDays, o
             </p>
           </div>
         )}
-      </div>
-    </div>
+    </BottomSheet>
   )
 }

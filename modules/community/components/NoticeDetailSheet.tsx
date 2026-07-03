@@ -3,6 +3,7 @@
 import type { ChangeEvent } from 'react'
 import { Sparkles, Trash2, Camera } from 'lucide-react'
 import { useLocale } from '@/contexts/LocaleContext'
+import { BottomSheet } from '@/components/BottomSheet'
 import { getCategory } from '@/modules/community/lib/categories'
 import { getIconComponent } from '@/modules/community/lib/icon'
 import type { NoticeView } from '@/modules/community/components/CommunityMap'
@@ -59,8 +60,7 @@ export function NoticeDetailSheet({
   const fixed = notice.status === 'fixed'
 
   return (
-    <div className="absolute inset-0 z-[2000] flex items-end" onClick={onClose}>
-      <div className="w-full bg-surface rounded-t-2xl shadow-2xl border-t border-brand-border p-5 pb-8 max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+    <BottomSheet onClose={onClose} maxHeight="80vh">
         <div className="w-10 h-1 bg-brand-border rounded-full mx-auto mb-4" />
         <div className="flex items-center gap-3 mb-3">
           <span className={`flex items-center justify-center w-10 h-10 rounded-full ${fixed ? 'bg-brand-photinia-light text-brand-photinia' : 'bg-brand-green-light text-brand-green'}`}>
@@ -150,7 +150,6 @@ export function NoticeDetailSheet({
             </div>
           </>
         )}
-      </div>
-    </div>
+    </BottomSheet>
   )
 }

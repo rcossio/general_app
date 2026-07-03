@@ -2,6 +2,7 @@
 
 import { Globe, Facebook, Instagram, Mail, Phone, MapPin, Pencil, Trash2, ExternalLink } from 'lucide-react'
 import { useLocale } from '@/contexts/LocaleContext'
+import { BottomSheet } from '@/components/BottomSheet'
 import { preferredContact, type AssociationView, type ContactType } from '../lib/contact'
 
 const CONTACT_ICON: Record<ContactType | 'phone', typeof Globe> = {
@@ -45,11 +46,7 @@ export function AssociationDetailSheet({ association, isAdmin, onClose, onEdit, 
       : null
 
   return (
-    <div className="absolute inset-0 z-[2000] flex items-end" onClick={onClose}>
-      <div
-        className="w-full bg-surface rounded-t-2xl shadow-2xl border-t border-brand-border p-5 pb-8 max-h-[80vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <BottomSheet onClose={onClose} maxHeight="80vh">
         <div className="w-10 h-1 bg-brand-border rounded-full mx-auto mb-4" />
 
         <div className="flex items-start gap-3 mb-4">
@@ -139,7 +136,6 @@ export function AssociationDetailSheet({ association, isAdmin, onClose, onEdit, 
             </button>
           </div>
         )}
-      </div>
-    </div>
+    </BottomSheet>
   )
 }

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { ArrowLeft } from 'lucide-react'
 import { useLocale } from '@/contexts/LocaleContext'
+import { BottomSheet } from '@/components/BottomSheet'
 import { resolveI18n, type I18nString } from '@/lib/i18n'
 
 export interface GameItem {
@@ -35,8 +36,7 @@ export function InventorySheet({ items, playerFlags, newItemIds, onClose }: Inve
     const desc = resolveI18n(viewedItem.description, locale)
     const itemName = resolveI18n(viewedItem.name, locale)
     return (
-      <div className="absolute inset-0 z-[2000] flex items-end">
-        <div className="w-full bg-surface rounded-t-2xl shadow-2xl border-t border-brand-border max-h-[80vh] overflow-y-auto">
+      <BottomSheet maxHeight="80vh" padded={false}>
           <div className="pt-3 flex justify-center">
             <div className="w-10 h-1 bg-brand-border rounded-full" />
           </div>
@@ -62,17 +62,12 @@ export function InventorySheet({ items, playerFlags, newItemIds, onClose }: Inve
               <p className="text-brand-text leading-relaxed text-sm">{desc}</p>
             ) : null}
           </div>
-        </div>
-      </div>
+      </BottomSheet>
     )
   }
 
   return (
-    <div className="absolute inset-0 z-[2000] flex items-end" onClick={onClose}>
-      <div
-        className="w-full bg-surface rounded-t-2xl shadow-2xl border-t border-brand-border max-h-[60vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <BottomSheet onClose={onClose} maxHeight="60vh" padded={false}>
         <div className="pt-3 flex justify-center">
           <div className="w-10 h-1 bg-brand-border rounded-full" />
         </div>
@@ -106,7 +101,6 @@ export function InventorySheet({ items, playerFlags, newItemIds, onClose }: Inve
             </ul>
           )}
         </div>
-      </div>
-    </div>
+    </BottomSheet>
   )
 }

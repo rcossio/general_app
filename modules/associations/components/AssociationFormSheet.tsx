@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useLocale } from '@/contexts/LocaleContext'
+import { BottomSheet } from '@/components/BottomSheet'
 import type { AssociationView } from '../lib/contact'
 import type { AssociationInput } from '../lib/schemas'
 
@@ -93,11 +94,7 @@ export function AssociationFormSheet({ association, onCancel, onSubmit }: Associ
   )
 
   return (
-    <div className="absolute inset-0 z-[2100] flex items-end" onClick={onCancel}>
-      <div
-        className="w-full bg-surface rounded-t-2xl shadow-2xl border-t border-brand-border p-5 pb-8 max-h-[88vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <BottomSheet onClose={onCancel} zIndex={2100} maxHeight="88vh">
         <div className="w-10 h-1 bg-brand-border rounded-full mx-auto mb-4" />
         <p className="font-rubik font-bold text-base mb-4">
           {association ? t('associations.editTitle') : t('associations.addTitle')}
@@ -143,7 +140,6 @@ export function AssociationFormSheet({ association, onCancel, onSubmit }: Associ
             {submitting ? t('common.saving') : t('common.save')}
           </button>
         </div>
-      </div>
-    </div>
+    </BottomSheet>
   )
 }
