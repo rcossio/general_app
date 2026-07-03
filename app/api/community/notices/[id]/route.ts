@@ -37,11 +37,14 @@ export async function PATCH(request: NextRequest, { params }: Params) {
   const input = await parseJson(request, markFixedSchema)
   if (isNextResponse(input)) return input
   const { beforePhotoKey, afterPhotoKey } = input
-  if (!isValidPhotoKey(beforePhotoKey) || !isValidPhotoKey(afterPhotoKey)) {
+  if (!isValidPhotoKey(afterPhotoKey) || (beforePhotoKey && !isValidPhotoKey(beforePhotoKey))) {
     return NextResponse.json({ error: 'Invalid photo key', code: 'BAD_REQUEST' }, { status: 400 })
   }
 
-  const existing = await prisma.communityNotice.findUnique({ where: { id }, select: { status: true } })
+  const existing = await prisma.communityNotice.findUnique({
+    where: { id },
+    select: { status: true, photoUrl: true },
+  })
   if (!existing) {
     return NextResponse.json({ error: 'Not found', code: 'NOT_FOUND' }, { status: 404 })
   }
@@ -49,13 +52,17 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     return NextResponse.json({ error: 'Already fixed', code: 'ALREADY_FIXED' }, { status: 400 })
   }
 
+  // Default the "before" to the reporter's original photo when the volunteer
+  // didn't upload a new one.
+  const beforePhotoUrl = beforePhotoKey ? getPublicUrl(beforePhotoKey) : existing.photoUrl
+
   const notice = await prisma.communityNotice.update({
     where: { id },
     data: {
       status: 'fixed',
       fixedAt: new Date(),
       fixedByUserId: result.user.sub,
-      beforePhotoUrl: getPublicUrl(beforePhotoKey),
+      beforePhotoUrl,
       afterPhotoUrl: getPublicUrl(afterPhotoKey),
     },
     select: {

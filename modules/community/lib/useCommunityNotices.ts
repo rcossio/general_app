@@ -113,7 +113,7 @@ export function useCommunityNotices() {
   )
 
   const markFixed = useCallback(
-    async (id: string, keys: { beforePhotoKey: string; afterPhotoKey: string }): Promise<NoticeView | null> => {
+    async (id: string, keys: { beforePhotoKey?: string; afterPhotoKey: string }): Promise<NoticeView | null> => {
       try {
         const res = await fetchWithAuth(`/api/community/notices/${id}`, {
           method: 'PATCH',

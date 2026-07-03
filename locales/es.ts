@@ -239,7 +239,7 @@ const es: Translations = {
     hoursAgo: 'hace {n}h',
     daysAgo: 'hace {n}d',
     markFixed: 'Marcar como arreglado',
-    fixTitle: '¿Lo arreglaste? Subí una foto del antes y el después',
+    fixTitle: '¿Lo arreglaste? Subí una foto del después',
     before: 'Antes',
     after: 'Después',
     confirmFix: 'Confirmar arreglo',

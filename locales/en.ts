@@ -237,7 +237,7 @@ const en = {
     hoursAgo: '{n}h ago',
     daysAgo: '{n}d ago',
     markFixed: 'Mark as fixed',
-    fixTitle: 'Did you fix it? Add a before and after photo',
+    fixTitle: 'Did you fix it? Add an "after" photo',
     before: 'Before',
     after: 'After',
     confirmFix: 'Confirm fix',

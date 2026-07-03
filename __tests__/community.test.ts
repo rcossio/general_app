@@ -155,6 +155,26 @@ describe('Community: mark fixed', () => {
     expect((await again.json()).code).toBe('ALREADY_FIXED')
   })
 
+  it('accepts an after-only fix and reuses the reporter photo as before', async () => {
+    const owner = await registerAndLogin('comm-fix-afteronly')
+    const created = await (await createNotice(owner.accessToken)).json()
+    const noticeId = created.data.notice.id
+    const originalPhoto = created.data.notice.photoUrl
+
+    const volunteer = await registerAndLogin('comm-fix-afteronly-vol')
+    const fix = await fetch(`${BASE}/api/community/notices/${noticeId}`, {
+      method: 'PATCH',
+      headers: authHeaders(volunteer.accessToken),
+      body: JSON.stringify({ afterPhotoKey: photoKey() }),
+    })
+    expect(fix.status).toBe(200)
+    const fixed = (await fix.json()).data.notice
+    expect(fixed.status).toBe('fixed')
+    // "before" defaults to the reporter's original photo when none is uploaded.
+    expect(fixed.beforePhotoUrl).toBe(originalPhoto)
+    expect(fixed.afterPhotoUrl).not.toBeNull()
+  })
+
   it('returns 404 for an unknown notice', async () => {
     const { accessToken } = await registerAndLogin('comm-fix-404')
     const res = await fetch(`${BASE}/api/community/notices/does-not-exist`, {

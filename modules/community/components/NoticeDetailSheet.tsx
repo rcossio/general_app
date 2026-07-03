@@ -18,7 +18,6 @@ interface NoticeDetailSheetProps {
   onRemove: () => void
   fixMode: boolean
   onStartFix: () => void
-  fixBefore: PhotoState | null
   fixAfter: PhotoState | null
   fixError: string | null
   fixingSubmit: boolean
@@ -37,7 +36,6 @@ export function NoticeDetailSheet({
   onRemove,
   fixMode,
   onStartFix,
-  fixBefore,
   fixAfter,
   fixError,
   fixingSubmit,
@@ -101,32 +99,36 @@ export function NoticeDetailSheet({
           <>
             <p className="text-sm text-brand-text mb-3">{t('community.fixTitle')}</p>
             <div className="grid grid-cols-2 gap-2 mb-3">
-              {(['before', 'after'] as const).map((which) => {
-                const ph = which === 'before' ? fixBefore : fixAfter
-                return (
-                  <div key={which}>
-                    <p className="text-[11px] font-rubik font-bold text-brand-gray mb-1">
-                      {which === 'before' ? t('community.before') : t('community.after')}
-                    </p>
-                    {ph ? (
-                      // eslint-disable-next-line @next/next/no-img-element -- local object-URL preview of the user's photo; next/image not used here
-                      <img src={ph.preview} alt="" className="w-full rounded-xl aspect-square object-cover" />
-                    ) : (
-                      <label className="flex items-center justify-center aspect-square rounded-xl border border-dashed border-brand-border text-brand-gray cursor-pointer hover:bg-brand-green-light">
-                        <Camera className="h-6 w-6" />
-                        <input type="file" accept="image/jpeg,image/png" className="hidden" onChange={pickFixPhoto(which)} />
-                      </label>
-                    )}
-                  </div>
-                )
-              })}
+              {/* "Before" is the reporter's existing photo (read-only); the
+                  volunteer only supplies the "after". */}
+              <div>
+                <p className="text-[11px] font-rubik font-bold text-brand-gray mb-1">{t('community.before')}</p>
+                {notice.photoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- R2 photo via plain <img>; next/image isn't configured for arbitrary remote hosts
+                  <img src={notice.photoUrl} alt="" className="w-full rounded-xl aspect-square object-cover" />
+                ) : (
+                  <div className="flex items-center justify-center aspect-square rounded-xl border border-dashed border-brand-border text-brand-gray text-xs">—</div>
+                )}
+              </div>
+              <div>
+                <p className="text-[11px] font-rubik font-bold text-brand-gray mb-1">{t('community.after')}</p>
+                {fixAfter ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- local object-URL preview of the user's photo; next/image not used here
+                  <img src={fixAfter.preview} alt="" className="w-full rounded-xl aspect-square object-cover" />
+                ) : (
+                  <label className="flex items-center justify-center aspect-square rounded-xl border border-dashed border-brand-border text-brand-gray cursor-pointer hover:bg-brand-green-light">
+                    <Camera className="h-6 w-6" />
+                    <input type="file" accept="image/jpeg,image/png" className="hidden" onChange={pickFixPhoto('after')} />
+                  </label>
+                )}
+              </div>
             </div>
             {fixError && <p className="text-sm text-brand-photinia mb-2">{fixError}</p>}
             <div className="flex gap-2">
               <button onClick={closeFix} className="px-4 py-2.5 rounded-xl border border-brand-border text-brand-text font-rubik font-bold text-sm">
                 {t('common.cancel')}
               </button>
-              <button onClick={submitFix} disabled={!fixBefore || !fixAfter || fixingSubmit} className="flex-1 px-4 py-2.5 rounded-xl bg-brand-green text-white font-rubik font-bold text-sm disabled:opacity-50">
+              <button onClick={submitFix} disabled={!fixAfter || fixingSubmit} className="flex-1 px-4 py-2.5 rounded-xl bg-brand-green text-white font-rubik font-bold text-sm disabled:opacity-50">
                 {fixingSubmit ? t('community.fixing') : t('community.confirmFix')}
               </button>
             </div>

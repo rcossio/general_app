@@ -15,9 +15,11 @@ export const createNoticeSchema = z
     path: ['note'],
   })
 
-// Marking a notice as fixed by a volunteer requires before + after photos.
+// Marking a notice as fixed by a volunteer. The "after" photo is required;
+// "before" is optional — when omitted the server reuses the notice's existing
+// (reporter's) photo as the before, since the volunteer usually only has the after.
 export const markFixedSchema = z.object({
-  beforePhotoKey: z.string().min(1).max(200),
+  beforePhotoKey: z.string().min(1).max(200).optional(),
   afterPhotoKey: z.string().min(1).max(200),
 })
 

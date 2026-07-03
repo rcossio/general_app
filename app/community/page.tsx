@@ -51,7 +51,6 @@ export default function CommunityPage() {
 
   // Volunteer "mark fixed" flow (before/after photos)
   const [fixMode, setFixMode] = useState(false)
-  const [fixBefore, setFixBefore] = useState<{ file: File; preview: string } | null>(null)
   const [fixAfter, setFixAfter] = useState<{ file: File; preview: string } | null>(null)
   const [fixingSubmit, setFixingSubmit] = useState(false)
   const [fixError, setFixError] = useState<string | null>(null)
@@ -160,7 +159,10 @@ export default function CommunityPage() {
     if (await deleteNotice(n.id)) setSelected(null)
   }
 
-  const pickFixPhoto = (which: 'before' | 'after') => async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // The volunteer only uploads the "after"; the "before" defaults to the
+  // reporter's existing photo (see the mark-fixed endpoint). The `which` param
+  // is kept for the sheet's prop signature but is always 'after'.
+  const pickFixPhoto = (_which: 'before' | 'after') => async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
     const err = validateImageFile(file)
@@ -178,17 +180,14 @@ export default function CommunityPage() {
       return
     }
     setFixError(null)
-    const set = which === 'before' ? setFixBefore : setFixAfter
-    set((prev) => {
+    setFixAfter((prev) => {
       if (prev) URL.revokeObjectURL(prev.preview)
       return { file: stable, preview: URL.createObjectURL(stable) }
     })
   }
 
   const closeFix = () => {
-    if (fixBefore) URL.revokeObjectURL(fixBefore.preview)
     if (fixAfter) URL.revokeObjectURL(fixAfter.preview)
-    setFixBefore(null)
     setFixAfter(null)
     setFixMode(false)
     setFixError(null)
@@ -210,13 +209,12 @@ export default function CommunityPage() {
   }
 
   const submitFix = async () => {
-    if (!selected || !fixBefore || !fixAfter) return
+    if (!selected || !fixAfter) return
     setFixingSubmit(true)
     setFixError(null)
     try {
-      const beforePhotoKey = await uploadPhoto(fixBefore.file)
       const afterPhotoKey = await uploadPhoto(fixAfter.file)
-      const updated = await markFixed(selected.id, { beforePhotoKey, afterPhotoKey })
+      const updated = await markFixed(selected.id, { afterPhotoKey })
       if (!updated) throw new Error('patch')
       closeDetail()
     } catch (e) {
@@ -348,7 +346,6 @@ export default function CommunityPage() {
           onRemove={() => removeNotice(selected)}
           fixMode={fixMode}
           onStartFix={() => setFixMode(true)}
-          fixBefore={fixBefore}
           fixAfter={fixAfter}
           fixError={fixError}
           fixingSubmit={fixingSubmit}

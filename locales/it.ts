@@ -239,7 +239,7 @@ const it: Translations = {
     hoursAgo: '{n}h fa',
     daysAgo: '{n}g fa',
     markFixed: 'Segna come sistemato',
-    fixTitle: 'L\'hai sistemato? Aggiungi una foto prima e dopo',
+    fixTitle: 'L\'hai sistemato? Aggiungi una foto del dopo',
     before: 'Prima',
     after: 'Dopo',
     confirmFix: 'Conferma',
