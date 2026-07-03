@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requirePermission, isNextResponse } from '@/lib/permissions'
+import { parseJson } from '@/lib/api'
 import { getUserFromRequest } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { getPublicUrl } from '@/lib/storage'
@@ -83,22 +84,10 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  let body: unknown
-  try {
-    body = await request.json()
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON', code: 'BAD_REQUEST' }, { status: 400 })
-  }
+  const input = await parseJson(request, createNoticeSchema)
+  if (isNextResponse(input)) return input
 
-  const parsed = createNoticeSchema.safeParse(body)
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: parsed.error.issues[0]?.message ?? 'Validation error', code: 'VALIDATION_ERROR' },
-      { status: 400 }
-    )
-  }
-
-  const { category, lat, lng, note, photoKey } = parsed.data
+  const { category, lat, lng, note, photoKey } = input
   if (!isValidPhotoKey(photoKey)) {
     return NextResponse.json({ error: 'Invalid photo key', code: 'BAD_REQUEST' }, { status: 400 })
   }

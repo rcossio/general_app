@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requirePermission, isNextResponse } from '@/lib/permissions'
+import { parseJson } from '@/lib/api'
 import { prisma } from '@/lib/prisma'
 import { associationSchema } from '@/modules/associations/lib/schemas'
 
@@ -41,22 +42,10 @@ export async function POST(request: NextRequest) {
   const result = await requirePermission(request, 'associations', 'manage')
   if (isNextResponse(result)) return result
 
-  let body: unknown
-  try {
-    body = await request.json()
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON', code: 'BAD_REQUEST' }, { status: 400 })
-  }
+  const input = await parseJson(request, associationSchema)
+  if (isNextResponse(input)) return input
 
-  const parsed = associationSchema.safeParse(body)
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: parsed.error.issues[0]?.message ?? 'Validation error', code: 'VALIDATION_ERROR' },
-      { status: 400 }
-    )
-  }
-
-  const { lat, lng, ...rest } = parsed.data
+  const { lat, lng, ...rest } = input
   try {
     const association = await prisma.association.create({
       data: { ...rest, lat: lat ?? null, lng: lng ?? null },

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth, isNextResponse } from '@/lib/permissions'
+import { parseJson } from '@/lib/api'
 import { prisma } from '@/lib/prisma'
 import { getPublicUrl } from '@/lib/storage'
 import { markFixedSchema, isValidPhotoKey } from '@/modules/community/lib/schemas'
@@ -33,17 +34,9 @@ export async function PATCH(request: NextRequest, { params }: Params) {
   if (isNextResponse(result)) return result
   const { id } = await params
 
-  let body: unknown
-  try {
-    body = await request.json()
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON', code: 'BAD_REQUEST' }, { status: 400 })
-  }
-  const parsed = markFixedSchema.safeParse(body)
-  if (!parsed.success) {
-    return NextResponse.json({ error: 'Validation error', code: 'VALIDATION_ERROR' }, { status: 400 })
-  }
-  const { beforePhotoKey, afterPhotoKey } = parsed.data
+  const input = await parseJson(request, markFixedSchema)
+  if (isNextResponse(input)) return input
+  const { beforePhotoKey, afterPhotoKey } = input
   if (!isValidPhotoKey(beforePhotoKey) || !isValidPhotoKey(afterPhotoKey)) {
     return NextResponse.json({ error: 'Invalid photo key', code: 'BAD_REQUEST' }, { status: 400 })
   }

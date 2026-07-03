@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requirePermission, isNextResponse } from '@/lib/permissions'
+import { parseJson } from '@/lib/api'
 import { prisma } from '@/lib/prisma'
 import { associationUpdateSchema } from '@/modules/associations/lib/schemas'
 
@@ -25,20 +26,8 @@ export async function PATCH(request: NextRequest, { params }: Params) {
   if (isNextResponse(result)) return result
   const { id } = await params
 
-  let body: unknown
-  try {
-    body = await request.json()
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON', code: 'BAD_REQUEST' }, { status: 400 })
-  }
-
-  const parsed = associationUpdateSchema.safeParse(body)
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: parsed.error.issues[0]?.message ?? 'Validation error', code: 'VALIDATION_ERROR' },
-      { status: 400 }
-    )
-  }
+  const input = await parseJson(request, associationUpdateSchema)
+  if (isNextResponse(input)) return input
 
   const existing = await prisma.association.findUnique({ where: { id }, select: { id: true } })
   if (!existing) {
@@ -48,7 +37,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
   try {
     const association = await prisma.association.update({
       where: { id },
-      data: parsed.data,
+      data: input,
       select: SELECT,
     })
     return NextResponse.json({ data: { association } })
