@@ -7,6 +7,7 @@ import { useLocale } from '@/contexts/LocaleContext'
 import Link from 'next/link'
 import { Eye, EyeOff } from 'lucide-react'
 import { z } from 'zod'
+import { ProfileCompletionFields } from '@/components/ProfileCompletionFields'
 
 export default function LoginPage() {
   return <Suspense><LoginForm /></Suspense>
@@ -98,37 +99,15 @@ function LoginForm() {
           <h1 className="text-2xl font-rubik font-bold mb-2 text-center">{t('auth.completeProfile')}</h1>
           <p className="text-sm text-brand-gray text-center mb-6">{t('auth.whatsYourName')}</p>
           <form onSubmit={handleRegister} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">{t('auth.name')}</label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                maxLength={100}
-                autoFocus
-                className="w-full px-3 py-2 rounded-lg border border-brand-border bg-surface focus:outline-none focus:ring-2 focus:ring-brand-green"
-              />
-              {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name}</p>}
-            </div>
-            <label className="flex items-start gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={privacyAccepted}
-                onChange={(e) => { setPrivacyAccepted(e.target.checked); setErrors((prev) => { const { privacy, ...rest } = prev; return rest }) }}
-                className="mt-1 h-4 w-4 rounded border-brand-border text-brand-green focus:ring-brand-green"
-              />
-              <span className="text-sm text-brand-gray">
-                {t('auth.acceptPrivacy')}{' '}
-                <Link href="/privacy" target="_blank" className="text-brand-green hover:underline">
-                  {t('auth.privacyPolicy')}
-                </Link>
-                {' & '}
-                <Link href="/terms" target="_blank" className="text-brand-green hover:underline">
-                  {t('auth.termsOfService')}
-                </Link>
-              </span>
-            </label>
-            {errors.privacy && <p className="text-xs text-red-500">{errors.privacy}</p>}
+            <ProfileCompletionFields
+              name={name}
+              onNameChange={setName}
+              showPrivacy
+              privacyAccepted={privacyAccepted}
+              onPrivacyChange={(v) => { setPrivacyAccepted(v); setErrors((prev) => { const { privacy, ...rest } = prev; return rest }) }}
+              nameError={errors.name}
+              privacyError={errors.privacy}
+            />
             {serverError && (
               <div className="p-3 rounded-lg bg-red-50 dark:bg-red-950 text-red-600 text-sm">
                 {serverError}
