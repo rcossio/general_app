@@ -114,8 +114,9 @@ export default function AssociationsPage() {
         </div>
       )}
 
-      {/* Map (top) */}
-      <div className="relative overflow-hidden z-0 shrink-0" style={{ height: '45%' }}>
+      {/* Map (top) — kept secondary; the searchable list below is the primary
+          surface since associations are browsed mostly by name. */}
+      <div className="relative overflow-hidden z-0 shrink-0" style={{ height: '32%' }}>
         <AssociationsMap
           associations={associations}
           selectedId={selected?.id ?? null}
