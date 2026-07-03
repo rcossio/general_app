@@ -37,6 +37,7 @@ export async function POST(request: NextRequest) {
         name: true,
         avatarUrl: true,
         passwordHash: true,
+        deletedAt: true,
         userRoles: { select: { role: { select: { slug: true } } } },
       },
     })
@@ -53,6 +54,17 @@ export async function POST(request: NextRequest) {
           { status: 401 }
         )
       }
+      // Soft-deleted accounts must not be able to log back in and mint fresh
+      // tokens (which would undo the deletion). /api/auth/refresh already blocks
+      // deletedAt users; login must too. Use the same uniform 401 so account
+      // state isn't leaked to an attacker.
+      if (user.deletedAt) {
+        audit('login_failed', { email, ip, reason: 'account_deleted' })
+        return NextResponse.json(
+          { error: 'Invalid credentials', code: 'INVALID_CREDENTIALS' },
+          { status: 401 }
+        )
+      }
     }
 
     const roles = user.userRoles.map((ur) => ur.role.slug)
@@ -61,7 +73,7 @@ export async function POST(request: NextRequest) {
     const refreshToken = signRefreshToken(payload)
     await storeRefreshToken(user.id, refreshToken)
 
-    const { passwordHash: _, ...safeUser } = user
+    const { passwordHash: _, deletedAt: __, ...safeUser } = user
 
     const response = NextResponse.json({
       data: { user: safeUser, accessToken, refreshToken },
