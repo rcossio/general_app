@@ -195,6 +195,8 @@ const it: Translations = {
     inventoryEmpty: 'Il tuo inventario è vuoto.',
     shareSession: 'Condividi sessione',
     joinSession: 'Unisciti a sessione',
+    join: 'Unisciti',
+    startedOn: 'Iniziata il {date}',
     joinCode: 'Codice di accesso',
     joinCodePlaceholder: 'Inserisci codice',
     generateCode: 'Genera codice',

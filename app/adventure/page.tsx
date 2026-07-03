@@ -127,7 +127,7 @@ function AdventureList() {
               disabled={joining || !joinCode.trim()}
               className="px-4 py-2 rounded-lg bg-brand-photinia hover:bg-brand-photinia-dark disabled:opacity-50 text-white text-sm font-medium"
             >
-              {joining ? '...' : t('adventure.joinSession')}
+              {joining ? '...' : t('adventure.join')}
             </button>
           </div>
           {joinError && (
@@ -173,7 +173,7 @@ function AdventureList() {
                   )}
                   {game.session && !game.session.completedAt && (
                     <p className="text-xs text-brand-gray mt-2">
-                      Started {new Date(game.session.startedAt).toLocaleDateString()}
+                      {t('adventure.startedOn', { date: new Date(game.session.startedAt).toLocaleDateString() })}
                     </p>
                   )}
                 </div>

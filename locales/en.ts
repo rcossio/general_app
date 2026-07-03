@@ -193,6 +193,8 @@ const en = {
     inventoryEmpty: 'Your inventory is empty.',
     shareSession: 'Share session',
     joinSession: 'Join session',
+    join: 'Join',
+    startedOn: 'Started {date}',
     joinCode: 'Join code',
     joinCodePlaceholder: 'Enter code',
     generateCode: 'Generate code',

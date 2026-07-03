@@ -243,7 +243,7 @@ To add a new language: (1) create `locales/<code>.ts` implementing `Translations
 
 ### File Uploads
 
-`lib/storage.ts` — Cloudflare R2 via AWS S3 SDK. Exports `getUploadUrl(key)` (presigned PUT, 5min), `getPublicUrl(key)`, and `deleteFile(key)`. Configured via `R2_*` env vars.
+`lib/storage.ts` — Cloudflare R2 via AWS S3 SDK. Exports `getUploadUrl(key)` (presigned PUT, 5min) and `getPublicUrl(key)`. Configured via `R2_*` env vars. (Note: uploaded photos are never deleted from R2 yet — orphaned files accumulate when a notice/avatar is replaced or removed. Add a delete-on-cleanup path if this becomes a concern.)
 
 ### Error Handling
 
