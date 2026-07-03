@@ -7,6 +7,7 @@ import { useLocale } from '@/contexts/LocaleContext'
 import { useTheme } from '@/contexts/ThemeContext'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
 import { LOCALES } from '@/locales'
+import { resizeToBlob } from '@/lib/imageResize'
 import { Sun, Moon, Monitor } from 'lucide-react'
 import { z } from 'zod'
 
@@ -39,25 +40,6 @@ function ProfileForm() {
     avatarUrl: z.string().url().optional().or(z.literal('')),
   })
 
-  const resizeImage = (file: File, maxSize: number): Promise<Blob> =>
-    new Promise((resolve, reject) => {
-      const img = new Image()
-      const url = URL.createObjectURL(file)
-      img.onload = () => {
-        URL.revokeObjectURL(url)
-        const scale = Math.min(1, maxSize / Math.max(img.width, img.height))
-        const w = Math.round(img.width * scale)
-        const h = Math.round(img.height * scale)
-        const canvas = document.createElement('canvas')
-        canvas.width = w
-        canvas.height = h
-        canvas.getContext('2d')!.drawImage(img, 0, 0, w, h)
-        canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error('resize failed')), 'image/webp', 0.85)
-      }
-      img.onerror = reject
-      img.src = url
-    })
-
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -68,7 +50,7 @@ function ProfileForm() {
     setUploading(true)
     setErrors((prev) => { const n = { ...prev }; delete n.avatar; return n })
     try {
-      const resized = await resizeImage(file, 256)
+      const resized = await resizeToBlob(file, { maxDim: 256, type: 'image/webp', quality: 0.85 })
       const res = await fetchWithAuth('/api/upload/avatar', { method: 'POST' })
       const { data } = await res.json()
       await fetch(data.uploadUrl, {

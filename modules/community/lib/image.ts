@@ -7,6 +7,8 @@
 // iPhone/Android users on "High Efficiency" mode should switch to "Most
 // Compatible" (JPEG).
 
+import { resizeToBlob } from '@/lib/imageResize'
+
 const ALLOWED_EXT = ['jpg', 'jpeg', 'png']
 export const MAX_INPUT_BYTES = 25 * 1024 * 1024 // 25 MB
 
@@ -40,47 +42,16 @@ export async function readStableImage(file: File): Promise<File> {
   return new File([buf], file.name || 'photo.jpg', { type: file.type || 'image/jpeg' })
 }
 
-// Load a blob into an <img> element. Broadly compatible (mirrors the proven
-// avatar-upload path in app/profile/page.tsx).
-function loadImage(blob: Blob): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const img = new Image()
-    const url = URL.createObjectURL(blob)
-    img.onload = () => {
-      URL.revokeObjectURL(url)
-      resolve(img)
-    }
-    img.onerror = () => {
-      URL.revokeObjectURL(url)
-      reject(new Error('load'))
-    }
-    img.src = url
-  })
-}
-
 // Returns a small JPEG Blob ready to upload, or throws an ImageError string.
+// The canvas downscale itself lives in lib/imageResize (shared with the avatar
+// upload); here we add the JPEG/PNG validation and normalise any decode/encode
+// failure to the 'decode' ImageError the UI knows how to message.
 export async function prepareImageForUpload(file: File, maxDim = 1280, quality = 0.8): Promise<Blob> {
   const err = validateImageFile(file)
   if (err) throw err
-
-  let img: HTMLImageElement
   try {
-    img = await loadImage(file)
+    return await resizeToBlob(file, { maxDim, type: 'image/jpeg', quality })
   } catch {
     throw 'decode' as ImageError
   }
-
-  const scale = Math.min(1, maxDim / Math.max(img.width, img.height))
-  const w = Math.round(img.width * scale)
-  const h = Math.round(img.height * scale)
-  const canvas = document.createElement('canvas')
-  canvas.width = w
-  canvas.height = h
-  const ctx = canvas.getContext('2d')
-  if (!ctx) throw 'decode' as ImageError
-  ctx.drawImage(img, 0, 0, w, h)
-
-  return new Promise<Blob>((resolve, reject) =>
-    canvas.toBlob((b) => (b ? resolve(b) : reject('decode' as ImageError)), 'image/jpeg', quality)
-  )
 }
