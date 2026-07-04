@@ -124,6 +124,7 @@ async function seedAssociations() {
     const data = {
       description: a.description ?? null,
       official: a.official ?? true,
+      taxCode: a.taxCode ?? null,
       website: a.website ?? null,
       facebook: a.facebook ?? null,
       instagram: a.instagram ?? null,

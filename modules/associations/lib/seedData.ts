@@ -14,6 +14,8 @@ export interface AssociationSeed {
   // false = broader local directory (not in the official Comune register).
   // Defaults to true when omitted.
   official?: boolean
+  // Codice Fiscale / registration number — stored only, never published.
+  taxCode?: string
   website?: string
   facebook?: string
   instagram?: string
@@ -85,6 +87,7 @@ export const ASSOCIATIONS_SEED: AssociationSeed[] = [
   },
   {
     name: 'AVIS Primo Soccorso Valenza',
+    taxCode: '01569860065',
     website: 'https://avisprimosoccorso.it/',
     facebook: 'https://www.facebook.com/AvisValenza/',
     instagram: 'https://www.instagram.com/avisvalenza/',
@@ -98,6 +101,7 @@ export const ASSOCIATIONS_SEED: AssociationSeed[] = [
   { name: 'A.V.O.C.', email: 'secondo.maschio@tiscali.it' },
   {
     name: 'AVULSS Valenza',
+    taxCode: '95006970065',
     email: 'avulssvalenza@gmail.com',
     phone: '+39 0131 953403',
     address: 'Via Martiri di Cefalonia 13, 15048 Valenza (AL)',
@@ -154,6 +158,7 @@ export const ASSOCIATIONS_SEED: AssociationSeed[] = [
   },
   {
     name: 'Cuore di Zampa',
+    taxCode: '96056570060',
     facebook: 'https://www.facebook.com/cuoredizampavalenza/',
     instagram: 'https://www.instagram.com/cuoredizampavalenza/',
     email: 'cuoredizampavalenza@gmail.com',
@@ -174,6 +179,7 @@ export const ASSOCIATIONS_SEED: AssociationSeed[] = [
   },
   {
     name: 'I Pensieri di Chadraque',
+    taxCode: '96060230065',
     website: 'https://www.pensieridichadraque.it/',
     facebook: 'https://www.facebook.com/ipensieridichadraque/',
     phone: '+39 339 5806910',
@@ -192,6 +198,7 @@ export const ASSOCIATIONS_SEED: AssociationSeed[] = [
   },
   {
     name: 'MiciAmici',
+    taxCode: '96052400064',
     website: 'https://www.miciamici.org/',
     facebook: 'https://www.facebook.com/MiciAmiciOdV/',
     email: 'miciamici@miciamici.org',
@@ -221,6 +228,7 @@ export const ASSOCIATIONS_SEED: AssociationSeed[] = [
   },
   {
     name: 'Piccolo Principe',
+    taxCode: '96066560069',
     facebook: 'https://www.facebook.com/p/Piccoloprincipe-61551849021012/',
     email: 'piccoloprincipe.aps@gmail.com',
     phone: '+39 324 8667381',
@@ -265,6 +273,7 @@ export const ASSOCIATIONS_SEED: AssociationSeed[] = [
   },
   {
     name: 'Spezziamo il Pane con Padre Filippo',
+    taxCode: '96060900063',
     website: 'https://www.spezziamoilpaneconpadrefilippo.it/',
     facebook: 'https://www.facebook.com/p/Spezziamo-il-pane-con-Padre-Filippo-100071402437665/',
     email: 'spezziamoilpane@gmail.com',
@@ -275,6 +284,7 @@ export const ASSOCIATIONS_SEED: AssociationSeed[] = [
   },
   {
     name: 'UNITRE Valenza - Università delle Tre Età',
+    taxCode: '95007730062',
     website: 'https://www.unitrevalenza.com/',
     email: 'uni3valenza@gmail.com',
     phone: '+39 0131 972246',
@@ -286,6 +296,7 @@ export const ASSOCIATIONS_SEED: AssociationSeed[] = [
   { name: 'Valenza Solidale' },
   {
     name: 'Vivere Insieme',
+    taxCode: '95005170063',
     facebook: 'https://www.facebook.com/assvivereinsiemevalenza/',
     email: 'assvivereinsiemevalenza@gmail.com',
     phone: '+39 0131 951261',
@@ -301,6 +312,7 @@ export const ASSOCIATIONS_SEED: AssociationSeed[] = [
   },
   {
     name: 'CAI - Club Alpino Italiano, Sezione di Valenza "Guerci"',
+    taxCode: '01872320062',
     description: 'Club Alpino Italiano – sezione di Valenza',
     email: 'cai@valenza.it',
   },
@@ -323,22 +335,26 @@ export const ASSOCIATIONS_SEED: AssociationSeed[] = [
   },
   {
     name: 'Insieme Si Può Fare ODV',
+    taxCode: '90013640066',
     description: 'Associazione sociale (ODV)',
     official: false,
   },
   {
     name: 'Duemiladodici ONLUS',
+    taxCode: '02372870069',
     description: 'Solidarietà (ONLUS)',
     official: false,
   },
   {
     name: 'Fondazione Valenza Anziani ETS',
+    taxCode: '95005390067',
     description: 'RSA e servizi per la terza età',
     official: false,
     address: 'Circonvallazione Ovest, 15048 Valenza (AL)',
   },
   {
     name: 'Missione Saida ODV',
+    taxCode: '95007860067',
     description: 'Missione umanitaria (Guatemala)',
     official: false,
     website: 'https://www.missionesaida.org/',
@@ -347,17 +363,20 @@ export const ASSOCIATIONS_SEED: AssociationSeed[] = [
   },
   {
     name: 'Amici dei Vigili del Fuoco ONLUS',
+    taxCode: '95007760069',
     description: 'Sostegno ai Vigili del Fuoco (ONLUS)',
     official: false,
     facebook: 'https://www.facebook.com/Amicivvf/',
   },
   {
     name: 'Associazione Adamas',
+    taxCode: '96065000067',
     description: 'Associazione culturale/sociale (ETS/APS)',
     official: false,
   },
   {
     name: 'The Joy Gospel Singers',
+    taxCode: '02620870069',
     description: 'Coro gospel',
     official: false,
     facebook: 'https://www.facebook.com/JGS.VALENZA/',
@@ -366,6 +385,7 @@ export const ASSOCIATIONS_SEED: AssociationSeed[] = [
   },
   {
     name: 'AyuRadha APS e ASD',
+    taxCode: '96058820067',
     description: 'Benessere, ayurveda e yoga',
     official: false,
     website: 'https://www.ayuradha.it/',
@@ -375,32 +395,38 @@ export const ASSOCIATIONS_SEED: AssociationSeed[] = [
   },
   {
     name: 'Fondazione Borsalino',
+    taxCode: '96061230064',
     description: 'Fondazione',
     official: false,
   },
   {
     name: 'A.S.D. Fulvius 1908',
+    taxCode: '02219130065',
     description: 'Calcio (ASD)',
     official: false,
     instagram: 'https://www.instagram.com/fulvius_1908/',
   },
   {
     name: 'A.S.D. Valenzana Mado (Mado Basket)',
+    taxCode: '02430510061',
     description: 'Basket (ASD)',
     official: false,
   },
   {
     name: "A.S.D. O'Ragno 114 MX School",
+    taxCode: '96057340067',
     description: 'Motocross (ASD)',
     official: false,
   },
   {
     name: 'Bocciofila Belvedere',
+    taxCode: '95000010066',
     description: 'Bocce (ASD)',
     official: false,
   },
   {
     name: 'A.S.D. Ginnastica Valentia',
+    taxCode: '95001490069',
     description: 'Ginnastica (ASD)',
     official: false,
     website: 'https://www.valentia.it/',
@@ -409,6 +435,7 @@ export const ASSOCIATIONS_SEED: AssociationSeed[] = [
   },
   {
     name: 'A.S.D. Associazione Vietata Riproduzione',
+    taxCode: '95002590065',
     description: 'Culturale (ASD)',
     official: false,
   },

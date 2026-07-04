@@ -302,6 +302,10 @@ model Association {
   // true = in the official Comune di Valenza register; false = other local
   // association added to the broader directory (shown under its own heading).
   official    Boolean  @default(true)
+  // Codice Fiscale / registration number (public for orgs, used to verify on
+  // RUNTS). Stored for records only — deliberately NOT returned by any public
+  // API select, so it isn't published in the directory.
+  taxCode     String?  @map("tax_code")
   website     String?
   facebook    String?
   instagram   String?
