@@ -125,6 +125,10 @@ const es: Translations = {
   },
   dashboard: {
     welcomeBack: 'Bienvenido/a, {name}',
+    resumeAdventure: 'Continúa tu aventura',
+    startAdventure: 'Empieza la aventura',
+    reportsToday: 'Avisos hoy: {used}/{max}',
+    associationsCount: '{count} asociaciones locales',
   },
   admin: {
     title: 'Panel de administración',

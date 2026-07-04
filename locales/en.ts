@@ -123,6 +123,10 @@ const en = {
   },
   dashboard: {
     welcomeBack: 'Welcome back, {name}',
+    resumeAdventure: 'Continue your adventure',
+    startAdventure: 'Start the adventure',
+    reportsToday: 'Reports today: {used}/{max}',
+    associationsCount: '{count} local associations',
   },
   admin: {
     title: 'Admin Panel',

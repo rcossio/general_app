@@ -125,6 +125,10 @@ const it: Translations = {
   },
   dashboard: {
     welcomeBack: 'Bentornato/a, {name}',
+    resumeAdventure: "Continua l'avventura",
+    startAdventure: "Inizia l'avventura",
+    reportsToday: 'Segnalazioni oggi: {used}/{max}',
+    associationsCount: '{count} associazioni locali',
   },
   admin: {
     title: 'Pannello Admin',
