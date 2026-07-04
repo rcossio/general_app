@@ -1,6 +1,7 @@
 import adventure from '@/modules/adventure/manifest'
 import community from '@/modules/community/manifest'
 import associations from '@/modules/associations/manifest'
+import memories from '@/modules/memories/manifest'
 
 export interface ModuleNavItem {
   label: string // English default / fallback
@@ -19,6 +20,6 @@ export interface ModuleManifest {
   testEndpoint: string
 }
 
-export const activeModules: ModuleManifest[] = [community, adventure, associations].filter(
+export const activeModules: ModuleManifest[] = [community, adventure, associations, memories].filter(
   (m) => m.isActive
 )

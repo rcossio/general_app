@@ -31,6 +31,7 @@ model User {
   gameSessions          GameSession[]
   sessionParticipations SessionParticipant[]
   communityNotices      CommunityNotice[]
+  memorialProfiles      MemorialProfile[]
 
   @@map("users")
 }
@@ -310,4 +311,52 @@ model Association {
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   @@map("associations")
+}
+
+// ============================================================
+// SECTION: Memories (commemorative profiles)
+// ============================================================
+
+// A commemorative profile for a deceased person, owned by the creator. The
+// public page lives at /memories/<slug>; the owner edits it and exports a QR
+// (to that public URL) as a PDF. Any logged-in user can create one; profiles
+// are public immediately (no draft state in v1). See modules/memories/.
+model MemorialProfile {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id") // owner
+  name      String // the person being remembered
+  subtitle  String? // optional one-line tagline (e.g. "Beloved father and teacher")
+  slug      String   @unique // public URL segment
+  facebook  String?
+  instagram String?
+  tiktok    String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user  User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  posts MemorialPost[]
+
+  @@index([userId])
+  @@map("memorial_profiles")
+}
+
+// A single life-story entry on a memorial profile: rich text (Tiptap JSON),
+// an ordered image carousel (R2 URLs), and an optional location (label + coords
+// for a future map). `position` controls display order within the profile.
+model MemorialPost {
+  id            String   @id @default(cuid())
+  profileId     String   @map("profile_id")
+  content       Json // Tiptap document JSON (safe, constrained node set)
+  images        String[] @default([]) // ordered R2 public URLs (carousel)
+  locationLabel String?  @map("location_label")
+  lat           Float?
+  lng           Float?
+  position      Int      @default(0)
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  profile MemorialProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+  @@map("memorial_posts")
 }
