@@ -221,6 +221,7 @@ const en = {
     chooseCategory: 'Choose a category',
     dragHint: 'Drag the pin to the exact spot',
     confirmLocation: 'Confirm location',
+    adjustLocation: 'Adjust location',
     noteOptional: 'Note (optional)',
     addPhoto: 'Add photo',
     photoRequired: 'Add a photo (required)',

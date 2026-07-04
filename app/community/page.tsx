@@ -91,7 +91,9 @@ export default function CommunityPage() {
     setNote('')
     setPhoto(null)
     setPlacement(mapCenter ?? { lat: center[0], lng: center[1] })
-    setReportStep('place')
+    // Open the form directly with the pin defaulted to the map centre. Moving
+    // the pin is an optional "adjust location" step, not a mandatory gate.
+    setReportStep('form')
   }
 
   const cancelReport = () => {
@@ -323,11 +325,8 @@ export default function CommunityPage() {
               {t('community.dragHint')}
             </div>
             <div className="absolute inset-x-0 bottom-0 z-[1000] p-3">
-              <div className="flex gap-2 max-w-md mx-auto">
-                <button onClick={cancelReport} className="px-4 py-3 rounded-xl bg-surface border border-brand-border text-brand-text font-rubik font-bold text-sm shadow">
-                  {t('common.cancel')}
-                </button>
-                <button onClick={() => setReportStep('form')} className="flex-1 px-4 py-3 rounded-xl bg-brand-photinia text-white font-rubik font-bold text-sm shadow-lg">
+              <div className="max-w-md mx-auto">
+                <button onClick={() => setReportStep('form')} className="w-full px-4 py-3 rounded-xl bg-brand-photinia text-white font-rubik font-bold text-sm shadow-lg">
                   {t('community.confirmLocation')}
                 </button>
               </div>
@@ -368,7 +367,7 @@ export default function CommunityPage() {
           submit={submit}
           submitting={submitting}
           errorMsg={errorMsg}
-          onBack={() => setReportStep('place')}
+          onAdjustLocation={() => setReportStep('place')}
           onCancel={cancelReport}
         />
       )}

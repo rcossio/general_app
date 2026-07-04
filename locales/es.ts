@@ -223,6 +223,7 @@ const es: Translations = {
     chooseCategory: 'Elegí una categoría',
     dragHint: 'Arrastrá el pin al lugar exacto',
     confirmLocation: 'Confirmar ubicación',
+    adjustLocation: 'Ajustar ubicación',
     noteOptional: 'Nota (opcional)',
     addPhoto: 'Agregar foto',
     photoRequired: 'Agregar foto (obligatoria)',

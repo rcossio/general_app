@@ -223,6 +223,7 @@ const it: Translations = {
     chooseCategory: 'Scegli una categoria',
     dragHint: 'Trascina il segnaposto sul punto esatto',
     confirmLocation: 'Conferma posizione',
+    adjustLocation: 'Modifica posizione',
     noteOptional: 'Nota (facoltativa)',
     addPhoto: 'Aggiungi foto',
     photoRequired: 'Aggiungi una foto (obbligatoria)',

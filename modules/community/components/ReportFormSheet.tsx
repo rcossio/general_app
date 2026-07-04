@@ -1,7 +1,7 @@
 'use client'
 
 import type { ChangeEvent } from 'react'
-import { ArrowLeft, X, Camera } from 'lucide-react'
+import { MapPin, X, Camera } from 'lucide-react'
 import { useLocale } from '@/contexts/LocaleContext'
 import { NOTICE_CATEGORIES } from '@/modules/community/lib/categories'
 import { getIconComponent } from '@/modules/community/lib/icon'
@@ -17,7 +17,7 @@ interface ReportFormSheetProps {
   submit: () => void
   submitting: boolean
   errorMsg: string | null
-  onBack: () => void
+  onAdjustLocation: () => void
   onCancel: () => void
 }
 
@@ -33,22 +33,22 @@ export function ReportFormSheet({
   submit,
   submitting,
   errorMsg,
-  onBack,
+  onAdjustLocation,
   onCancel,
 }: ReportFormSheetProps) {
   const { t } = useLocale()
   return (
     <div className="absolute inset-x-0 bottom-0 z-[2000]">
       <div className="w-full bg-surface rounded-t-2xl shadow-2xl border-t border-brand-border p-5 pb-8 max-h-[70vh] overflow-y-auto">
-        <div className="flex items-center justify-between mb-4">
-          <button onClick={onBack} className="p-1.5 rounded-full hover:bg-brand-green-light text-brand-gray" aria-label={t('common.cancel')}>
-            <ArrowLeft className="h-5 w-5" strokeWidth={2.5} />
-          </button>
+        <div className="flex items-center justify-between mb-3">
           <h2 className="font-rubik font-bold text-base">{t('community.reportProblem')}</h2>
-          <button onClick={onCancel} className="p-1.5 rounded-full hover:bg-brand-green-light text-brand-gray">
+          <button onClick={onCancel} className="p-1.5 rounded-full hover:bg-brand-green-light text-brand-gray" aria-label={t('common.cancel')}>
             <X className="h-5 w-5" />
           </button>
         </div>
+        <button onClick={onAdjustLocation} className="flex items-center gap-1.5 mb-4 text-sm text-brand-green font-rubik font-bold hover:underline">
+          <MapPin className="h-4 w-4" strokeWidth={2.5} /> {t('community.adjustLocation')}
+        </button>
 
         <p className="text-xs font-rubik font-bold text-brand-gray mb-2">{t('community.chooseCategory')}</p>
         <div className="grid grid-cols-3 gap-2 mb-4">
