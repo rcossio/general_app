@@ -10,6 +10,7 @@
 
 export interface AssociationSeed {
   name: string
+  description?: string
   website?: string
   facebook?: string
   instagram?: string
@@ -21,23 +22,30 @@ export interface AssociationSeed {
 }
 
 export const ASSOCIATIONS_SEED: AssociationSeed[] = [
-  // No website/social/email or address could be verified.
-  { name: 'ACdV' },
+  {
+    name: 'ACdV',
+    description: 'Associazione Controllo del Vicinato',
+    website: 'https://www.acdv.it',
+    facebook: 'https://www.facebook.com/acdv.it',
+    instagram: 'https://www.instagram.com/controllodelvicinato/',
+    email: 'segreteria.organizzativa@acdv.it',
+  },
   {
     name: 'AGESCI Valenza 1',
+    website: 'https://gruppi.agesci.it/valenza1/',
     facebook: 'https://www.facebook.com/agescivalenza1/',
     email: 'valenza1@piemonte.agesci.it',
     phone: '+39 333 3379548',
     address: 'Strada al Po e Oltrepo 1, 15048 Valenza (AL)',
-    lat: 45.0148,
-    lng: 8.6486,
+    lat: 45.0055,
+    lng: 8.651,
   },
   {
     name: 'AGESCI Valenza 2',
     email: 'valenza2@piemonte.agesci.it',
-    address: 'Viale Santuario, 15048 Valenza (AL)',
-    lat: 44.9993,
-    lng: 8.6357,
+    address: 'Viale Santuario (presso Santuario N.S. della Pietà), 15048 Valenza (AL)',
+    lat: 45.0064,
+    lng: 8.6331,
   },
   {
     name: 'A.I.D.O. Valenza',
@@ -58,8 +66,11 @@ export const ASSOCIATIONS_SEED: AssociationSeed[] = [
     lat: 45.0106,
     lng: 8.6448,
   },
-  // Alessandria-based; no reliable Valenza contact/address found.
-  { name: 'Amici ed ex Allievi del Liceo Scientifico Galileo Galilei' },
+  {
+    // Alessandria-based cultural association (runs the "I più fragili tra i più deboli" project).
+    name: 'Amici ed ex Allievi del Liceo Scientifico Galileo Galilei',
+    facebook: 'https://www.facebook.com/ipiufragilitraipiudeboli/',
+  },
   {
     name: 'A.N.A. - Associazione Nazionale Alpini Valenza',
     website: 'https://alpinialessandria.it/',
@@ -151,7 +162,13 @@ export const ASSOCIATIONS_SEED: AssociationSeed[] = [
   { name: 'FAI col Cuore' },
   // No dedicated contact channel could be verified.
   { name: 'Gli Amici di Mario' },
-  { name: 'Insieme al Traguardo', email: 'patriziaraia63@gmail.com' },
+  {
+    name: 'Insieme al Traguardo',
+    email: 'patriziaraia63@gmail.com',
+    address: 'c/o Oratorio del Duomo, 15048 Valenza (AL)',
+    lat: 45.013,
+    lng: 8.644,
+  },
   {
     name: 'I Pensieri di Chadraque',
     website: 'https://www.pensieridichadraque.it/',
@@ -174,10 +191,14 @@ export const ASSOCIATIONS_SEED: AssociationSeed[] = [
     name: 'MiciAmici',
     website: 'https://www.miciamici.org/',
     facebook: 'https://www.facebook.com/MiciAmiciOdV/',
+    email: 'miciamici@miciamici.org',
+    phone: '+39 335 6936891',
   },
   {
     name: 'OFTAL - sezione Alessandria',
     website: 'https://www.oftal.org/alessandria/',
+    phone: '+39 0131 441080',
+    address: 'Via Plana 49, 15121 Alessandria (AL)',
   },
   {
     name: 'Organizzazione Europea Vigili del Fuoco Volontari di Protezione Civile di Valenza',
@@ -216,6 +237,7 @@ export const ASSOCIATIONS_SEED: AssociationSeed[] = [
   {
     name: "Projeto Corumba'",
     website: 'https://www.projetocorumba.org/',
+    address: 'Via Verona 1, 15121 Alessandria (AL)',
   },
   {
     name: 'Raccolta Alimentare per gli Animali',
@@ -233,8 +255,10 @@ export const ASSOCIATIONS_SEED: AssociationSeed[] = [
     lng: 8.6389,
   },
   {
+    // Valenza "Conferenza" — the local Facebook page is more specific than the
+    // national federation site.
     name: 'Società di San Vincenzo de Paoli',
-    website: 'https://www.sanvincenzoitalia.it/',
+    facebook: 'https://www.facebook.com/sanvincenzovalenza/',
   },
   {
     name: 'Spezziamo il Pane con Padre Filippo',

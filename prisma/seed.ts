@@ -63,6 +63,7 @@ async function main() {
   const userAllowlist = [
     'adventure:play',
     'community:create',
+    'memories:create',
   ]
 
   // Clear old user/bot_user role_permissions and re-assign from allowlist
@@ -121,6 +122,7 @@ async function main() {
 async function seedAssociations() {
   for (const a of ASSOCIATIONS_SEED) {
     const data = {
+      description: a.description ?? null,
       website: a.website ?? null,
       facebook: a.facebook ?? null,
       instagram: a.instagram ?? null,
