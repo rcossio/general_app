@@ -267,6 +267,8 @@ const es: Translations = {
     title: 'Asociaciones',
     searchPlaceholder: 'Buscar asociaciones…',
     empty: 'No se encontraron asociaciones.',
+    moreTitle: 'Más asociaciones de Valenza',
+    moreNote: 'Activas en la zona — no en el registro oficial del Ayuntamiento.',
     loadError: 'No se pudieron cargar las asociaciones. Comprueba tu conexión.',
     retry: 'Reintentar',
     noContact: 'No hay información de contacto disponible.',

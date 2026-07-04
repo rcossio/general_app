@@ -11,6 +11,7 @@ const SELECT = {
   id: true,
   name: true,
   description: true,
+  official: true,
   website: true,
   facebook: true,
   instagram: true,

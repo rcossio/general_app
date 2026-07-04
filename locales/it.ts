@@ -267,6 +267,8 @@ const it: Translations = {
     title: 'Associazioni',
     searchPlaceholder: 'Cerca associazioni…',
     empty: 'Nessuna associazione trovata.',
+    moreTitle: 'Altre associazioni di Valenza',
+    moreNote: 'Attive sul territorio — non nel registro ufficiale del Comune.',
     loadError: 'Impossibile caricare le associazioni. Controlla la connessione.',
     retry: 'Riprova',
     noContact: 'Nessun contatto disponibile.',

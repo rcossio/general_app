@@ -5,6 +5,7 @@ export interface AssociationView {
   id: string
   name: string
   description: string | null
+  official: boolean
   website: string | null
   facebook: string | null
   instagram: string | null

@@ -299,6 +299,9 @@ model Association {
   id          String   @id @default(cuid())
   name        String   @unique
   description String?
+  // true = in the official Comune di Valenza register; false = other local
+  // association added to the broader directory (shown under its own heading).
+  official    Boolean  @default(true)
   website     String?
   facebook    String?
   instagram   String?

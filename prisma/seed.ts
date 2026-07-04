@@ -123,6 +123,7 @@ async function seedAssociations() {
   for (const a of ASSOCIATIONS_SEED) {
     const data = {
       description: a.description ?? null,
+      official: a.official ?? true,
       website: a.website ?? null,
       facebook: a.facebook ?? null,
       instagram: a.instagram ?? null,

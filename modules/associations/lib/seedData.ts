@@ -11,6 +11,9 @@
 export interface AssociationSeed {
   name: string
   description?: string
+  // false = broader local directory (not in the official Comune register).
+  // Defaults to true when omitted.
+  official?: boolean
   website?: string
   facebook?: string
   instagram?: string
@@ -289,5 +292,124 @@ export const ASSOCIATIONS_SEED: AssociationSeed[] = [
     address: 'Via Martiri di Cefalonia 13, 15048 Valenza (AL)',
     lat: 45.0089,
     lng: 8.6448,
+  },
+
+  // --- Additional entries from the official Comune di Valenza directory ---
+  {
+    name: 'Associazione Orafa Valenzana (AOV)',
+    description: 'Associazione di categoria del distretto orafo',
+  },
+  {
+    name: 'CAI - Club Alpino Italiano, Sezione di Valenza "Guerci"',
+    description: 'Club Alpino Italiano – sezione di Valenza',
+    email: 'cai@valenza.it',
+  },
+  {
+    name: 'CNA Etica e Solidale ONLUS',
+    description: 'Associazione socio-assistenziale (ONLUS)',
+    email: 'info@cnaeticaesolidaleonlus.it',
+  },
+  {
+    name: 'Valenza Teatro Social Club (VTSC)',
+    description: 'Teatro e cultura',
+  },
+
+  // --- Broader local directory (not in the official Comune register) ---
+  {
+    name: 'A.S.D. Pallavolo Valenza',
+    description: 'Pallavolo (ASD)',
+    official: false,
+    instagram: 'https://www.instagram.com/pallavolo_valenza',
+  },
+  {
+    name: 'Insieme Si Può Fare ODV',
+    description: 'Associazione sociale (ODV)',
+    official: false,
+  },
+  {
+    name: 'Duemiladodici ONLUS',
+    description: 'Solidarietà (ONLUS)',
+    official: false,
+  },
+  {
+    name: 'Fondazione Valenza Anziani ETS',
+    description: 'RSA e servizi per la terza età',
+    official: false,
+    address: 'Circonvallazione Ovest, 15048 Valenza (AL)',
+  },
+  {
+    name: 'Missione Saida ODV',
+    description: 'Missione umanitaria (Guatemala)',
+    official: false,
+    website: 'https://www.missionesaida.org/',
+    phone: '+39 333 4820888',
+    address: "Vicolo Sant'Ambrogio 3, 15048 Valenza (AL)",
+  },
+  {
+    name: 'Amici dei Vigili del Fuoco ONLUS',
+    description: 'Sostegno ai Vigili del Fuoco (ONLUS)',
+    official: false,
+    facebook: 'https://www.facebook.com/Amicivvf/',
+  },
+  {
+    name: 'Associazione Adamas',
+    description: 'Associazione culturale/sociale (ETS/APS)',
+    official: false,
+  },
+  {
+    name: 'The Joy Gospel Singers',
+    description: 'Coro gospel',
+    official: false,
+    facebook: 'https://www.facebook.com/JGS.VALENZA/',
+    instagram: 'https://www.instagram.com/joygospelsingers.valenza/',
+    email: 'thejoygospelsingers@gmail.com',
+  },
+  {
+    name: 'AyuRadha APS e ASD',
+    description: 'Benessere, ayurveda e yoga',
+    official: false,
+    website: 'https://www.ayuradha.it/',
+    facebook: 'https://www.facebook.com/Ayuradha97/',
+    email: 'ayuradha.valenza@gmail.com',
+    address: 'Strada Astigliano 104/B, 15048 Valenza (AL)',
+  },
+  {
+    name: 'Fondazione Borsalino',
+    description: 'Fondazione',
+    official: false,
+  },
+  {
+    name: 'A.S.D. Fulvius 1908',
+    description: 'Calcio (ASD)',
+    official: false,
+    instagram: 'https://www.instagram.com/fulvius_1908/',
+  },
+  {
+    name: 'A.S.D. Valenzana Mado (Mado Basket)',
+    description: 'Basket (ASD)',
+    official: false,
+  },
+  {
+    name: "A.S.D. O'Ragno 114 MX School",
+    description: 'Motocross (ASD)',
+    official: false,
+  },
+  {
+    name: 'Bocciofila Belvedere',
+    description: 'Bocce (ASD)',
+    official: false,
+  },
+  {
+    name: 'A.S.D. Ginnastica Valentia',
+    description: 'Ginnastica (ASD)',
+    official: false,
+    website: 'https://www.valentia.it/',
+    facebook: 'https://www.facebook.com/p/Ginnastica-Valentia-100063271235309/',
+    address: 'Via Michelangelo 3bis, 15048 Valenza (AL)',
+  },
+  {
+    name: 'A.S.D. Associazione Vietata Riproduzione',
+    description: 'Culturale (ASD)',
+    official: false,
   },
 ]

@@ -82,6 +82,32 @@ export default function AssociationsPage() {
     if (await deleteAssociation(a.id)) setSelected(null)
   }
 
+  const officialList = filtered.filter((a) => a.official)
+  const moreList = filtered.filter((a) => !a.official)
+
+  const renderRow = (a: AssociationView) => {
+    const pref = preferredContact(a)
+    const Icon = pref ? CONTACT_ICON[pref.type] : null
+    const secondary = a.description || a.address
+    return (
+      <li key={a.id}>
+        <button
+          onClick={() => setSelected(a)}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-surface border border-brand-border text-left hover:shadow-sm transition-shadow"
+        >
+          <span className="flex items-center justify-center w-8 h-8 rounded-full bg-brand-photinia-light text-brand-photinia shrink-0">
+            {Icon ? <Icon className="h-4 w-4" /> : <Mail className="h-4 w-4 opacity-40" />}
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-rubik font-semibold text-sm text-brand-text truncate">{a.name}</span>
+            {secondary && <span className="block text-xs text-brand-gray truncate">{secondary}</span>}
+          </span>
+          <ChevronRight className="h-4 w-4 text-brand-gray shrink-0" />
+        </button>
+      </li>
+    )
+  }
+
   return (
     <div className="relative flex flex-col" style={{ height: '100dvh' }}>
       {/* Top bar */}
@@ -143,29 +169,16 @@ export default function AssociationsPage() {
           {filtered.length === 0 ? (
             <p className="text-sm text-brand-gray text-center py-8">{t('associations.empty')}</p>
           ) : (
-            <ul className="space-y-1.5">
-              {filtered.map((a) => {
-                const pref = preferredContact(a)
-                const Icon = pref ? CONTACT_ICON[pref.type] : null
-                return (
-                  <li key={a.id}>
-                    <button
-                      onClick={() => setSelected(a)}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-surface border border-brand-border text-left hover:shadow-sm transition-shadow"
-                    >
-                      <span className="flex items-center justify-center w-8 h-8 rounded-full bg-brand-photinia-light text-brand-photinia shrink-0">
-                        {Icon ? <Icon className="h-4 w-4" /> : <Mail className="h-4 w-4 opacity-40" />}
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block font-rubik font-semibold text-sm text-brand-text truncate">{a.name}</span>
-                        {a.address && <span className="block text-xs text-brand-gray truncate">{a.address}</span>}
-                      </span>
-                      <ChevronRight className="h-4 w-4 text-brand-gray shrink-0" />
-                    </button>
-                  </li>
-                )
-              })}
-            </ul>
+            <>
+              {officialList.length > 0 && <ul className="space-y-1.5">{officialList.map(renderRow)}</ul>}
+              {moreList.length > 0 && (
+                <div className="mt-5">
+                  <p className="px-1 font-rubik font-bold text-sm text-brand-text">{t('associations.moreTitle')}</p>
+                  <p className="px-1 mb-2 text-xs text-brand-gray">{t('associations.moreNote')}</p>
+                  <ul className="space-y-1.5">{moreList.map(renderRow)}</ul>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

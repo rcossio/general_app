@@ -265,6 +265,8 @@ const en = {
     title: 'Associations',
     searchPlaceholder: 'Search associations…',
     empty: 'No associations found.',
+    moreTitle: 'More Valenza associations',
+    moreNote: 'Also active locally — not part of the official Comune register.',
     loadError: 'Could not load associations. Check your connection.',
     retry: 'Retry',
     noContact: 'No contact information available.',
