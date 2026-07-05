@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation'
 import { Search, ChevronLeft, ChevronRight, ChevronDown, Trash2, X } from 'lucide-react'
 import { activeModules } from '@/config/modules'
 import { isAdminRole } from '@/lib/roles'
+import { EventRequestsPanel } from '@/modules/events/components/EventRequestsPanel'
 
 interface AdminUser {
   id: string
@@ -145,6 +146,9 @@ function AdminPanel() {
   return (
     <div className="max-w-4xl mx-auto p-4 md:p-6">
       <h1 className="text-2xl font-bold mb-6">{t('admin.title')}</h1>
+
+      {/* Event publishing requests queue */}
+      <EventRequestsPanel />
 
       {/* Search + role filter */}
       <div className="flex flex-col sm:flex-row gap-3 mb-4">

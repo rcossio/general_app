@@ -8,7 +8,7 @@ import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
 import { useLocale } from '@/contexts/LocaleContext'
 import { useMemorialEditor, memoryImageUrl, type ProfileForm } from '@/modules/memories/lib/useMemories'
 import { PostEditor } from '@/modules/memories/components/PostEditor'
-import { excerpt } from '@/modules/memories/lib/excerpt'
+import { excerpt } from '@/lib/richtext/excerpt'
 import type { PostInput } from '@/modules/memories/lib/schemas'
 
 export default function MemorialEditPage() {

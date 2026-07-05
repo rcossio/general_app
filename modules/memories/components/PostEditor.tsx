@@ -4,7 +4,7 @@ import { useState } from 'react'
 import type { JSONContent } from '@tiptap/core'
 import { X, ImagePlus, MapPin, Loader2 } from 'lucide-react'
 import { useLocale } from '@/contexts/LocaleContext'
-import { MemoryEditor } from './MemoryEditor'
+import { RichTextEditor } from '@/components/RichTextEditor'
 import { memoryImageUrl } from '../lib/useMemories'
 import { MAX_POST_IMAGES, type PostInput } from '../lib/schemas'
 import type { MemorialPostView } from '../lib/types'
@@ -67,7 +67,7 @@ export function PostEditor({ initial, uploadImage, onSave, onCancel }: PostEdito
 
       <div>
         <p className="text-xs font-rubik font-bold text-brand-gray mb-1">{t('memories.text')}</p>
-        <MemoryEditor initialContent={content} onChange={setContent} />
+        <RichTextEditor initialContent={content} onChange={setContent} />
       </div>
 
       <div>

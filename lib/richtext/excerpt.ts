@@ -1,6 +1,6 @@
 // Walk a Tiptap document (or any node) collecting its text — used to show a
-// short plain-text preview of a post in the editor's post list. No tiptap import
-// needed; it just reads the JSON shape.
+// short plain-text preview of rich content. No tiptap import needed; it just
+// reads the JSON shape.
 export function plainText(node: unknown): string {
   if (!node || typeof node !== 'object') return ''
   const n = node as { text?: unknown; content?: unknown[] }

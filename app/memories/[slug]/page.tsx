@@ -4,8 +4,8 @@ import Link from 'next/link'
 import { Facebook, Instagram, Music2, MapPin } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 import { getPublicUrl } from '@/lib/storage'
-import { renderMemoryHtml } from '@/modules/memories/lib/richText'
-import { PostCarousel } from '@/modules/memories/components/PostCarousel'
+import { renderRichText } from '@/lib/richtext/render'
+import { ImageCarousel } from '@/components/ImageCarousel'
 import { HideChrome } from '@/modules/memories/components/HideChrome'
 
 type Params = { params: Promise<{ slug: string }> }
@@ -81,10 +81,10 @@ export default async function MemorialPublicPage({ params }: Params) {
         <div className="space-y-10">
           {profile.posts.map((post) => (
             <article key={post.id}>
-              <PostCarousel images={post.images.map((k) => getPublicUrl(k))} />
+              <ImageCarousel images={post.images.map((k) => getPublicUrl(k))} />
               <div
                 className="text-brand-text leading-relaxed [&_h2]:font-rubik [&_h2]:text-xl [&_h2]:font-bold [&_h2]:mt-4 [&_h2]:mb-2 [&_p]:mb-3 [&_strong]:font-bold [&_em]:italic [&_a]:text-brand-green [&_a]:underline [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-3 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:mb-3 [&_blockquote]:border-l-4 [&_blockquote]:border-brand-green [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-brand-gray [&_blockquote]:my-3"
-                dangerouslySetInnerHTML={{ __html: renderMemoryHtml(post.content) }}
+                dangerouslySetInnerHTML={{ __html: renderRichText(post.content) }}
               />
               {post.locationLabel && (
                 <p className="mt-2 flex items-center gap-1.5 text-sm text-brand-gray">

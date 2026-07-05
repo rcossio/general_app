@@ -64,6 +64,7 @@ async function main() {
     'adventure:play',
     'community:create',
     'memories:create',
+    'events:create',
   ]
 
   // Clear old user/bot_user role_permissions and re-assign from allowlist

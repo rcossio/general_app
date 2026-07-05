@@ -86,6 +86,19 @@ export async function requirePermission(
   return { user }
 }
 
+// Soft permission check returning a boolean (not a 403). Admins pass everything.
+// Reuses the per-user permission cache. Use when a missing permission should
+// change behaviour (e.g. lifting a rate limit) rather than block the request.
+export async function userHasPermission(
+  user: JwtPayload,
+  resource: string,
+  action: string
+): Promise<boolean> {
+  if (isAdminRole(user.roles)) return true
+  const perms = await loadUserPermissions(user.sub)
+  return perms.has(`${resource}:${action}`)
+}
+
 export async function requireAuth(
   request: Request
 ): Promise<{ user: JwtPayload } | NextResponse> {

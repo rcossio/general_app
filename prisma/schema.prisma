@@ -32,6 +32,8 @@ model User {
   sessionParticipations SessionParticipant[]
   communityNotices      CommunityNotice[]
   memorialProfiles      MemorialProfile[]
+  events                Event[]
+  eventQuotaRequests    EventQuotaRequest[]
 
   @@map("users")
 }
@@ -366,4 +368,60 @@ model MemorialPost {
 
   @@index([profileId])
   @@map("memorial_posts")
+}
+
+// ============================================================
+// SECTION: Events (community events board)
+// ============================================================
+
+enum EventRequestStatus {
+  pending
+  approved
+  denied
+}
+
+// A community event published by a user. Non-admins may publish 1 per rolling
+// 7 days; admins and holders of `events:unlimited` bypass the cap. Public to
+// read at /events; owner (or admin) edits. Rich text is the shared Tiptap
+// document (see lib/richtext). Images only (presigned direct-to-R2) — no video.
+model Event {
+  id            String    @id @default(cuid())
+  userId        String    @map("user_id")
+  title         String
+  type          String // category key — see modules/events/lib/categories.ts
+  content       Json // Tiptap document JSON (shared rich text)
+  images        String[]  @default([]) // ordered R2 object keys (carousel)
+  startAt       DateTime  @map("start_at")
+  endAt         DateTime? @map("end_at")
+  locationLabel String?   @map("location_label")
+  lat           Float?
+  lng           Float?
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([startAt])
+  @@map("events")
+}
+
+// A user's request to publish more than the weekly limit. Admins review these
+// in the admin panel; approving grants the user the `events:unlimited`
+// permission. reviewedByUserId is a plain id (no FK) — just an audit note.
+model EventQuotaRequest {
+  id               String             @id @default(cuid())
+  userId           String             @map("user_id")
+  message          String?
+  status           EventRequestStatus @default(pending)
+  reviewedByUserId String?            @map("reviewed_by_user_id")
+  reviewedAt       DateTime?          @map("reviewed_at")
+  createdAt        DateTime           @default(now()) @map("created_at")
+  updatedAt        DateTime           @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@map("event_quota_requests")
 }

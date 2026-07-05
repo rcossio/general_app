@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 // A simple image carousel for a memorial post. One image → just the image; many
 // → prev/next arrows + dots. Images are resolved public URLs.
-export function PostCarousel({ images }: { images: string[] }) {
+export function ImageCarousel({ images }: { images: string[] }) {
   const [i, setI] = useState(0)
   if (images.length === 0) return null
 
