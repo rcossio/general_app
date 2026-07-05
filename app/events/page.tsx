@@ -3,12 +3,12 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import * as Icons from 'lucide-react'
 import { Plus, CalendarDays, MapPin } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useLocale } from '@/contexts/LocaleContext'
 import { useEventsFeed, eventImageUrl } from '@/modules/events/lib/useEvents'
 import { getEventType } from '@/modules/events/lib/categories'
+import { getIcon } from '@/lib/icons'
 
 export default function EventsPage() {
   const router = useRouter()
@@ -67,7 +67,7 @@ export default function EventsPage() {
         <ul className="space-y-2.5">
           {events.map((ev) => {
             const cat = getEventType(ev.type)
-            const Icon = (Icons as unknown as Record<string, React.ComponentType<{ className?: string }>>)[cat.icon] ?? CalendarDays
+            const Icon = getIcon(cat.icon)
             return (
               <li key={ev.id}>
                 <Link href={`/events/${ev.id}`} className="flex gap-3 rounded-2xl border border-brand-border bg-surface overflow-hidden hover:shadow-md transition-shadow">

@@ -2,11 +2,11 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import * as Icons from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useLocale } from '@/contexts/LocaleContext'
 import { useChrome } from '@/contexts/ChromeContext'
 import { buildNavItems } from '@/lib/navItems'
+import { getIcon } from '@/lib/icons'
 import { isAdminRole } from '@/lib/roles'
 
 export function BottomNav() {
@@ -23,7 +23,7 @@ export function BottomNav() {
       <div className="flex items-center justify-around h-16">
         {navItems.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
-          const IconComponent = (Icons as unknown as Record<string, React.ComponentType<{ className?: string }>>)[item.icon]
+          const IconComponent = getIcon(item.icon)
           return (
             <Link
               key={item.href}

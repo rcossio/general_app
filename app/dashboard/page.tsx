@@ -6,7 +6,7 @@ import { useLocale } from '@/contexts/LocaleContext'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
 import { activeModules } from '@/config/modules'
 import Link from 'next/link'
-import * as Icons from 'lucide-react'
+import { getIcon } from '@/lib/icons'
 
 export default function DashboardPage() {
   return (
@@ -79,7 +79,7 @@ function Dashboard() {
       {/* Module cards — each shows a live status line the nav can't */}
       <div className="grid grid-cols-2 gap-4 mb-8">
         {activeModules.map((mod) => {
-          const IconComponent = (Icons as unknown as Record<string, React.ComponentType<{ className?: string }>>)[mod.navItem.icon]
+          const IconComponent = getIcon(mod.navItem.icon)
           const status = statuses[mod.id]
           return (
             <Link

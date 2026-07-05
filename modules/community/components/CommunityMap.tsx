@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { MapContainer, TileLayer, Marker, CircleMarker, useMap, useMapEvents } from 'react-leaflet'
 import { renderToStaticMarkup } from 'react-dom/server'
-import * as Icons from 'lucide-react'
+import { MapPin } from 'lucide-react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { getInitialProvider, OSM_PROVIDER } from '@/lib/mapTiles'
@@ -41,7 +41,7 @@ function noticeDivIcon(notice: NoticeView, now: number): L.DivIcon {
 }
 
 const PIN_HTML = renderToStaticMarkup(
-  <Icons.MapPin color="#48b35c" size={40} strokeWidth={2.5} fill="#fff" />
+  <MapPin color="#48b35c" size={40} strokeWidth={2.5} fill="#fff" />
 )
 const placementIcon = L.divIcon({
   className: '',

@@ -3,12 +3,12 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
-import * as Icons from 'lucide-react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useLocale } from '@/contexts/LocaleContext'
 import { useChrome } from '@/contexts/ChromeContext'
 import { buildNavItems } from '@/lib/navItems'
+import { getIcon } from '@/lib/icons'
 import { isAdminRole } from '@/lib/roles'
 
 export function Sidebar() {
@@ -43,7 +43,7 @@ export function Sidebar() {
       <nav className="flex-1 overflow-y-auto py-4 space-y-1 px-2">
         {navItems.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
-          const IconComponent = (Icons as unknown as Record<string, React.ComponentType<{ className?: string }>>)[item.icon]
+          const IconComponent = getIcon(item.icon)
           return (
             <Link
               key={item.href}
