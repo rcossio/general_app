@@ -9,6 +9,7 @@ import {
   HeartHandshake,
   Flower2,
   CalendarDays,
+  MapPinned,
   // event types
   Palette,
   Music,
@@ -70,6 +71,7 @@ const ICONS: Record<string, ComponentType<IconProps>> = {
   HeartHandshake,
   Flower2,
   CalendarDays,
+  MapPinned,
   Palette,
   Music,
   Trophy,

@@ -425,3 +425,29 @@ model EventQuotaRequest {
   @@index([status])
   @@map("event_quota_requests")
 }
+
+// ============================================================
+// SECTION: Activities (local activities directory)
+// ============================================================
+
+// A local activity/place (restaurant, sport, culture, event…). Like the
+// Associations directory: public read (map + list), admin-managed. Classified
+// by `category` (keyed — drives the map marker colour; see
+// modules/activities/lib/categories.ts). Seeded from that module's seedData.ts.
+model Activity {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  category  String // category key (colour classification)
+  type      String? // free-text subtype (e.g. "Pizzería")
+  address   String?
+  city      String?
+  phone     String?
+  notes     String?
+  lat       Float?
+  lng       Float?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([category])
+  @@map("activities")
+}
