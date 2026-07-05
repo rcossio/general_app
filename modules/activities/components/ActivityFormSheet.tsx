@@ -21,6 +21,10 @@ type FormState = {
   city: string
   phone: string
   notes: string
+  website: string
+  facebook: string
+  instagram: string
+  email: string
   lat: string
   lng: string
 }
@@ -34,6 +38,10 @@ function initial(a: ActivityView | null): FormState {
     city: a?.city ?? '',
     phone: a?.phone ?? '',
     notes: a?.notes ?? '',
+    website: a?.website ?? '',
+    facebook: a?.facebook ?? '',
+    instagram: a?.instagram ?? '',
+    email: a?.email ?? '',
     lat: a?.lat != null ? String(a.lat) : '',
     lng: a?.lng != null ? String(a.lng) : '',
   }
@@ -63,6 +71,11 @@ export function ActivityFormSheet({ activity, onCancel, onSubmit }: Props) {
       city: form.city.trim() || undefined,
       phone: form.phone.trim() || undefined,
       notes: form.notes.trim() || undefined,
+      website: form.website.trim() || undefined,
+      facebook: form.facebook.trim() || undefined,
+      instagram: form.instagram.trim() || undefined,
+      email: form.email.trim() || undefined,
+      taxCode: undefined, // not edited via the form; preserved on PATCH
       lat,
       lng,
     })
@@ -99,6 +112,10 @@ export function ActivityFormSheet({ activity, onCancel, onSubmit }: Props) {
         {field('address', 'activities.field.address')}
         {field('city', 'activities.field.city')}
         {field('phone', 'activities.field.phone')}
+        {field('website', 'activities.field.website')}
+        {field('facebook', 'activities.field.facebook')}
+        {field('instagram', 'activities.field.instagram')}
+        {field('email', 'activities.field.email')}
         <label className="block">
           <span className="text-xs font-rubik font-bold text-brand-gray">{t('activities.field.notes')}</span>
           <textarea value={form.notes} onChange={set('notes')} rows={2} className={cls} />

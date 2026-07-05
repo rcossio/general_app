@@ -1,7 +1,6 @@
 import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 import { activeModules } from '../config/modules'
-import { ASSOCIATIONS_SEED } from '../modules/associations/lib/seedData'
 import { ACTIVITIES_SEED } from '../modules/activities/lib/seedData'
 
 const prisma = new PrismaClient()
@@ -114,12 +113,12 @@ async function main() {
   })
 
   await seedBotUsers(botUser.id)
-  await seedAssociations()
   await seedActivities()
   console.log('Seed completed successfully')
 }
 
-// Local activities directory. Upsert by name (unique) — seedData.ts is the
+// Unified local directory (activities + associations merged). Associations are
+// categories 'formal'/'informal'. Upsert by name (unique) — seedData.ts is the
 // source of truth, so re-seeding refreshes the fields.
 async function seedActivities() {
   for (const a of ACTIVITIES_SEED) {
@@ -130,36 +129,15 @@ async function seedActivities() {
       city: a.city ?? null,
       phone: a.phone ?? null,
       notes: a.notes ?? null,
-      lat: a.lat ?? null,
-      lng: a.lng ?? null,
-    }
-    await prisma.activity.upsert({
-      where: { name: a.name },
-      update: data,
-      create: { name: a.name, ...data },
-    })
-  }
-}
-
-// Curated Valenza associations directory. Upsert by name (unique) so the
-// seedData.ts file stays the source of truth — re-seeding refreshes the fields.
-// Note: this overwrites any admin edits to seeded entries on re-run.
-async function seedAssociations() {
-  for (const a of ASSOCIATIONS_SEED) {
-    const data = {
-      description: a.description ?? null,
-      official: a.official ?? true,
-      taxCode: a.taxCode ?? null,
       website: a.website ?? null,
       facebook: a.facebook ?? null,
       instagram: a.instagram ?? null,
       email: a.email ?? null,
-      phone: a.phone ?? null,
-      address: a.address ?? null,
+      taxCode: a.taxCode ?? null,
       lat: a.lat ?? null,
       lng: a.lng ?? null,
     }
-    await prisma.association.upsert({
+    await prisma.activity.upsert({
       where: { name: a.name },
       update: data,
       create: { name: a.name, ...data },

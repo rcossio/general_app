@@ -286,41 +286,8 @@ model CommunityNotice {
   @@map("community_notices")
 }
 
-// ============================================================
-// SECTION: Associations (Contact an association)
-// ============================================================
-
-// Curated directory of Valenza volunteer/civic associations. Read is public;
-// create/update/delete are admin-only (associations:manage). Seeded from
-// modules/associations/lib/seedData.ts — `name` is unique so the seed upserts
-// idempotently. Contact fields are all optional; the client shows a single
-// "preferred" contact (website > facebook > instagram > email — see
-// modules/associations/lib/contact.ts). Entries without lat/lng still appear in
-// the list, just not on the map.
-model Association {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  description String?
-  // true = in the official Comune di Valenza register; false = other local
-  // association added to the broader directory (shown under its own heading).
-  official    Boolean  @default(true)
-  // Codice Fiscale / registration number (public for orgs, used to verify on
-  // RUNTS). Stored for records only — deliberately NOT returned by any public
-  // API select, so it isn't published in the directory.
-  taxCode     String?  @map("tax_code")
-  website     String?
-  facebook    String?
-  instagram   String?
-  email       String?
-  phone       String?
-  address     String?
-  lat         Float?
-  lng         Float?
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-
-  @@map("associations")
-}
+// (The Associations module was merged into Activities on 2026-07-05 — its data
+// now lives in the `activities` table as categories 'formal'/'informal'.)
 
 // ============================================================
 // SECTION: Memories (commemorative profiles)
@@ -437,12 +404,19 @@ model EventQuotaRequest {
 model Activity {
   id        String   @id @default(cuid())
   name      String   @unique
-  category  String // category key (colour classification)
+  category  String // category key (colour classification); 'formal'/'informal' = associations
   type      String? // free-text subtype (e.g. "Pizzería")
   address   String?
   city      String?
   phone     String?
   notes     String?
+  // Association-grade contact fields (populated for merged associations).
+  website   String?
+  facebook  String?
+  instagram String?
+  email     String?
+  // Codice Fiscale — stored only, never returned by the public API.
+  taxCode   String?  @map("tax_code")
   lat       Float?
   lng       Float?
   createdAt DateTime @default(now()) @map("created_at")

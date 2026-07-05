@@ -17,7 +17,9 @@ export const ACTIVITY_CATEGORIES: ActivityCategory[] = [
   { key: 'culture', color: '#0891b2', labelKey: 'activities.cat.culture' },
   { key: 'outdoors', color: '#16a34a', labelKey: 'activities.cat.outdoors' },
   { key: 'wellness', color: '#14b8a6', labelKey: 'activities.cat.wellness' },
-  { key: 'associations', color: '#6366f1', labelKey: 'activities.cat.associations' },
+  // Associations, merged in as two classes:
+  { key: 'formal', color: '#4f46e5', labelKey: 'activities.cat.formal' },
+  { key: 'informal', color: '#a855f7', labelKey: 'activities.cat.informal' },
   { key: 'niche', color: '#64748b', labelKey: 'activities.cat.niche' },
   { key: 'event', color: '#ea580c', labelKey: 'activities.cat.event' },
 ]

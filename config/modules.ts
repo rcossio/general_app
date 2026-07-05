@@ -1,6 +1,5 @@
 import adventure from '@/modules/adventure/manifest'
 import community from '@/modules/community/manifest'
-import associations from '@/modules/associations/manifest'
 import memories from '@/modules/memories/manifest'
 import events from '@/modules/events/manifest'
 import activities from '@/modules/activities/manifest'
@@ -22,6 +21,6 @@ export interface ModuleManifest {
   testEndpoint: string
 }
 
-export const activeModules: ModuleManifest[] = [community, adventure, associations, memories, events, activities].filter(
+export const activeModules: ModuleManifest[] = [community, adventure, memories, events, activities].filter(
   (m) => m.isActive
 )

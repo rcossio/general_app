@@ -15,6 +15,10 @@ const SELECT = {
   city: true,
   phone: true,
   notes: true,
+  website: true,
+  facebook: true,
+  instagram: true,
+  email: true,
   lat: true,
   lng: true,
 } as const

@@ -8,6 +8,10 @@ export interface ActivityView {
   city: string | null
   phone: string | null
   notes: string | null
+  website: string | null
+  facebook: string | null
+  instagram: string | null
+  email: string | null
   lat: number | null
   lng: number | null
 }

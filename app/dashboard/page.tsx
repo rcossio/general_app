@@ -57,15 +57,6 @@ function Dashboard() {
         .catch(() => {})
     }
 
-    if (activeModules.some((m) => m.id === 'associations')) {
-      fetch('/api/associations')
-        .then((r) => (r.ok ? r.json() : null))
-        .then((b) => {
-          const list = b?.data?.associations ?? []
-          setStatus('associations', { text: t('dashboard.associationsCount', { count: String(list.length) }) })
-        })
-        .catch(() => {})
-    }
 
     return () => { cancelled = true }
   }, [fetchWithAuth, t])
