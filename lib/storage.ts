@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3'
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import { env } from './env'
 
@@ -25,8 +25,4 @@ export async function getUploadUrl(key: string, contentType = 'image/webp'): Pro
 
 export function getPublicUrl(key: string): string {
   return `${PUBLIC_URL}/${key}`
-}
-
-export async function deleteFile(key: string): Promise<void> {
-  await s3.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: key }))
 }

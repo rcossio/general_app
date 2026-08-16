@@ -1,12 +1,14 @@
-// import workout from '@/modules/workout/manifest'
-// import lifeTracker from '@/modules/life-tracker/manifest'  // commented = disconnected
 import adventure from '@/modules/adventure/manifest'
-// import events from '@/modules/events/manifest'  // commented = disconnected
+import community from '@/modules/community/manifest'
+import memories from '@/modules/memories/manifest'
+import events from '@/modules/events/manifest'
+import activities from '@/modules/activities/manifest'
 
 export interface ModuleNavItem {
-  label: string
+  label: string // English default / fallback
+  labelKey: string // i18n key resolved by the nav (see lib/navItems.ts)
   href: string
-  icon: string
+  icon: string // lucide-react icon name
 }
 
 export interface ModuleManifest {
@@ -19,6 +21,6 @@ export interface ModuleManifest {
   testEndpoint: string
 }
 
-export const activeModules: ModuleManifest[] = [adventure].filter(
+export const activeModules: ModuleManifest[] = [community, adventure, memories, events, activities].filter(
   (m) => m.isActive
 )

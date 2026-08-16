@@ -2,10 +2,10 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { useLocale } from '@/contexts/LocaleContext'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
+import { ProfileCompletionFields } from '@/components/ProfileCompletionFields'
 
 export default function CompleteProfilePage() {
   return (
@@ -56,38 +56,14 @@ function CompleteProfileForm() {
         <h1 className="text-2xl font-rubik font-bold mb-2 text-center">{t('auth.completeProfile')}</h1>
         <p className="text-sm text-brand-gray text-center mb-6">{t('auth.whatsYourName')}</p>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder={t('auth.name')}
-            maxLength={100}
-            autoFocus
-            className="w-full px-3 py-2 rounded-lg border border-brand-border bg-surface focus:outline-none focus:ring-2 focus:ring-brand-green"
+          <ProfileCompletionFields
+            name={name}
+            onNameChange={setName}
+            showPrivacy={needsPrivacy}
+            privacyAccepted={privacyAccepted}
+            onPrivacyChange={(v) => { setPrivacyAccepted(v); setError('') }}
+            privacyError={error}
           />
-          {needsPrivacy && (
-            <label className="flex items-start gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={privacyAccepted}
-                onChange={(e) => { setPrivacyAccepted(e.target.checked); setError('') }}
-                className="mt-1 h-4 w-4 rounded border-brand-border text-brand-green focus:ring-brand-green"
-              />
-              <span className="text-sm text-brand-gray">
-                {t('auth.acceptPrivacy')}{' '}
-                <Link href="/privacy" target="_blank" className="text-brand-green hover:underline">
-                  {t('auth.privacyPolicy')}
-                </Link>
-                {' & '}
-                <Link href="/terms" target="_blank" className="text-brand-green hover:underline">
-                  {t('auth.termsOfService')}
-                </Link>
-              </span>
-            </label>
-          )}
-          {error && (
-            <p className="text-sm text-red-500">{error}</p>
-          )}
           <button
             type="submit"
             disabled={loading || !name.trim()}

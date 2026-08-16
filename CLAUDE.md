@@ -26,7 +26,7 @@ Do not implement changes while still discussing them with the user. Wait for exp
 
 ## Before Starting Any Task
 
-Read all `.md` files before doing anything. This includes — but is not limited to — `README.md`, `docs/SPEC.md`, and `docs/DEPLOYMENT.md`. These files define the intended architecture, conventions, and constraints. Code must conform to them, not to whatever pattern already exists in the codebase (existing code may already be wrong).
+Read all `.md` files before doing anything. This includes — but is not limited to — `README.md`, `docs/SPEC.md`, `docs/DEPLOYMENT.md`, and `docs/ENGINEERING_NOTES.md` (durable gotchas + reusable building blocks + module landscape). These files define the intended architecture, conventions, and constraints. Code must conform to them, not to whatever pattern already exists in the codebase (existing code may already be wrong).
 
 Scan the project structure first. Check what already exists before creating anything new — test folders, config files, scripts, docs. Do not create a file if one already serves the same purpose.
 
@@ -109,12 +109,10 @@ Do not create new top-level folders without a clear reason. Check what already e
 
 Features are pluggable. Each module has a manifest (`modules/<name>/manifest.ts`) defining nav items, permissions, and API prefix. Active modules are registered in `config/modules.ts`.
 
-- **Adventure** is the only active module.
-- **Life Tracker** is disabled: import commented in `config/modules.ts`, folders prefixed with `_` in `app/`, `app/api/`, `__tests__/`. DB tables intact.
-- **Workout** is disabled: import commented in `config/modules.ts`, folders prefixed with `_`. DB tables intact.
-- **Events** is disabled: import commented in `config/modules.ts`.
+- **Adventure** and **Community** are the active modules. A module is "active" iff it is imported into the `activeModules` array in `config/modules.ts` with `isActive: true` (the array is filtered by `isActive`).
+- **Life Tracker**, **Workout**, and **Events** were disabled and then fully removed: their `app/`, `app/api/`, `__tests__/` folders were deleted and their DB tables dropped (migration `drop_disabled_module_tables`). They are no longer present in any form.
 
-To disable a module: comment out its import in `config/modules.ts` and prefix its folders with `_` in `app/`, `app/api/`, and `__tests__/`. Its nav item disappears and RBAC blocks its routes automatically. Tables stay intact. To re-enable: reverse both steps and run `npx prisma migrate dev`.
+To disable a module: set `isActive: false` in its `modules/<name>/manifest.ts` (or remove it from the `activeModules` array). Its nav item disappears and RBAC blocks its routes automatically because the permissions are no longer seeded. Its `app/` and `app/api/` route folders keep working unless you also delete them — so for a clean disable, delete the route folders too. DB tables stay intact until you drop them with a migration. To fully remove a module, delete its `modules/<name>/`, `app/<name>/`, `app/api/<name>/` folders and drop its tables.
 
 To add a new module:
 1. Create `modules/<name>/manifest.ts` and `modules/<name>/lib/schemas.ts`
@@ -245,7 +243,7 @@ To add a new language: (1) create `locales/<code>.ts` implementing `Translations
 
 ### File Uploads
 
-`lib/storage.ts` — Cloudflare R2 via AWS S3 SDK. Exports `getUploadUrl(key)` (presigned PUT, 5min), `getPublicUrl(key)`, and `deleteFile(key)`. Configured via `R2_*` env vars.
+`lib/storage.ts` — Cloudflare R2 via AWS S3 SDK. Exports `getUploadUrl(key)` (presigned PUT, 5min) and `getPublicUrl(key)`. Configured via `R2_*` env vars. (Note: uploaded photos are never deleted from R2 yet — orphaned files accumulate when a notice/avatar is replaced or removed. Add a delete-on-cleanup path if this becomes a concern.)
 
 ### Error Handling
 

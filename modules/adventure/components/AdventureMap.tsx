@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { MapContainer, TileLayer, CircleMarker, Marker, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import { getInitialProvider, OSM_PROVIDER } from '@/modules/adventure/lib/tileProviders'
+import { getInitialProvider, OSM_PROVIDER } from '@/lib/mapTiles'
 
 // Base map tiles. Uses the provider chosen via NEXT_PUBLIC_MAP_PROVIDER, but
 // auto-falls back to OSM if that provider starts erroring (e.g. MapTiler quota
@@ -148,7 +148,7 @@ function PlayerTracker({
     if (recenterSignal && position) {
       map.setView([position.lat, position.lng], map.getZoom())
     }
-  }, [recenterSignal]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [recenterSignal]) // eslint-disable-line react-hooks/exhaustive-deps -- recenter only when the signal fires; position & map are intentionally excluded so panning isn't overridden on every GPS update
 
   // Dead-zone follow: pan only when the marker leaves the centered 60% box, so
   // small GPS jitter is absorbed and the player is kept on-screen as they walk.

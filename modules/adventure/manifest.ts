@@ -6,6 +6,7 @@ const adventureManifest: ModuleManifest = {
   isActive: true,
   navItem: {
     label: 'Adventure',
+    labelKey: 'nav.adventure',
     href: '/adventure',
     icon: 'Map',
   },

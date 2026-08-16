@@ -18,8 +18,8 @@ independent modules. Modules can be connected or disconnected without touching c
 code. Future modules are added by dropping a new folder into `modules/` and registering
 it in `config/modules.ts`.
 
-**Active modules:** Life Tracker, Adventure
-**Disabled modules:** Workout (code intact, import commented out in `config/modules.ts`)
+**Active modules:** Adventure, Community
+**Disabled modules:** Life Tracker, Workout, Events (code intact, imports commented out in `config/modules.ts`; tables intact)
 
 ---
 
@@ -65,11 +65,12 @@ primary switch.
 
 ```ts
 // config/modules.ts
-// import workout from '@/modules/workout/manifest'   ← commented = disconnected
-import lifeTracker from '@/modules/life-tracker/manifest'
+// import lifeTracker from '@/modules/life-tracker/manifest'  ← commented = disconnected
+// import workout from '@/modules/workout/manifest'           ← commented = disconnected
 import adventure from '@/modules/adventure/manifest'
+import community from '@/modules/community/manifest'
 
-export const activeModules = [lifeTracker, adventure]
+export const activeModules = [community, adventure]
 ```
 
 ### Module manifest shape

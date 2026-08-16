@@ -46,9 +46,15 @@ describe('Auth: Login', () => {
     expect(res.status).toBe(401)
   })
 
-  it('returns 401 for unknown email', async () => {
-    const { res } = await login(uniqueEmail('ghost'))
-    expect(res.status).toBe(401)
+  it('returns needsRegistration for unknown email (unified login)', async () => {
+    const res = await fetch(`${BASE}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: uniqueEmail('ghost'), password: 'Smoke!Test99' }),
+    })
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.data.needsRegistration).toBe(true)
   })
 })
 
@@ -97,6 +103,44 @@ describe('Auth: Logout', () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ refreshToken }),
     })
+    expect(res.status).toBe(401)
+  })
+})
+
+describe('Auth: Account deletion', () => {
+  it('requires auth', async () => {
+    const res = await fetch(`${BASE}/api/auth/delete-account`, { method: 'POST' })
+    expect(res.status).toBe(401)
+  })
+
+  it('soft-deletes on first call and rejects a second call', async () => {
+    const { accessToken } = await registerAndLogin('del')
+    const first = await fetch(`${BASE}/api/auth/delete-account`, {
+      method: 'POST',
+      headers: authHeaders(accessToken),
+    })
+    expect(first.status).toBe(200)
+    expect((await first.json()).data.deactivated).toBe(true)
+
+    const second = await fetch(`${BASE}/api/auth/delete-account`, {
+      method: 'POST',
+      headers: authHeaders(accessToken),
+    })
+    expect(second.status).toBe(400)
+    expect((await second.json()).code).toBe('ALREADY_DELETED')
+  })
+
+  it('blocks a soft-deleted account from logging back in', async () => {
+    // Security boundary: a deleted account must not be able to mint fresh tokens
+    // (which would undo the deletion). /refresh already blocks this; login must too.
+    const { email, password, accessToken } = await registerAndLogin('del-login')
+    const del = await fetch(`${BASE}/api/auth/delete-account`, {
+      method: 'POST',
+      headers: authHeaders(accessToken),
+    })
+    expect(del.status).toBe(200)
+
+    const { res } = await login(email, password)
     expect(res.status).toBe(401)
   })
 })

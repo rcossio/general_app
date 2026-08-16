@@ -29,24 +29,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [accessToken, setAccessToken] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
-  const refreshing = useRef(false)
+  // Single-flight refresh: concurrent 401s share one in-flight refresh promise
+  // instead of the losers getting `null` and bubbling up the raw 401.
+  const refreshPromise = useRef<Promise<string | null> | null>(null)
 
-  const refresh = useCallback(async (): Promise<string | null> => {
-    if (refreshing.current) return null
-    refreshing.current = true
-    try {
-      const res = await fetch('/api/auth/refresh', { method: 'POST', credentials: 'include' })
-      if (!res.ok) {
-        setUser(null)
-        setAccessToken(null)
+  const refresh = useCallback((): Promise<string | null> => {
+    if (refreshPromise.current) return refreshPromise.current
+    const p = (async (): Promise<string | null> => {
+      try {
+        const res = await fetch('/api/auth/refresh', { method: 'POST', credentials: 'include' })
+        if (!res.ok) {
+          setUser(null)
+          setAccessToken(null)
+          return null
+        }
+        const body = await res.json()
+        setAccessToken(body.data.accessToken)
+        return body.data.accessToken
+      } catch {
+        // Network failure — treat as a failed refresh rather than an unhandled rejection.
         return null
+      } finally {
+        refreshPromise.current = null
       }
-      const body = await res.json()
-      setAccessToken(body.data.accessToken)
-      return body.data.accessToken
-    } finally {
-      refreshing.current = false
-    }
+    })()
+    refreshPromise.current = p
+    return p
   }, [])
 
   const fetchMe = useCallback(async (token: string) => {

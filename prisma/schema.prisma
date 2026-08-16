@@ -28,10 +28,12 @@ model User {
   userPermissions       UserPermission[]
   refreshTokens         RefreshToken[]
   passwordResetTokens   PasswordResetToken[]
-  workoutRoutines       WorkoutRoutine[]
-  trackerEntries        TrackerEntry[]
   gameSessions          GameSession[]
   sessionParticipations SessionParticipant[]
+  communityNotices      CommunityNotice[]
+  memorialProfiles      MemorialProfile[]
+  events                Event[]
+  eventQuotaRequests    EventQuotaRequest[]
 
   @@map("users")
 }
@@ -126,57 +128,6 @@ model PasswordResetToken {
   @@index([userId])
   @@index([tokenHash])
   @@map("password_reset_tokens")
-}
-
-// ============================================================
-// SECTION: Workout Module
-// ============================================================
-
-model WorkoutRoutine {
-  id          String   @id @default(cuid())
-  userId      String   @map("user_id")
-  name        String
-  description String?
-  isPublic    Boolean  @default(false) @map("is_public")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-
-  user User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  days WorkoutDay[]
-
-  @@index([userId])
-  @@index([isPublic, createdAt])
-  @@map("workout_routines")
-}
-
-model WorkoutDay {
-  id        String @id @default(cuid())
-  routineId String @map("routine_id")
-  dayOfWeek Int    @map("day_of_week")
-  name      String
-
-  routine   WorkoutRoutine    @relation(fields: [routineId], references: [id], onDelete: Cascade)
-  exercises WorkoutExercise[]
-
-  @@index([routineId])
-  @@map("workout_days")
-}
-
-model WorkoutExercise {
-  id              String  @id @default(cuid())
-  dayId           String  @map("day_id")
-  name            String
-  sets            Int?
-  reps            Int?
-  durationSeconds Int?    @map("duration_seconds")
-  restSeconds     Int?    @map("rest_seconds")
-  notes           String?
-  order           Int
-
-  day WorkoutDay @relation(fields: [dayId], references: [id], onDelete: Cascade)
-
-  @@index([dayId])
-  @@map("workout_exercises")
 }
 
 // ============================================================
@@ -300,31 +251,177 @@ model LocationVisit {
 }
 
 // ============================================================
-// SECTION: Life Tracker Module
+// SECTION: Community module (municipal notices)
 // ============================================================
 
-enum TrackerType {
-  DESIRE
-  EMOTION
-  GOAL
-  ACHIEVEMENT
+enum CommunityNoticeStatus {
+  open
+  fixed
 }
 
-model TrackerEntry {
-  id        String      @id @default(cuid())
-  userId    String      @map("user_id")
-  type      TrackerType
-  title     String
-  content   String?
-  score     Int
-  tags      String[]
-  isPublic  Boolean     @default(false) @map("is_public")
-  createdAt DateTime    @default(now()) @map("created_at")
+model CommunityNotice {
+  id         String    @id @default(cuid())
+  userId     String    @map("user_id")
+  category   String // category key (free string — see modules/community/lib/categories.ts)
+  lat        Float
+  lng        Float
+  note       String?   @db.VarChar(280)
+  photoUrl   String?   @map("photo_url")
+  status     CommunityNoticeStatus @default(open)
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  resolvedAt DateTime? @map("resolved_at")
+
+  // Set when a volunteer marks the notice fixed (before/after photos required).
+  fixedAt        DateTime? @map("fixed_at")
+  fixedByUserId  String?   @map("fixed_by_user_id")
+  beforePhotoUrl String?   @map("before_photo_url")
+  afterPhotoUrl  String?   @map("after_photo_url")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-  @@index([userId, type])
-  @@index([isPublic, createdAt])
-  @@map("tracker_entries")
+  @@index([status])
+  @@index([createdAt])
+  @@map("community_notices")
+}
+
+// (The Associations module was merged into Activities on 2026-07-05 — its data
+// now lives in the `activities` table as categories 'formal'/'informal'.)
+
+// ============================================================
+// SECTION: Memories (commemorative profiles)
+// ============================================================
+
+// A commemorative profile for a deceased person, owned by the creator. The
+// public page lives at /memories/<slug>; the owner edits it and exports a QR
+// (to that public URL) as a PDF. Any logged-in user can create one; profiles
+// are public immediately (no draft state in v1). See modules/memories/.
+model MemorialProfile {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id") // owner
+  name      String // the person being remembered
+  subtitle  String? // optional one-line tagline (e.g. "Beloved father and teacher")
+  slug      String   @unique // public URL segment
+  facebook  String?
+  instagram String?
+  tiktok    String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user  User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  posts MemorialPost[]
+
+  @@index([userId])
+  @@map("memorial_profiles")
+}
+
+// A single life-story entry on a memorial profile: rich text (Tiptap JSON),
+// an ordered image carousel (R2 URLs), and an optional location (label + coords
+// for a future map). `position` controls display order within the profile.
+model MemorialPost {
+  id            String   @id @default(cuid())
+  profileId     String   @map("profile_id")
+  content       Json // Tiptap document JSON (safe, constrained node set)
+  images        String[] @default([]) // ordered R2 public URLs (carousel)
+  locationLabel String?  @map("location_label")
+  lat           Float?
+  lng           Float?
+  position      Int      @default(0)
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  profile MemorialProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+  @@map("memorial_posts")
+}
+
+// ============================================================
+// SECTION: Events (community events board)
+// ============================================================
+
+enum EventRequestStatus {
+  pending
+  approved
+  denied
+}
+
+// A community event published by a user. Non-admins may publish 1 per rolling
+// 7 days; admins and holders of `events:unlimited` bypass the cap. Public to
+// read at /events; owner (or admin) edits. Rich text is the shared Tiptap
+// document (see lib/richtext). Images only (presigned direct-to-R2) — no video.
+model Event {
+  id            String    @id @default(cuid())
+  userId        String    @map("user_id")
+  title         String
+  type          String // category key — see modules/events/lib/categories.ts
+  content       Json // Tiptap document JSON (shared rich text)
+  images        String[]  @default([]) // ordered R2 object keys (carousel)
+  startAt       DateTime  @map("start_at")
+  endAt         DateTime? @map("end_at")
+  locationLabel String?   @map("location_label")
+  lat           Float?
+  lng           Float?
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([startAt])
+  @@map("events")
+}
+
+// A user's request to publish more than the weekly limit. Admins review these
+// in the admin panel; approving grants the user the `events:unlimited`
+// permission. reviewedByUserId is a plain id (no FK) — just an audit note.
+model EventQuotaRequest {
+  id               String             @id @default(cuid())
+  userId           String             @map("user_id")
+  message          String?
+  status           EventRequestStatus @default(pending)
+  reviewedByUserId String?            @map("reviewed_by_user_id")
+  reviewedAt       DateTime?          @map("reviewed_at")
+  createdAt        DateTime           @default(now()) @map("created_at")
+  updatedAt        DateTime           @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@map("event_quota_requests")
+}
+
+// ============================================================
+// SECTION: Activities (local activities directory)
+// ============================================================
+
+// A local activity/place (restaurant, sport, culture, event…). Like the
+// Associations directory: public read (map + list), admin-managed. Classified
+// by `category` (keyed — drives the map marker colour; see
+// modules/activities/lib/categories.ts). Seeded from that module's seedData.ts.
+model Activity {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  category  String // category key (colour classification); 'formal'/'informal' = associations
+  type      String? // free-text subtype (e.g. "Pizzería")
+  address   String?
+  city      String?
+  phone     String?
+  notes     String?
+  // Association-grade contact fields (populated for merged associations).
+  website   String?
+  facebook  String?
+  instagram String?
+  email     String?
+  // Codice Fiscale — stored only, never returned by the public API.
+  taxCode   String?  @map("tax_code")
+  lat       Float?
+  lng       Float?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([category])
+  @@map("activities")
 }

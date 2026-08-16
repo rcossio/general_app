@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { X, Navigation } from 'lucide-react'
 import { useLocale } from '@/contexts/LocaleContext'
+import { BottomSheet } from '@/components/BottomSheet'
 
 const DEFAULT_LOCATION_IMAGE = '/images/adventure/default-location.webp'
 const DEFAULT_EVENT_IMAGE = '/images/adventure/default-event.webp'
@@ -77,11 +78,7 @@ export function LocationSheet({
   const src = imageUrl ?? (type === 'event' ? DEFAULT_EVENT_IMAGE : DEFAULT_LOCATION_IMAGE)
 
   return (
-    <div className="absolute inset-0 z-[2000] flex items-end" onClick={effectiveLocked ? undefined : onDismiss}>
-      <div
-        className="w-full bg-surface rounded-t-2xl shadow-2xl border-t border-brand-border max-h-[80vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <BottomSheet onClose={effectiveLocked ? undefined : onDismiss} maxHeight="80vh" padded={false}>
         {/* Drag handle */}
         <div className="pt-3 flex justify-center">
           <div className="w-10 h-1 bg-brand-border rounded-full" />
@@ -199,7 +196,6 @@ export function LocationSheet({
             </p>
           )}
         </div>
-      </div>
-    </div>
+    </BottomSheet>
   )
 }

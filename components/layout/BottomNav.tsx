@@ -2,17 +2,12 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { activeModules } from '@/config/modules'
-import * as Icons from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useLocale } from '@/contexts/LocaleContext'
 import { useChrome } from '@/contexts/ChromeContext'
-
-const MODULE_NAV_KEYS: Record<string, string> = {
-  workout: 'nav.workout',
-  'life-tracker': 'nav.lifeTracker',
-  adventure: 'nav.adventure',
-}
+import { buildNavItems } from '@/lib/navItems'
+import { getIcon } from '@/lib/icons'
+import { isAdminRole } from '@/lib/roles'
 
 export function BottomNav() {
   const pathname = usePathname()
@@ -21,21 +16,14 @@ export function BottomNav() {
   const { hideChrome } = useChrome()
   if (hideChrome) return null
 
-  const isAdmin = user?.roles?.some((r) => ['master_admin', 'admin'].includes(r))
-
-  const navItems = [
-    { label: t('nav.home'), href: '/dashboard', icon: 'Home' },
-    ...activeModules.map((m) => ({ ...m.navItem, label: t(MODULE_NAV_KEYS[m.id] ?? 'nav.home') })),
-    { label: t('nav.profile'), href: '/profile', icon: 'User' },
-    ...(isAdmin ? [{ label: t('nav.admin'), href: '/admin', icon: 'Shield' }] : []),
-  ]
+  const navItems = buildNavItems(t, isAdminRole(user?.roles))
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-brand-green md:hidden">
       <div className="flex items-center justify-around h-16">
         {navItems.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
-          const IconComponent = (Icons as unknown as Record<string, React.ComponentType<{ className?: string }>>)[item.icon]
+          const IconComponent = getIcon(item.icon)
           return (
             <Link
               key={item.href}

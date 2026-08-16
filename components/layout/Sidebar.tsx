@@ -3,18 +3,13 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
-import { activeModules } from '@/config/modules'
-import * as Icons from 'lucide-react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useLocale } from '@/contexts/LocaleContext'
 import { useChrome } from '@/contexts/ChromeContext'
-
-const MODULE_NAV_KEYS: Record<string, string> = {
-  workout: 'nav.workout',
-  'life-tracker': 'nav.lifeTracker',
-  adventure: 'nav.adventure',
-}
+import { buildNavItems } from '@/lib/navItems'
+import { getIcon } from '@/lib/icons'
+import { isAdminRole } from '@/lib/roles'
 
 export function Sidebar() {
   const pathname = usePathname()
@@ -24,14 +19,7 @@ export function Sidebar() {
   const { hideChrome } = useChrome()
   if (hideChrome) return null
 
-  const isAdmin = user?.roles.some((r) => ['master_admin', 'admin'].includes(r))
-
-  const navItems = [
-    { label: t('nav.dashboard'), href: '/dashboard', icon: 'Home' },
-    ...activeModules.map((m) => ({ ...m.navItem, label: t(MODULE_NAV_KEYS[m.id] ?? 'nav.home') })),
-    { label: t('nav.profile'), href: '/profile', icon: 'User' },
-    ...(isAdmin ? [{ label: t('nav.admin'), href: '/admin', icon: 'Shield' }] : []),
-  ]
+  const navItems = buildNavItems(t, isAdminRole(user?.roles))
 
   return (
     <aside
@@ -55,7 +43,7 @@ export function Sidebar() {
       <nav className="flex-1 overflow-y-auto py-4 space-y-1 px-2">
         {navItems.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
-          const IconComponent = (Icons as unknown as Record<string, React.ComponentType<{ className?: string }>>)[item.icon]
+          const IconComponent = getIcon(item.icon)
           return (
             <Link
               key={item.href}
